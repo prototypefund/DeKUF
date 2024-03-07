@@ -1,18 +1,28 @@
-from typing import Any, Dict
-
 from django.db import models
 
 
-class JsonData(models.Model):
-    data: Dict[str, Any] = models.JSONField()
+class Commissioner(models.Model):
+    name = models.CharField(max_length=200)
 
 
 class Survey(models.Model):
-    issuer: str = models.CharField(max_length=100)
+    commissioners = models.ManyToManyField(Commissioner)
 
 
 class Query(models.Model):
-    survey: Survey = models.ForeignKey(
+    survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="queries"
     )
-    dataKey: str = models.CharField()
+    data_key = models.CharField(max_length=100)
+
+
+class SurveyResponse(models.Model):
+    commissioners = models.ManyToManyField(Commissioner)
+
+
+class QueryResponse(models.Model):
+    survey_response = models.ForeignKey(
+        SurveyResponse, on_delete=models.CASCADE, related_name="queryResponses"
+    )
+    data_key = models.CharField(max_length=100)
+    data = models.JSONField()
