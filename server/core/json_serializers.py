@@ -1,12 +1,20 @@
 from rest_framework import serializers
 
-from .models import Commissioner, QueryResponse, SurveyResponse
+from .models import Commissioner, QueryResponse, Survey, SurveyResponse
 
 
 class CommissionerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Commissioner
         fields = ("name",)
+
+
+class SurveySerializer(serializers.ModelSerializer):
+    commissioners = CommissionerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Survey
+        fields = ["commissioners"]
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
@@ -17,9 +25,7 @@ class QueryResponseSerializer(serializers.ModelSerializer):
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
     commissioners = CommissionerSerializer(many=True)
-    queryResponses = QueryResponseSerializer(
-        many=True
-    )
+    queryResponses = QueryResponseSerializer(many=True)
 
     class Meta:
         model = SurveyResponse
