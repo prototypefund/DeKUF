@@ -1,27 +1,4 @@
-#include <QtCore>
-#include <iostream>
-
-class Client : public QObject {
-    Q_OBJECT
-
-public:
-    Client(QObject* parent = 0)
-        : QObject(parent)
-    {
-    }
-
-public slots:
-    void run()
-    {
-        std::cout << "Hello, World!" << std::endl;
-        emit finished();
-    }
-
-signals:
-    void finished();
-};
-
-#include "main.moc"
+#include "client.hpp"
 
 int main(int argc, char* argv[])
 {

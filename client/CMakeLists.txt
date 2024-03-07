@@ -12,7 +12,8 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_executable(dekuf-client
-  src/main.cpp
+    src/main.cpp
+    src/client.cpp
 )
 
 target_link_libraries(dekuf-client PRIVATE Qt6::Core)
