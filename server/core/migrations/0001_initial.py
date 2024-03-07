@@ -24,5 +24,5 @@ class Migration(migrations.Migration):
                 ),
                 ("data", models.JSONField()),
             ],
-        ),
+        )
     ]

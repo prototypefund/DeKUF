@@ -1,5 +1,7 @@
+from typing import Any, Dict
+
 from django.db import models
 
 
-class JSONData(models.Model):
-    data = models.JSONField()
+class JsonData(models.Model):
+    data: Dict[str, Any] = models.JSONField()
