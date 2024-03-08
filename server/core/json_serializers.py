@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Commissioner, QueryResponse, Survey, SurveyResponse
+from .models import Commissioner, Query, QueryResponse, Survey, SurveyResponse
 
 
 class CommissionerSerializer(serializers.ModelSerializer):
@@ -9,12 +9,19 @@ class CommissionerSerializer(serializers.ModelSerializer):
         fields = ("name",)
 
 
+class QuerySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Query
+        fields = ["data_key"]
+
+
 class SurveySerializer(serializers.ModelSerializer):
     commissioners = CommissionerSerializer(many=True, read_only=True)
+    queries = QuerySerializer(many=True)
 
     class Meta:
         model = Survey
-        fields = ["commissioners"]
+        fields = ["name", "commissioners", "queries"]
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
