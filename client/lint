@@ -1,0 +1,14 @@
+#!/bin/sh
+
+case "$1" in
+    "--fix")
+        clang_args="-i"
+        ;;
+    *)
+        clang_args="--dry-run"
+        ;;
+esac
+
+find src \
+     \( -name "*.cpp" -or -name "*.hpp" \) \
+     -exec clang-format $clang_args {} \;

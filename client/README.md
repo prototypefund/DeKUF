@@ -35,9 +35,13 @@ For the moment, you'll need to manually install a few dependencies:
     cmake ..
     make
 
-### Formatting the code
+### Linting
 
-We use an auto formatter to improve maintainability and reduce nit picking,
-please run it before committing any changes:
+We use linting to improve maintainability and to reduce nit picking, please run
+it before committing any changes:
 
-    ./format
+    ./lint
+
+It can fix issues directly, should save you some time:
+
+    ./lint --fix
