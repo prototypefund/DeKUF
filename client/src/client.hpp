@@ -13,4 +13,7 @@ public slots:
 
 signals:
     void finished();
+
+private:
+    void handleSurveysResponse(const QByteArray& data);
 };

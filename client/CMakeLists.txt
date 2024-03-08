@@ -11,11 +11,11 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Network)
 
 add_executable(dekuf-client
     src/main.cpp
     src/client.cpp
 )
 
-target_link_libraries(dekuf-client PRIVATE Qt6::Core)
+target_link_libraries(dekuf-client PRIVATE Qt6::Core Qt6::Network)
