@@ -35,6 +35,11 @@ For the moment, you'll need to manually install a few dependencies:
     cmake ..
     make
 
+### Running the tests
+
+    cd build
+    make && make test
+
 ### Linting
 
 We use linting to improve maintainability and to reduce nit picking, please run
