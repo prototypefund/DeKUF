@@ -21,7 +21,7 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ["name", "commissioners", "queries"]
+        fields = ["id", "name", "commissioners", "queries"]
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
