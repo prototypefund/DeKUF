@@ -4,7 +4,7 @@
 
 class Survey {
 public:
-    inline static QList<QSharedPointer<Survey>> listFromByteArray(
+    static QList<QSharedPointer<Survey>> listFromByteArray(
         const QByteArray& data)
     {
         QList<QSharedPointer<Survey>> surveys;
@@ -20,7 +20,7 @@ public:
 
     const QString name;
 
-    inline Survey(const QString& name)
+    Survey(const QString& name)
         : name(name)
     {
     }
