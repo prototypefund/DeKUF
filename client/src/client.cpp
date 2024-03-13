@@ -1,3 +1,4 @@
+#include <QDateTime>
 #include <QTextStream>
 #include <QtNetwork>
 
@@ -9,7 +10,7 @@ Client::Client(QObject* parent)
 {
 }
 
-void Client::run()
+void Client::fetchSurveys()
 {
     auto manager = new QNetworkAccessManager(this);
     QUrl url("http://localhost:8000/api/surveys");
@@ -24,6 +25,14 @@ void Client::run()
                 qCritical() << "Error:" << reply->errorString();
             emit finished();
         });
+}
+
+void Client::run()
+{
+    storage.addDataPoint(
+        "timestamp", QString::number(QDateTime::currentSecsSinceEpoch()));
+    qDebug() << "Stored timestamps: " << storage.listDataPoints("timestamp");
+    fetchSurveys();
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
