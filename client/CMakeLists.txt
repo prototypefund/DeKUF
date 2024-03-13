@@ -11,11 +11,19 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
 
 add_executable(dekuf-client
     src/main.cpp
     src/client.cpp
 )
-
 target_link_libraries(dekuf-client PRIVATE Qt6::Core Qt6::Network)
+
+enable_testing(true)
+add_executable(dekuf-client-tests
+    tests/main.cpp
+    tests/survey_test.cpp
+)
+target_link_libraries(dekuf-client-tests PRIVATE Qt::Test)
+add_test(NAME dekuf-client-tests COMMAND dekuf-client-tests)
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")

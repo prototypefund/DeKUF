@@ -2,6 +2,7 @@
 #include <QtNetwork>
 
 #include "client.hpp"
+#include "survey.hpp"
 
 Client::Client(QObject* parent)
     : QObject(parent)
@@ -30,11 +31,8 @@ void Client::handleSurveysResponse(const QByteArray& data)
     using Qt::endl;
 
     QTextStream cout(stdout);
-    auto document = QJsonDocument::fromJson(data);
-    auto surveys = document.array();
+    auto surveys = Survey::listFromByteArray(data);
     cout << "Retrieved " << surveys.count() << " surveys:" << endl;
-    for (auto survey : surveys) {
-        auto surveyObject = survey.toObject();
-        cout << "- " << surveyObject["name"].toString() << endl;
-    }
+    for (auto survey : surveys)
+        cout << "- " << survey->name << endl;
 }

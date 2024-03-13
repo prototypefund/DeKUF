@@ -9,6 +9,6 @@ case "$1" in
         ;;
 esac
 
-find src \
+find src tests \
      \( -name "*.cpp" -or -name "*.hpp" \) \
      -exec clang-format $clang_args {} \;
