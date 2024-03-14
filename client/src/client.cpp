@@ -4,6 +4,7 @@
 
 #include "client.hpp"
 #include "survey.hpp"
+#include "survey_response.hpp"
 
 Client::Client(QObject* parent)
     : QObject(parent)
@@ -41,7 +42,30 @@ void Client::handleSurveysResponse(const QByteArray& data)
 
     QTextStream cout(stdout);
     auto surveys = Survey::listFromByteArray(data);
-    cout << "Retrieved " << surveys.count() << " surveys:" << endl;
-    for (auto survey : surveys)
-        cout << "- " << survey->name << endl;
+    for (auto survey : surveys) {
+        auto surveyResponse = createSurveyResponse(survey);
+        if (surveyResponse->queryResponses.count() == 0)
+            continue;
+        postSurveyResponse(surveyResponse);
+    }
+}
+
+QSharedPointer<SurveyResponse> Client::createSurveyResponse(
+    QSharedPointer<Survey> survey)
+{
+    Storage storage;
+    QSharedPointer<SurveyResponse> surveyResponse;
+    for (auto query : survey->queries) {
+        auto dataPoints = storage.listDataPoints(query->dataKey);
+        if (dataPoints.count() == 0)
+            continue;
+        surveyResponse->queryResponses.append(
+            QSharedPointer<QueryResponse>::create(
+                query->dataKey, dataPoints.first()));
+    }
+    return surveyResponse;
+}
+
+void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
+{
 }
