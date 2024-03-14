@@ -22,6 +22,7 @@ target_link_libraries(dekuf-client PRIVATE Qt6::Core Qt6::Network Qt::Sql)
 enable_testing(true)
 add_executable(dekuf-client-tests
     tests/main.cpp
+    tests/survey_response_test.cpp
     tests/survey_test.cpp
     tests/storage_test.cpp
 )

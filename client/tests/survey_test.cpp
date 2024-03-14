@@ -19,3 +19,19 @@ void SurveyTest::testListFromByteArrayForSingleSurvey()
     QCOMPARE(surveys.first()->id, "1234");
     QCOMPARE(surveys.first()->name, "test");
 }
+
+void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
+{
+    auto data = QString("[{\"id\": \"1234\", \"name\": \"test\", \"queries\": "
+                        "[{\"dataKey\": \"timestamp\"}]}]")
+                    .toUtf8();
+    auto surveys = Survey::listFromByteArray(data);
+
+    QCOMPARE(surveys.count(), 1);
+    auto survey = surveys.first();
+
+    QCOMPARE(survey->id, "1234");
+    QCOMPARE(survey->name, "test");
+    QCOMPARE(survey->queries.count(), 1);
+    QCOMPARE(survey->queries.first()->dataKey, "timestamp");
+}
