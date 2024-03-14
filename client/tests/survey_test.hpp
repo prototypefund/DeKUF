@@ -8,4 +8,5 @@ class SurveyTest : public QObject {
 private slots:
     void testListFromByteArrayForEmptyArray();
     void testListFromByteArrayForSingleSurvey();
+    void testListFromByteArrayForSingleSurveyWithQuery();
 };
