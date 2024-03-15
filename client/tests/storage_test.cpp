@@ -27,3 +27,5 @@ void StorageTest::testAddAndListDataPoints()
     QCOMPARE(dataPoints.count(), 1);
     QCOMPARE(dataPoints.first(), "1337");
 }
+
+QTEST_MAIN(StorageTest)

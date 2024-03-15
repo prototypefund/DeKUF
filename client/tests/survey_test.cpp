@@ -35,3 +35,5 @@ void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
     QCOMPARE(survey->queries.count(), 1);
     QCOMPARE(survey->queries.first()->dataKey, "timestamp");
 }
+
+QTEST_MAIN(SurveyTest)

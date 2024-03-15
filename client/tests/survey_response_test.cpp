@@ -36,3 +36,5 @@ void SurveyResponseTest::testToByteArrayForResponse()
         queryResponseJsonObject.first()["dataKey"].toString(), "timestamp");
     QCOMPARE(queryResponseJsonObject.first()["data"].toString(), "123456789");
 }
+
+QTEST_MAIN(SurveyResponseTest)
