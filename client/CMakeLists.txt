@@ -13,21 +13,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Test)
 
-add_executable(dekuf-client
-    src/main.cpp
-    src/client.cpp
-)
-target_link_libraries(dekuf-client PRIVATE Qt6::Core Qt6::Network Qt::Sql)
-
 enable_testing(true)
-add_executable(dekuf-client-tests
-    tests/main.cpp
-    tests/survey_response_test.cpp
-    tests/survey_test.cpp
-    tests/storage_test.cpp
-)
-# TODO: Properly link against the dekuf-client code instead of repeating
-#       dependencies here.
-target_link_libraries(dekuf-client-tests PRIVATE Qt::Test Qt::Sql)
-add_test(NAME dekuf-client-tests COMMAND dekuf-client-tests)
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+
+add_subdirectory(src)
+add_subdirectory(tests)
