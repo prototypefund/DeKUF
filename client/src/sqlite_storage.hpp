@@ -4,17 +4,27 @@
 #include <QtCore>
 #include <QtSql>
 
-#define STORAGE_DATABASE_PATH "db.sqlite3"
+#define SQLITE_STORAGE_USER_DIR ".dekuf"
+#define SQLITE_STORAGE_DATABASE_FILE "db.sqlite3"
 
 class SqliteStorage : public Storage {
 public:
-    SqliteStorage()
+    SqliteStorage(const QString& databasePath)
         : db(QSqlDatabase::addDatabase("QSQLITE"))
     {
-        db.setDatabaseName(STORAGE_DATABASE_PATH);
+        QFileInfo(databasePath).dir().mkpath(".");
+
+        db.setDatabaseName(databasePath);
         if (!db.open())
             qDebug() << "Error: Unable to open database";
         migrate();
+    }
+
+    SqliteStorage()
+        : SqliteStorage(QDir::homePath() + QDir::separator()
+            + SQLITE_STORAGE_USER_DIR + QDir::separator()
+            + SQLITE_STORAGE_DATABASE_FILE)
+    {
     }
 
     QList<QString> listDataPoints(const QString& key)
