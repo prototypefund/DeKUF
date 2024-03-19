@@ -2,6 +2,7 @@
 
 #include "../src/survey_response.hpp"
 
+#include "stubs/storageStub.hpp"
 #include "survey_response_test.hpp"
 
 QJsonArray ReadQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
@@ -37,21 +38,21 @@ void SurveyResponseTest::testToByteArrayForResponse()
     QCOMPARE(queryResponseJsonObject.first()["data"].toString(), "123456789");
 }
 
-void SurveyResponseTest::testCreateSurveyResponse()
+void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
 {
-    SurveyResponse surveyResponse;
+    StorageStub storage;
 
-    surveyResponse.queryResponses.append(
-        QSharedPointer<QueryResponse>::create("timestamp", "123456789"));
+    Survey survey("testId", "testName");
+    survey.queries.append(QSharedPointer<Query>::create("testKey"));
+    survey.commissioners.append(QSharedPointer<Commissioner>::create("KDE"));
+    storage.addDataPoint("testKey", "testValue");
 
-    auto jsonSurvey
-        = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
+    auto surveyResponse = SurveyResponse::create(
+        QSharedPointer<Survey>::create(survey), storage);
 
-    auto queryResponseJsonObject = ReadQueriesFromSurveyJsonObject(jsonSurvey);
-
-    QCOMPARE(
-        queryResponseJsonObject.first()["dataKey"].toString(), "timestamp");
-    QCOMPARE(queryResponseJsonObject.first()["data"].toString(), "123456789");
+    QCOMPARE(surveyResponse->queryResponses.first()->dataKey, "");
+    QCOMPARE(surveyResponse->queryResponses.first()->data, "testValue");
+    QCOMPARE(surveyResponse->commissioners.first()->name, "KDE");
 }
 
 QTEST_MAIN(SurveyResponseTest)
