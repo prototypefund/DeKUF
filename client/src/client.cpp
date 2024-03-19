@@ -22,9 +22,11 @@ void Client::fetchSurveys()
             if (reply->error() == QNetworkReply::NoError) {
                 auto responseData = reply->readAll();
                 handleSurveysResponse(responseData);
-            } else
+            } else {
                 qCritical() << "Error:" << reply->errorString();
-            emit finished();
+                emit finished();
+            }
+            reply->deleteLater();
         });
 }
 
@@ -36,25 +38,10 @@ void Client::run()
     fetchSurveys();
 }
 
-void Client::handleSurveysResponse(const QByteArray& data)
-{
-    using Qt::endl;
-
-    QTextStream cout(stdout);
-    auto surveys = Survey::listFromByteArray(data);
-    for (auto survey : surveys) {
-        auto surveyResponse = createSurveyResponse(survey);
-        if (surveyResponse->queryResponses.count() == 0)
-            continue;
-        postSurveyResponse(surveyResponse);
-    }
-}
-
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     QSharedPointer<Survey> survey)
 {
-    Storage storage;
-    QSharedPointer<SurveyResponse> surveyResponse;
+    QSharedPointer<SurveyResponse> surveyResponse(new SurveyResponse);
     for (auto query : survey->queries) {
         auto dataPoints = storage.listDataPoints(query->dataKey);
         if (dataPoints.count() == 0)
@@ -66,6 +53,44 @@ QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     return surveyResponse;
 }
 
+void Client::handleSurveysResponse(const QByteArray& data)
+{
+    using Qt::endl;
+
+    QTextStream cout(stdout);
+    auto surveys = Survey::listFromByteArray(data);
+    for (auto survey : surveys) {
+        auto surveyResponse = createSurveyResponse(survey);
+        if (surveyResponse->queryResponses.isEmpty())
+            continue;
+        postSurveyResponse(surveyResponse);
+    }
+}
+
 void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
 {
+    auto manager = new QNetworkAccessManager(this);
+    QUrl url("http://localhost:8000/api/survey-response/");
+    QNetworkRequest request(url);
+
+    // request.setHeader(QNetworkRequest::ContentTypeHeader,
+    // "application/json");
+
+    QNetworkReply* reply
+        = manager->post(request, surveyResponse->toJsonByteArray());
+
+    connect(
+        manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray response = reply->readAll();
+                qDebug() << "Response:" << response;
+            } else {
+                QByteArray response = reply->readAll();
+                QString errorString = reply->errorString();
+                qCritical() << "Response error:" << response;
+                qCritical() << "Error string:" << reply->errorString();
+            }
+            reply->deleteLater();
+            emit finished();
+        });
 }

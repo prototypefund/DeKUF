@@ -4,7 +4,7 @@
 
 class QueryResponse {
 public:
-    QueryResponse(const QString dataKey, const QString data)
+    QueryResponse(const QString& dataKey, const QString& data)
         : dataKey(dataKey)
         , data(data)
     {
@@ -29,7 +29,7 @@ public:
             queryJsonResponses.push_back(queryJsonResponse);
         }
 
-        surveyJsonResponse["queries"] = queryJsonResponses;
+        surveyJsonResponse["queryResponses"] = queryJsonResponses;
 
         QJsonDocument root;
         root.setObject(surveyJsonResponse);

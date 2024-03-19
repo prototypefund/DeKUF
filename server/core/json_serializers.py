@@ -10,9 +10,10 @@ class CommissionerSerializer(serializers.ModelSerializer):
 
 
 class QuerySerializer(serializers.ModelSerializer):
+    dataKey = serializers.CharField(source='data_key')
     class Meta:
         model = Query
-        fields = ["data_key"]
+        fields = ["dataKey"]
 
 
 class SurveySerializer(serializers.ModelSerializer):
@@ -25,9 +26,10 @@ class SurveySerializer(serializers.ModelSerializer):
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
+    dataKey = serializers.CharField(source='data_key')
     class Meta:
         model = QueryResponse
-        fields = ("data_key", "data")
+        fields = ("dataKey", "data")
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):

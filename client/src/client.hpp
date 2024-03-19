@@ -5,6 +5,7 @@
 #include "storage.hpp"
 #include "survey.hpp"
 #include "survey_response.hpp"
+class QNetworkAccessManager;
 
 class Client : public QObject {
     Q_OBJECT
@@ -21,6 +22,7 @@ signals:
 
 private:
     Storage storage;
+    QNetworkAccessManager* manager;
 
     void handleSurveysResponse(const QByteArray& data);
     void postSurveyResponse(QSharedPointer<SurveyResponse>);
