@@ -22,11 +22,12 @@ For the moment, you'll need to manually install a few dependencies:
 2. [CMake](https://cmake.org/)
 3. The [Qt framework](https://www.qt.io/product/qt6), version 6.2.4 (or later,
    presumably)
-4. [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+4. [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html)
+5. [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
 
 #### Debian/Ubuntu
 
-    sudo apt install build-essential cmake qt6-base-dev clang-format
+    sudo apt install build-essential cmake qt6-base-dev designer-qt6 clang-format
 
 ### Building
 

@@ -18,3 +18,5 @@ target_link_libraries(dekuf-client-lib PUBLIC
 add_executable(dekuf-client main.cpp)
 target_link_libraries(dekuf-client PRIVATE dekuf-client-lib)
 set_target_properties(dekuf-client PROPERTIES RUNTIME_OUTPUT_DIRECTORY "..")
+
+add_subdirectory(ui)
