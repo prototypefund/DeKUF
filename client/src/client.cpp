@@ -3,6 +3,7 @@
 #include <QtNetwork>
 
 #include "client.hpp"
+#include "commissioner.hpp"
 #include "survey.hpp"
 #include "survey_response.hpp"
 
@@ -41,7 +42,18 @@ void Client::run()
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     QSharedPointer<Survey> survey)
 {
-    QSharedPointer<SurveyResponse> surveyResponse(new SurveyResponse);
+    // Only KDE allowed as commissioner
+    QString kdeName("KDE");
+    if (std::any_of(survey->commissioners.begin(), survey->commissioners.end(),
+            [&](const QSharedPointer<Commissioner>& commissioner) {
+                return commissioner->name == kdeName;
+            }))
+        return QSharedPointer<SurveyResponse>();
+
+    auto surveyResponse = QSharedPointer<SurveyResponse>::create();
+    surveyResponse->commissioners.append(
+        QSharedPointer<Commissioner>::create(kdeName));
+
     for (auto query : survey->queries) {
         auto dataPoints = storage.listDataPoints(query->dataKey);
         if (dataPoints.count() == 0)
@@ -61,7 +73,8 @@ void Client::handleSurveysResponse(const QByteArray& data)
     auto surveys = Survey::listFromByteArray(data);
     for (auto survey : surveys) {
         auto surveyResponse = createSurveyResponse(survey);
-        if (surveyResponse->queryResponses.isEmpty())
+        if (surveyResponse == nullptr
+            || surveyResponse->queryResponses.isEmpty())
             continue;
         postSurveyResponse(surveyResponse);
     }

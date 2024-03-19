@@ -1,5 +1,6 @@
 #pragma once
 
+#include "commissioner.hpp"
 #include <QtCore>
 
 class QueryResponse {
@@ -15,12 +16,14 @@ public:
 
 class SurveyResponse {
 public:
+    QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     QByteArray toJsonByteArray()
     {
         QJsonObject surveyJsonResponse;
         QJsonArray queryJsonResponses;
+        QJsonArray commissionersJson;
 
         for (auto queryResponse : queryResponses) {
             QJsonObject queryJsonResponse;
@@ -29,7 +32,14 @@ public:
             queryJsonResponses.push_back(queryJsonResponse);
         }
 
+        for (auto commissioner : commissioners) {
+            QJsonObject commissionerJson;
+            commissionerJson["name"] = commissioner->name;
+            commissionersJson.push_back(commissionerJson);
+        }
+
         surveyJsonResponse["queryResponses"] = queryJsonResponses;
+        surveyJsonResponse["commissioners"] = commissionersJson;
 
         QJsonDocument root;
         root.setObject(surveyJsonResponse);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "commissioner.hpp"
 #include <QtCore>
 
 class Query {
@@ -24,11 +25,19 @@ public:
             auto id = object["id"].toString();
             auto name = object["name"].toString();
             QSharedPointer<Survey> survey(new Survey(id, name));
+
+            for (auto item : object["commissioners"].toArray()) {
+                auto object = item.toObject();
+                auto name = object["name"].toString();
+                survey->commissioners.push_back(
+                    QSharedPointer<Commissioner>::create(name));
+            }
+
             for (auto item : object["queries"].toArray()) {
                 auto object = item.toObject();
                 auto dataKey = object["dataKey"].toString();
-                QSharedPointer<Query> query(new Query(dataKey));
-                survey->queries.push_back(query);
+                survey->queries.push_back(
+                    QSharedPointer<Query>::create(dataKey));
             }
             surveys.push_back(survey);
         }
@@ -37,6 +46,7 @@ public:
 
     const QString id;
     const QString name;
+    QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<Query>> queries;
 
     Survey(const QString& id, const QString& name)
