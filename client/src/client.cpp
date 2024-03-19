@@ -3,7 +3,6 @@
 #include <QtNetwork>
 
 #include "client.hpp"
-#include "commissioner.hpp"
 #include "survey.hpp"
 #include "survey_response.hpp"
 
@@ -39,32 +38,6 @@ void Client::run()
     fetchSurveys();
 }
 
-QSharedPointer<SurveyResponse> Client::createSurveyResponse(
-    QSharedPointer<Survey> survey)
-{
-    // Only KDE allowed as commissioner
-    QString kdeName("KDE");
-    if (std::any_of(survey->commissioners.begin(), survey->commissioners.end(),
-            [&](const QSharedPointer<Commissioner>& commissioner) {
-                return commissioner->name == kdeName;
-            }))
-        return QSharedPointer<SurveyResponse>();
-
-    auto surveyResponse = QSharedPointer<SurveyResponse>::create();
-    surveyResponse->commissioners.append(
-        QSharedPointer<Commissioner>::create(kdeName));
-
-    for (auto query : survey->queries) {
-        auto dataPoints = storage.listDataPoints(query->dataKey);
-        if (dataPoints.count() == 0)
-            continue;
-        surveyResponse->queryResponses.append(
-            QSharedPointer<QueryResponse>::create(
-                query->dataKey, dataPoints.first()));
-    }
-    return surveyResponse;
-}
-
 void Client::handleSurveysResponse(const QByteArray& data)
 {
     using Qt::endl;
@@ -72,7 +45,7 @@ void Client::handleSurveysResponse(const QByteArray& data)
     QTextStream cout(stdout);
     auto surveys = Survey::listFromByteArray(data);
     for (auto survey : surveys) {
-        auto surveyResponse = createSurveyResponse(survey);
+        auto surveyResponse = SurveyResponse::create(survey, storage);
         if (surveyResponse == nullptr
             || surveyResponse->queryResponses.isEmpty())
             continue;
@@ -86,8 +59,7 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
     QUrl url("http://localhost:8000/api/survey-response/");
     QNetworkRequest request(url);
 
-    // request.setHeader(QNetworkRequest::ContentTypeHeader,
-    // "application/json");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QNetworkReply* reply
         = manager->post(request, surveyResponse->toJsonByteArray());
