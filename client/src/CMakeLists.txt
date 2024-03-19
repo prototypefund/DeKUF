@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
 
 file(GLOB DEKUF_CLIENT_LIB_SRC CONFIGURE_DEPENDS "*.cpp" "*.hpp")
-list(REMOVE_ITEM DEKUF_CLIENT_LIB_SRC "main.cpp")
+list(FILTER DEKUF_CLIENT_LIB_SRC EXCLUDE REGEX "/main\\.cpp$")
 
 add_library(dekuf-client-lib ${DEKUF_CLIENT_LIB_SRC})
 target_link_libraries(dekuf-client-lib PUBLIC
