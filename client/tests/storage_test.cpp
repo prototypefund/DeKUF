@@ -4,8 +4,6 @@
 
 #include "storage_test.hpp"
 
-#define TEST_DATA_POINT "timestamp"
-
 void StorageTest::init()
 {
     QFile dbFile(STORAGE_DATABASE_PATH);
