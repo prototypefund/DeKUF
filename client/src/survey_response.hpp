@@ -22,7 +22,7 @@ public:
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     static QSharedPointer<SurveyResponse> create(
-        QSharedPointer<Survey> survey, Storage storage)
+        QSharedPointer<Survey> survey, Storage& storage)
     {
         // Only KDE allowed as commissioner
         QString kdeName("KDE");

@@ -8,4 +8,5 @@ class SurveyResponseTest : public QObject {
 private slots:
     void testToByteArrayForEmptyResponse();
     void testToByteArrayForResponse();
+    void testCreateSurveyResponse();
 };

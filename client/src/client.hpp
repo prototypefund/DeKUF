@@ -2,6 +2,7 @@
 
 #include <QtCore>
 
+#include "sqlite_storage.hpp"
 #include "storage.hpp"
 #include "survey.hpp"
 #include "survey_response.hpp"
@@ -21,7 +22,7 @@ signals:
     void finished();
 
 private:
-    Storage storage;
+    SqliteStorage storage;
     QNetworkAccessManager* manager;
 
     void handleSurveysResponse(const QByteArray& data);

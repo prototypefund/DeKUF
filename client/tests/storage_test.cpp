@@ -1,6 +1,6 @@
 #include <QTest>
 
-#include "../src/storage.hpp"
+#include "../src/sqlite_storage.hpp"
 
 #include "storage_test.hpp"
 
@@ -14,14 +14,14 @@ void StorageTest::init()
 
 void StorageTest::testListDataPointsInitiallyEmpty()
 {
-    Storage storage;
+    SqliteStorage storage;
     auto dataPoints = storage.listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 0);
 }
 
 void StorageTest::testAddAndListDataPoints()
 {
-    Storage storage;
+    SqliteStorage storage;
     storage.addDataPoint("timestamp", "1337");
     auto dataPoints = storage.listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 1);
