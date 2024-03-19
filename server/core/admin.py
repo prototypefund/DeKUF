@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Commissioner, Query, Survey
+from .models import Commissioner, Query, Survey, SurveyResponse, QueryResponse
 
 
 @admin.register(Commissioner)
@@ -20,3 +20,15 @@ class SurveyAdmin(admin.ModelAdmin):
     inlines = [QueryInline]
     search_fields = ("commissioners__name",)
     filter_horizontal = ("commissioners",)
+
+
+class QueryResponseInline(admin.TabularInline):
+    model = QueryResponse
+    fields = ('data_key', 'data')
+    readonly_fields = ('data_key', 'data')
+    extra = 1
+
+
+@admin.register(SurveyResponse)
+class SurveyResponseAdmin(admin.ModelAdmin):
+    inlines = [QueryResponseInline]
