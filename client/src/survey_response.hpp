@@ -26,7 +26,7 @@ public:
     {
         // Only KDE allowed as commissioner
         QString kdeName("KDE");
-        if (std::any_of(survey->commissioners.begin(),
+        if (!std::any_of(survey->commissioners.begin(),
                 survey->commissioners.end(),
                 [&](const QSharedPointer<Commissioner>& commissioner) {
                     return commissioner->name == kdeName;

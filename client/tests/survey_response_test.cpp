@@ -5,9 +5,9 @@
 #include "stubs/storageStub.hpp"
 #include "survey_response_test.hpp"
 
-QJsonArray ReadQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
+QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
 {
-    auto jsonQueriesValue = jsonSurvey["queries"];
+    auto jsonQueriesValue = jsonSurvey["queryResponses"];
     return jsonQueriesValue.toArray();
 }
 
@@ -18,7 +18,7 @@ void SurveyResponseTest::testToByteArrayForEmptyResponse()
     auto jsonSurvey
         = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
 
-    QCOMPARE(ReadQueriesFromSurveyJsonObject(jsonSurvey).count(), 0);
+    QCOMPARE(readQueriesFromSurveyJsonObject(jsonSurvey).count(), 0);
 }
 
 void SurveyResponseTest::testToByteArrayForResponse()
@@ -30,8 +30,7 @@ void SurveyResponseTest::testToByteArrayForResponse()
 
     auto jsonSurvey
         = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
-
-    auto queryResponseJsonObject = ReadQueriesFromSurveyJsonObject(jsonSurvey);
+    auto queryResponseJsonObject = readQueriesFromSurveyJsonObject(jsonSurvey);
 
     QCOMPARE(
         queryResponseJsonObject.first()["dataKey"].toString(), "timestamp");
@@ -50,7 +49,8 @@ void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
     auto surveyResponse = SurveyResponse::create(
         QSharedPointer<Survey>::create(survey), storage);
 
-    QCOMPARE(surveyResponse->queryResponses.first()->dataKey, "");
+    QVERIFY(!surveyResponse.isNull());
+    QCOMPARE(surveyResponse->queryResponses.first()->dataKey, "testKey");
     QCOMPARE(surveyResponse->queryResponses.first()->data, "testValue");
     QCOMPARE(surveyResponse->commissioners.first()->name, "KDE");
 }
