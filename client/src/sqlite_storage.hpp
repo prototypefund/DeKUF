@@ -4,8 +4,10 @@
 #include <QtCore>
 #include <QtSql>
 
-#define SQLITE_STORAGE_USER_DIR ".dekuf"
-#define SQLITE_STORAGE_DATABASE_FILE "db.sqlite3"
+namespace detail {
+const QString userDir = ".dekuf";
+const QString dbFileName = "db.sqlite3";
+}
 
 class SqliteStorage : public Storage {
 public:
@@ -21,9 +23,8 @@ public:
     }
 
     SqliteStorage()
-        : SqliteStorage(QDir::homePath() + QDir::separator()
-            + SQLITE_STORAGE_USER_DIR + QDir::separator()
-            + SQLITE_STORAGE_DATABASE_FILE)
+        : SqliteStorage(QDir::homePath() + QDir::separator() + detail::userDir
+            + QDir::separator() + detail::dbFileName)
     {
     }
 
