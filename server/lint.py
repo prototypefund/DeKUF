@@ -13,5 +13,5 @@ def call(args):
 if __name__ == "__main__":
     fix = len(sys.argv) > 1 and sys.argv[1] == "--fix"
     extra_args = [] if fix else ["--check"]
-    call(["isort", "."] + extra_args)
+    call(["isort", "--profile", "black", "."] + extra_args)
     call(["black", "-l", "80", "-C", "."] + extra_args)
