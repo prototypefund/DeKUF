@@ -1,13 +1,25 @@
-test:
+test-client:
     stage: test
-    image: python:3.10
+    image: gcc
     before_script:
         - >
             apt-get update -yqq &&
             apt-get install -yqq
-            build-essential cmake qt6-base-dev clang-format
-    script:
+            cmake qt6-base-dev clang-format
         - cd client
+    script:
         - make lint
         - make
         - make test
+
+test-server:
+    stage: test
+    image: python:3.10
+    before_script:
+        - pip install --upgrade pip
+        - cd server
+        - pip install -r requirements.txt
+    script:
+        ./lint.py
+        ./manage.py migrate
+        ./manage.py test
