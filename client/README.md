@@ -46,8 +46,8 @@ For the moment, you'll need to manually install a few dependencies:
 We use linting to improve maintainability and to reduce nit picking, please run
 it before committing any changes:
 
-    ./lint
+    make lint
 
 It can fix issues directly, should save you some time:
 
-    ./lint --fix
+    make lint-fix
