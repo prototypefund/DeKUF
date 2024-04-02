@@ -7,8 +7,15 @@ define clang_format
 endef
 
 .PHONY: all
-all:
-	@echo "TODO"
+all: build
+	make -C build
+
+.PHONY: test
+test:
+	make -C build test
+
+build:
+	cmake -B build
 
 .PHONY: lint
 lint:
@@ -17,3 +24,7 @@ lint:
 .PHONY: lint-fix
 lint-fix:
 	@$(call clang_format,"-i")
+
+.PHONY: clean
+clean:
+	$(RM) -r build

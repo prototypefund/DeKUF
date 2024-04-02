@@ -31,14 +31,10 @@ For the moment, you'll need to manually install a few dependencies:
 
 ### Building
 
-    mkdir build
-    cd build
-    cmake ..
     make
 
 ### Running the tests
 
-    cd build
     make && make test
 
 ### Linting
