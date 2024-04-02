@@ -11,6 +11,10 @@ test-client:
         - make lint
         - make
         - make test
+    rules:
+        - changes:
+            - .gitlab-ci.yml
+            - client/**/*
 
 test-server:
     stage: test
@@ -23,3 +27,7 @@ test-server:
         ./lint.py
         ./manage.py migrate
         ./manage.py test
+    rules:
+        - changes:
+            - .gitlab-ci.yml
+            - server/**/*
