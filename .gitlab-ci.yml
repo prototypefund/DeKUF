@@ -5,7 +5,7 @@ test:
         - >
             apt-get update -yqq &&
             apt-get install -yqq
-            build-essential cmake qt6-base-dev designer-qt6 clang-format
+            build-essential cmake qt6-base-dev clang-format
     script:
         - cd client
         - make lint
