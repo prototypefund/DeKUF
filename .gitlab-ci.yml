@@ -1,0 +1,13 @@
+test:
+    stage: test
+    image: python:3.10
+    before_script:
+        - >
+            apt-get update -yqq &&
+            apt-get install -yqq
+            build-essential cmake qt6-base-dev designer-qt6 clang-format
+    script:
+        - cd client
+        - make lint
+        - make
+        - make test
