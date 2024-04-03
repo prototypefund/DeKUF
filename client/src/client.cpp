@@ -34,7 +34,9 @@ void Client::run()
 {
     storage.addDataPoint(
         "timestamp", QString::number(QDateTime::currentSecsSinceEpoch()));
-    qDebug() << "Stored timestamps: " << storage.listDataPoints("timestamp");
+    qDebug() << "Stored timestamps: ";
+    for (auto dataPoint : storage.listDataPoints("timestamp"))
+        qDebug() << "-" << dataPoint.value;
     fetchSurveys();
 }
 

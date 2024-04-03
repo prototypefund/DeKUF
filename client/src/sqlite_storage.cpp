@@ -21,7 +21,8 @@ void migrate()
     query.prepare("CREATE TABLE IF NOT EXISTS data_point("
                   "    id INTEGER PRIMARY KEY,"
                   "    key TEXT,"
-                  "    value TEXT"
+                  "    value TEXT,"
+                  "    created_at DATETIME"
                   ")");
     execQuery(query);
 }
@@ -44,24 +45,27 @@ SqliteStorage::SqliteStorage()
 {
 }
 
-QList<QString> SqliteStorage::listDataPoints(const QString& key)
+QList<DataPoint> SqliteStorage::listDataPoints(const QString& key)
 {
-    QList<QString> dataPoints;
+    QList<DataPoint> dataPoints;
     QSqlQuery query;
-    query.prepare("SELECT value FROM data_point WHERE key = :key");
+    query.prepare("SELECT value, created_at FROM data_point WHERE key = :key");
     query.bindValue(":key", key);
     if (!execQuery(query))
         return dataPoints;
 
     while (query.next())
-        dataPoints.push_back(query.value(0).toString());
+        dataPoints.push_back({ .key = key,
+            .value = query.value(0).toString(),
+            .createdAt = query.value(1).toDateTime() });
     return dataPoints;
 }
 
 void SqliteStorage::addDataPoint(const QString& key, const QString& value)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO data_point (key, value) values (:key, :value)");
+    query.prepare("INSERT INTO data_point (key, value, created_at)"
+                  "    values (:key, :value, CURRENT_TIMESTAMP)");
     query.bindValue(":key", key);
     query.bindValue(":value", value);
     execQuery(query);

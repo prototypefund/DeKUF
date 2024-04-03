@@ -27,7 +27,7 @@ QSharedPointer<SurveyResponse> SurveyResponse::create(
             continue;
         surveyResponse->queryResponses.append(
             QSharedPointer<QueryResponse>::create(
-                query->dataKey, dataPoints.first()));
+                query->dataKey, dataPoints.first().value));
     }
     return surveyResponse;
 }

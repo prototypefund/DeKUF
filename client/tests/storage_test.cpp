@@ -28,7 +28,10 @@ void StorageTest::testAddAndListDataPoints()
     storage->addDataPoint("timestamp", "1337");
     auto dataPoints = storage->listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 1);
-    QCOMPARE(dataPoints.first(), "1337");
+    auto first = dataPoints.first();
+    QCOMPARE(first.key, "timestamp");
+    QCOMPARE(first.value, "1337");
+    QCOMPARE(first.createdAt.date(), QDate::currentDate());
 }
 
 QTEST_MAIN(StorageTest)
