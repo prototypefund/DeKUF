@@ -6,6 +6,17 @@ namespace {
 const QString userDir = ".dekuf";
 const QString dbFileName = "db.sqlite3";
 
+QSqlDatabase createDb(const QString& path)
+{
+    if (QSqlDatabase::connectionNames().count() > 0)
+        return QSqlDatabase::database();
+
+    QFileInfo(path).dir().mkpath(".");
+    auto db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(path);
+    return db;
+}
+
 bool execQuery(QSqlQuery& query)
 {
     auto result = query.exec();
@@ -29,11 +40,9 @@ void migrate()
 }
 
 SqliteStorage::SqliteStorage(const QString& databasePath)
-    : db(QSqlDatabase::addDatabase("QSQLITE"))
+    : db(createDb(databasePath))
 {
-    QFileInfo(databasePath).dir().mkpath(".");
-
-    db.setDatabaseName(databasePath);
+    // TODO: Exception instead of return code.
     if (!db.open())
         qDebug() << "Error: Unable to open database";
     migrate();
