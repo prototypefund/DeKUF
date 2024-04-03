@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QObject>
-#include <qtmetamacros.h>
 
 class Storage;
 
