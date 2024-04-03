@@ -1,5 +1,6 @@
-#include "sqlite_storage.hpp"
 #include <QtSql>
+
+#include "sqlite_storage.hpp"
 
 namespace {
 const QString userDir = ".dekuf";
