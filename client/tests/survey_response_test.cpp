@@ -2,7 +2,7 @@
 
 #include "../src/survey_response.hpp"
 
-#include "stubs/storageStub.hpp"
+#include "stubs/storage_stub.hpp"
 #include "survey_response_test.hpp"
 
 QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
