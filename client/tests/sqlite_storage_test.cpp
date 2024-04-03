@@ -2,28 +2,28 @@
 
 #include "../src/sqlite_storage.hpp"
 
-#include "storage_test.hpp"
+#include "sqlite_storage_test.hpp"
 
 namespace {
 const QString databasePath = "test-db.sqlite3";
 };
 
-void StorageTest::init() { storage = new SqliteStorage(databasePath); }
+void SqliteStorageTest::init() { storage = new SqliteStorage(databasePath); }
 
-void StorageTest::cleanup()
+void SqliteStorageTest::cleanup()
 {
     delete storage;
     QFile dbFile(databasePath);
     dbFile.remove();
 }
 
-void StorageTest::testListDataPointsInitiallyEmpty()
+void SqliteStorageTest::testListDataPointsInitiallyEmpty()
 {
     auto dataPoints = storage->listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 0);
 }
 
-void StorageTest::testAddAndListDataPoints()
+void SqliteStorageTest::testAddAndListDataPoints()
 {
     storage->addDataPoint("timestamp", "1337");
     auto dataPoints = storage->listDataPoints("timestamp");
@@ -34,4 +34,4 @@ void StorageTest::testAddAndListDataPoints()
     QCOMPARE(first.createdAt.date(), QDate::currentDate());
 }
 
-QTEST_MAIN(StorageTest)
+QTEST_MAIN(SqliteStorageTest)

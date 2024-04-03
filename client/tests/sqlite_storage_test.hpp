@@ -5,7 +5,7 @@
 
 class Storage;
 
-class StorageTest : public QObject {
+class SqliteStorageTest : public QObject {
     Q_OBJECT
 
 private:
