@@ -1,5 +1,3 @@
-#include "commissioner.hpp"
-
 #include "survey.hpp"
 
 Query::Query(const QString& dataKey)

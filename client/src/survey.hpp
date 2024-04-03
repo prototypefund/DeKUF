@@ -2,7 +2,7 @@
 
 #include <QtCore>
 
-class Commissioner;
+#include "commissioner.hpp"
 
 class Query {
 public:

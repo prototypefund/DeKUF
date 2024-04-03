@@ -2,9 +2,10 @@
 
 #include <QtCore>
 
-class Commisioner;
-class Survey;
-class SurveyResponse;
+#include "commissioner.hpp"
+#include "storage.hpp"
+#include "survey.hpp"
+#include "survey_response.hpp"
 
 class QueryResponse {
 public:

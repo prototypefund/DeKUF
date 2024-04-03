@@ -1,7 +1,3 @@
-#include "commissioner.hpp"
-#include "storage.hpp"
-#include "survey.hpp"
-
 #include "survey_response.hpp"
 
 QueryResponse::QueryResponse(const QString& dataKey, const QString& data)
