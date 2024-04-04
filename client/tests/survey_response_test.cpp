@@ -71,4 +71,19 @@ void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
     QCOMPARE(surveyResponse->commissioners.first()->name, "KDE");
 }
 
+void SurveyResponseTest::testNoSurveyResponseCreatedForWrongCommissioners()
+{
+    StorageStub storage;
+
+    Survey survey("testId", "testName");
+    survey.queries.append(QSharedPointer<Query>::create("testKey"));
+    survey.commissioners.append(QSharedPointer<Commissioner>::create("Wrong"));
+    storage.addDataPoint("testKey", "testValue");
+
+    auto surveyResponse = SurveyResponse::create(
+        QSharedPointer<Survey>::create(survey), storage);
+
+    QVERIFY(surveyResponse.isNull());
+}
+
 QTEST_MAIN(SurveyResponseTest)
