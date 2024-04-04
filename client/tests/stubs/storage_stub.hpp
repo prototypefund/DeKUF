@@ -16,7 +16,8 @@ public:
             matchingValues.push_back({ .value = dataPoint.second });
         return matchingValues;
     };
-    virtual void addDataPoint(const QString& dataKey, const QString& data)
+
+    void addDataPoint(const QString& dataKey, const QString& data)
     {
         dataPoints.push_back(QPair<QString, QString>(dataKey, data));
     }
