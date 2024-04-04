@@ -37,6 +37,22 @@ void SurveyResponseTest::testToByteArrayForResponse()
     QCOMPARE(queryResponseJsonObject.first()["data"].toString(), "123456789");
 }
 
+void SurveyResponseTest::testToAndFromByteArray()
+{
+    SurveyResponse response;
+    response.commissioners.append(QSharedPointer<Commissioner>::create("Foo"));
+    response.queryResponses.append(
+        QSharedPointer<QueryResponse>::create("timestamp", "123456789"));
+    auto json = response.toJsonByteArray();
+    auto deserialized = SurveyResponse::fromJsonByteArray(json);
+    QCOMPARE(response.commissioners.count(), 1);
+    QCOMPARE(
+        *response.commissioners.first(), *deserialized->commissioners.first());
+    QCOMPARE(response.queryResponses.count(), 1);
+    QCOMPARE(*response.queryResponses.first(),
+        *deserialized->queryResponses.first());
+}
+
 void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
 {
     StorageStub storage;

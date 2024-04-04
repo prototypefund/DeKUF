@@ -6,6 +6,7 @@
 class StorageStub : public Storage {
 private:
     QList<QPair<QString, QString>> dataPoints;
+    QList<QSharedPointer<SurveyResponse>> surveyResponses;
 
 public:
     QList<DataPoint> listDataPoints(const QString& key)
@@ -18,5 +19,16 @@ public:
     virtual void addDataPoint(const QString& dataKey, const QString& data)
     {
         dataPoints.push_back(QPair<QString, QString>(dataKey, data));
+    }
+
+    QList<QSharedPointer<SurveyResponse>> listSurveyResponses()
+    {
+        return surveyResponses;
+    }
+
+    void addSurveyResponse(const SurveyResponse& response)
+    {
+        surveyResponses.push_back(
+            QSharedPointer<SurveyResponse>::create(response));
     }
 };

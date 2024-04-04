@@ -71,6 +71,7 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray response = reply->readAll();
                 qDebug() << "Response:" << response;
+                storage.addSurveyResponse(*surveyResponse);
             } else {
                 QByteArray response = reply->readAll();
                 QString errorString = reply->errorString();

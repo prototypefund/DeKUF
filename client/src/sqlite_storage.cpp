@@ -1,5 +1,7 @@
 #include <QtSql>
 
+#include "survey_response.hpp"
+
 #include "sqlite_storage.hpp"
 
 namespace {
@@ -33,6 +35,13 @@ void migrate()
                   "    id INTEGER PRIMARY KEY,"
                   "    key TEXT,"
                   "    value TEXT,"
+                  "    created_at DATETIME"
+                  ")");
+    execQuery(query);
+
+    query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
+                  "    id INTEGER PRIMARY KEY,"
+                  "    data TEXT,"
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
@@ -77,5 +86,32 @@ void SqliteStorage::addDataPoint(const QString& key, const QString& value)
                   "    values (:key, :value, CURRENT_TIMESTAMP)");
     query.bindValue(":key", key);
     query.bindValue(":value", value);
+    execQuery(query);
+}
+
+QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses()
+{
+    QList<QSharedPointer<SurveyResponse>> responses;
+    QSqlQuery query;
+    query.prepare("SELECT data FROM survey_response");
+    if (!execQuery(query))
+        return responses;
+
+    while (query.next()) {
+        auto data = query.value(0).toByteArray();
+        QSharedPointer<SurveyResponse> response(
+            SurveyResponse::fromJsonByteArray(data));
+        responses.push_back(response);
+    }
+
+    return responses;
+}
+
+void SqliteStorage::addSurveyResponse(const SurveyResponse& response)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO survey_response (data, created_at)"
+                  "values (:data, CURRENT_TIMESTAMP)");
+    query.bindValue(":data", response.toJsonByteArray());
     execQuery(query);
 }

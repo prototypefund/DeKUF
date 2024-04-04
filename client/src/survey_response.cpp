@@ -6,6 +6,32 @@ QueryResponse::QueryResponse(const QString& dataKey, const QString& data)
 {
 }
 
+QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
+    QByteArray& responseData)
+{
+    auto response = QSharedPointer<SurveyResponse>::create();
+    auto surveyResponseObject = QJsonDocument::fromJson(responseData).object();
+
+    auto commissionerArray = surveyResponseObject["commissioners"].toArray();
+    for (auto commissionerItem : commissionerArray) {
+        auto commissionerObject = commissionerItem.toObject();
+        auto name = commissionerObject["name"].toString();
+        response->commissioners.append(
+            QSharedPointer<Commissioner>::create(name));
+    }
+
+    auto queryResponseArray = surveyResponseObject["queryResponses"].toArray();
+    for (auto queryResponseItem : queryResponseArray) {
+        auto queryResponseObject = queryResponseItem.toObject();
+        auto dataKey = queryResponseObject["dataKey"].toString();
+        auto data = queryResponseObject["data"].toString();
+        response->queryResponses.append(
+            QSharedPointer<QueryResponse>::create(dataKey, data));
+    }
+
+    return response;
+}
+
 QSharedPointer<SurveyResponse> SurveyResponse::create(
     QSharedPointer<Survey> survey, Storage& storage)
 {
@@ -32,7 +58,7 @@ QSharedPointer<SurveyResponse> SurveyResponse::create(
     return surveyResponse;
 }
 
-QByteArray SurveyResponse::toJsonByteArray()
+QByteArray SurveyResponse::toJsonByteArray() const
 {
     QJsonObject surveyJsonResponse;
     QJsonArray queryJsonResponses;

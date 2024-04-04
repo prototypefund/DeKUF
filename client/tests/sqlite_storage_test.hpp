@@ -15,4 +15,5 @@ private slots:
     void cleanup();
     void testListDataPointsInitiallyEmpty();
     void testAddAndListDataPoints();
+    void testAddAndListSurveyResponses();
 };

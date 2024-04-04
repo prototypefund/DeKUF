@@ -10,4 +10,9 @@ public:
         : name(name)
     {
     }
+
+    bool operator==(const Commissioner& other) const
+    {
+        return name == other.name;
+    }
 };

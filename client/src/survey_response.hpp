@@ -13,15 +13,23 @@ public:
     const QString data;
 
     QueryResponse(const QString& dataKey, const QString& data);
+
+    bool operator==(const QueryResponse& other) const
+    {
+        return dataKey == other.dataKey && data == other.data;
+    }
 };
 
 class SurveyResponse {
 public:
+    static QSharedPointer<SurveyResponse> fromJsonByteArray(
+        QByteArray& responseData);
+
     QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     static QSharedPointer<SurveyResponse> create(
         QSharedPointer<Survey> survey, Storage& storage);
 
-    QByteArray toJsonByteArray();
+    QByteArray toJsonByteArray() const;
 };
