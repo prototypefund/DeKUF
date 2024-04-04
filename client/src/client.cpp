@@ -8,12 +8,12 @@
 
 Client::Client(QObject* parent)
     : QObject(parent)
+    , manager(new QNetworkAccessManager(this))
 {
 }
 
 void Client::fetchSurveys()
 {
-    auto manager = new QNetworkAccessManager(this);
     QUrl url("http://localhost:8000/api/surveys");
     QNetworkRequest request(url);
     manager->get(request);
@@ -57,7 +57,6 @@ void Client::handleSurveysResponse(const QByteArray& data)
 
 void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
 {
-    auto manager = new QNetworkAccessManager(this);
     QUrl url("http://localhost:8000/api/survey-response/");
     QNetworkRequest request(url);
 

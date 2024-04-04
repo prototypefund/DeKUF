@@ -1,2 +1,2 @@
-Checks: 'modernize-*,-modernize-use-trailing-return-type,-modernize-pass-by-value'
+Checks: 'cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type,-modernize-pass-by-value'
 WarningsAsErrors: '*'
