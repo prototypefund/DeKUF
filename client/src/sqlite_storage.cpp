@@ -21,7 +21,7 @@ QSqlDatabase createDb(const QString& path)
 
 bool execQuery(QSqlQuery& query)
 {
-    auto result = query.exec();
+    const auto result = query.exec();
     // TODO: Exception instead of return code.
     if (!result)
         qDebug() << query.lastError();
@@ -98,7 +98,7 @@ QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
         return responses;
 
     while (query.next()) {
-        auto data = query.value(0).toByteArray();
+        const auto data = query.value(0).toByteArray();
         QSharedPointer<SurveyResponse> response(
             SurveyResponse::fromJsonByteArray(data));
         responses.push_back(response);

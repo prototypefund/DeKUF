@@ -7,24 +7,27 @@ QueryResponse::QueryResponse(const QString& dataKey, const QString& data)
 }
 
 QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
-    QByteArray& responseData)
+    const QByteArray& responseData)
 {
     auto response = QSharedPointer<SurveyResponse>::create();
-    auto surveyResponseObject = QJsonDocument::fromJson(responseData).object();
+    const auto surveyResponseObject
+        = QJsonDocument::fromJson(responseData).object();
 
-    auto commissionerArray = surveyResponseObject["commissioners"].toArray();
-    for (auto commissionerItem : commissionerArray) {
-        auto commissionerObject = commissionerItem.toObject();
-        auto name = commissionerObject["name"].toString();
+    const auto commissionerArray
+        = surveyResponseObject["commissioners"].toArray();
+    for (const auto& commissionerItem : commissionerArray) {
+        const auto commissionerObject = commissionerItem.toObject();
+        const auto name = commissionerObject["name"].toString();
         response->commissioners.append(
             QSharedPointer<Commissioner>::create(name));
     }
 
-    auto queryResponseArray = surveyResponseObject["queryResponses"].toArray();
-    for (auto queryResponseItem : queryResponseArray) {
-        auto queryResponseObject = queryResponseItem.toObject();
-        auto dataKey = queryResponseObject["dataKey"].toString();
-        auto data = queryResponseObject["data"].toString();
+    const auto queryResponseArray
+        = surveyResponseObject["queryResponses"].toArray();
+    for (const auto& queryResponseItem : queryResponseArray) {
+        const auto queryResponseObject = queryResponseItem.toObject();
+        const auto dataKey = queryResponseObject["dataKey"].toString();
+        const auto data = queryResponseObject["data"].toString();
         response->queryResponses.append(
             QSharedPointer<QueryResponse>::create(dataKey, data));
     }
@@ -47,8 +50,8 @@ QSharedPointer<SurveyResponse> SurveyResponse::create(
     surveyResponse->commissioners.append(
         QSharedPointer<Commissioner>::create(kdeName));
 
-    for (auto query : survey->queries) {
-        auto dataPoints = storage.listDataPoints(query->dataKey);
+    for (const auto& query : survey->queries) {
+        const auto dataPoints = storage.listDataPoints(query->dataKey);
         if (dataPoints.count() == 0)
             continue;
         surveyResponse->queryResponses.append(
@@ -64,14 +67,14 @@ QByteArray SurveyResponse::toJsonByteArray() const
     QJsonArray queryJsonResponses;
     QJsonArray commissionersJson;
 
-    for (auto queryResponse : queryResponses) {
+    for (const auto& queryResponse : queryResponses) {
         QJsonObject queryJsonResponse;
         queryJsonResponse["dataKey"] = queryResponse->dataKey;
         queryJsonResponse["data"] = queryResponse->data;
         queryJsonResponses.push_back(queryJsonResponse);
     }
 
-    for (auto commissioner : commissioners) {
+    for (const auto& commissioner : commissioners) {
         QJsonObject commissionerJson;
         commissionerJson["name"] = commissioner->name;
         commissionersJson.push_back(commissionerJson);

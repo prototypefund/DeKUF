@@ -20,16 +20,16 @@ void SqliteStorageTest::cleanup()
 
 void SqliteStorageTest::testListDataPointsInitiallyEmpty()
 {
-    auto dataPoints = storage->listDataPoints("timestamp");
+    const auto dataPoints = storage->listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 0);
 }
 
 void SqliteStorageTest::testAddAndListDataPoints()
 {
     storage->addDataPoint("timestamp", "1337");
-    auto dataPoints = storage->listDataPoints("timestamp");
+    const auto dataPoints = storage->listDataPoints("timestamp");
     QCOMPARE(dataPoints.count(), 1);
-    auto first = dataPoints.first();
+    const auto first = dataPoints.first();
     QCOMPARE(first.key, "timestamp");
     QCOMPARE(first.value, "1337");
     QCOMPARE(first.createdAt.date(), QDate::currentDate());

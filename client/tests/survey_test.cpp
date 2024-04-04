@@ -6,15 +6,15 @@
 
 void SurveyTest::testListFromByteArrayForEmptyArray()
 {
-    auto data = QString("[]").toUtf8();
-    auto surveys = Survey::listFromByteArray(data);
+    const auto data = QString("[]").toUtf8();
+    const auto surveys = Survey::listFromByteArray(data);
     QCOMPARE(surveys.count(), 0);
 }
 
 void SurveyTest::testListFromByteArrayForSingleSurvey()
 {
-    auto data = QString(R"([{"id": "1234" ,"name": "test"}])").toUtf8();
-    auto surveys = Survey::listFromByteArray(data);
+    const auto data = QString(R"([{"id": "1234" ,"name": "test"}])").toUtf8();
+    const auto surveys = Survey::listFromByteArray(data);
     QCOMPARE(surveys.count(), 1);
     QCOMPARE(surveys.first()->id, "1234");
     QCOMPARE(surveys.first()->name, "test");
@@ -22,13 +22,13 @@ void SurveyTest::testListFromByteArrayForSingleSurvey()
 
 void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
 {
-    auto data = QString("[{\"id\": \"1234\", \"name\": \"test\", \"queries\": "
-                        "[{\"dataKey\": \"timestamp\"}]}]")
-                    .toUtf8();
-    auto surveys = Survey::listFromByteArray(data);
+    const auto data = QString("[{\"id\": \"1234\", \"name\": \"test\", "
+                              "\"queries\": [{\"dataKey\": \"timestamp\"}]}]")
+                          .toUtf8();
+    const auto surveys = Survey::listFromByteArray(data);
 
     QCOMPARE(surveys.count(), 1);
-    auto survey = surveys.first();
+    const auto survey = surveys.first();
 
     QCOMPARE(survey->id, "1234");
     QCOMPARE(survey->name, "test");

@@ -20,7 +20,7 @@ void Client::fetchSurveys()
     connect(
         manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
             if (reply->error() == QNetworkReply::NoError) {
-                auto responseData = reply->readAll();
+                const auto responseData = reply->readAll();
                 handleSurveysResponse(responseData);
             } else {
                 qCritical() << "Error:" << reply->errorString();
@@ -35,7 +35,7 @@ void Client::run()
     storage.addDataPoint(
         "timestamp", QString::number(QDateTime::currentSecsSinceEpoch()));
     qDebug() << "Stored timestamps: ";
-    for (auto dataPoint : storage.listDataPoints("timestamp"))
+    for (const auto& dataPoint : storage.listDataPoints("timestamp"))
         qDebug() << "-" << dataPoint.value;
     fetchSurveys();
 }
@@ -45,9 +45,9 @@ void Client::handleSurveysResponse(const QByteArray& data)
     using Qt::endl;
 
     QTextStream cout(stdout);
-    auto surveys = Survey::listFromByteArray(data);
-    for (auto survey : surveys) {
-        auto surveyResponse = SurveyResponse::create(survey, storage);
+    const auto surveys = Survey::listFromByteArray(data);
+    for (const auto& survey : surveys) {
+        const auto surveyResponse = SurveyResponse::create(survey, storage);
         if (surveyResponse == nullptr
             || surveyResponse->queryResponses.isEmpty())
             continue;

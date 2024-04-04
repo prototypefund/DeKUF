@@ -23,7 +23,7 @@ public:
 class SurveyResponse {
 public:
     static QSharedPointer<SurveyResponse> fromJsonByteArray(
-        QByteArray& responseData);
+        const QByteArray& responseData);
 
     QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<QueryResponse>> queryResponses;

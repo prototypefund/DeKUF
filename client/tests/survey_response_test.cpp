@@ -7,7 +7,7 @@
 
 QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
 {
-    auto jsonQueriesValue = jsonSurvey["queryResponses"];
+    const auto jsonQueriesValue = jsonSurvey["queryResponses"];
     return jsonQueriesValue.toArray();
 }
 
@@ -15,7 +15,7 @@ void SurveyResponseTest::testToByteArrayForEmptyResponse()
 {
     SurveyResponse surveyResponse;
 
-    auto jsonSurvey
+    const auto jsonSurvey
         = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
 
     QCOMPARE(readQueriesFromSurveyJsonObject(jsonSurvey).count(), 0);
@@ -28,9 +28,10 @@ void SurveyResponseTest::testToByteArrayForResponse()
     surveyResponse.queryResponses.append(
         QSharedPointer<QueryResponse>::create("timestamp", "123456789"));
 
-    auto jsonSurvey
+    const auto jsonSurvey
         = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
-    auto queryResponseJsonObject = readQueriesFromSurveyJsonObject(jsonSurvey);
+    const auto queryResponseJsonObject
+        = readQueriesFromSurveyJsonObject(jsonSurvey);
 
     QCOMPARE(
         queryResponseJsonObject.first()["dataKey"].toString(), "timestamp");
@@ -43,8 +44,8 @@ void SurveyResponseTest::testToAndFromByteArray()
     response.commissioners.append(QSharedPointer<Commissioner>::create("Foo"));
     response.queryResponses.append(
         QSharedPointer<QueryResponse>::create("timestamp", "123456789"));
-    auto json = response.toJsonByteArray();
-    auto deserialized = SurveyResponse::fromJsonByteArray(json);
+    const auto json = response.toJsonByteArray();
+    const auto deserialized = SurveyResponse::fromJsonByteArray(json);
     QCOMPARE(response.commissioners.count(), 1);
     QCOMPARE(
         *response.commissioners.first(), *deserialized->commissioners.first());
@@ -62,7 +63,7 @@ void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
     survey.commissioners.append(QSharedPointer<Commissioner>::create("KDE"));
     storage.addDataPoint("testKey", "testValue");
 
-    auto surveyResponse = SurveyResponse::create(
+    const auto surveyResponse = SurveyResponse::create(
         QSharedPointer<Survey>::create(survey), storage);
 
     QVERIFY(!surveyResponse.isNull());
@@ -80,7 +81,7 @@ void SurveyResponseTest::testNoSurveyResponseCreatedForWrongCommissioners()
     survey.commissioners.append(QSharedPointer<Commissioner>::create("Wrong"));
     storage.addDataPoint("testKey", "testValue");
 
-    auto surveyResponse = SurveyResponse::create(
+    const auto surveyResponse = SurveyResponse::create(
         QSharedPointer<Survey>::create(survey), storage);
 
     QVERIFY(surveyResponse.isNull());

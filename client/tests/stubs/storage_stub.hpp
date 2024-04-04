@@ -12,7 +12,7 @@ public:
     QList<DataPoint> listDataPoints(const QString& key) const
     {
         QList<DataPoint> matchingValues;
-        for (auto dataPoint : dataPoints)
+        for (const auto& dataPoint : dataPoints)
             matchingValues.push_back({ .value = dataPoint.second });
         return matchingValues;
     };

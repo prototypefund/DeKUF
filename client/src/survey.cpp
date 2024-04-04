@@ -8,23 +8,23 @@ Query::Query(const QString& dataKey)
 QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
 {
     QList<QSharedPointer<Survey>> surveys;
-    auto document = QJsonDocument::fromJson(data);
-    for (auto item : document.array()) {
-        auto object = item.toObject();
-        auto id = object["id"].toString();
-        auto name = object["name"].toString();
+    const auto document = QJsonDocument::fromJson(data);
+    for (const auto& item : document.array()) {
+        const auto object = item.toObject();
+        const auto id = object["id"].toString();
+        const auto name = object["name"].toString();
         QSharedPointer<Survey> survey(new Survey(id, name));
 
-        for (auto item : object["commissioners"].toArray()) {
-            auto object = item.toObject();
-            auto name = object["name"].toString();
+        for (const auto& item : object["commissioners"].toArray()) {
+            const auto object = item.toObject();
+            const auto name = object["name"].toString();
             survey->commissioners.push_back(
                 QSharedPointer<Commissioner>::create(name));
         }
 
-        for (auto item : object["queries"].toArray()) {
-            auto object = item.toObject();
-            auto dataKey = object["dataKey"].toString();
+        for (const auto& item : object["queries"].toArray()) {
+            const auto object = item.toObject();
+            const auto dataKey = object["dataKey"].toString();
             survey->queries.push_back(QSharedPointer<Query>::create(dataKey));
         }
         surveys.push_back(survey);
