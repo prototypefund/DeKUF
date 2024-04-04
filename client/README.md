@@ -18,7 +18,8 @@ stage.
 
 For the moment, you'll need to manually install a few dependencies:
 
-1. A C++ toolchain (e.g. GCC, LLVM or MSVC)
+1. A C++ toolchain (e.g. GCC, LLVM or MSVC) - note that at the time of writing,
+   you will have to use Clang for the linting to work (see below).
 2. [CMake](https://cmake.org/)
 3. The [Qt framework](https://www.qt.io/product/qt6), version 6.2.4 (or later,
    presumably)
@@ -27,7 +28,9 @@ For the moment, you'll need to manually install a few dependencies:
 
 #### Debian/Ubuntu
 
-    sudo apt install build-essential cmake qt6-base-dev designer-qt6 clang-format
+    sudo apt install build-essential clang cmake qt6-base-dev clang-format clang-tidy designer-qt6
+    echo 'export CXX=/usr/bin/clang++' >> ~/.profile
+    . ~/.profile
 
 ### Building
 

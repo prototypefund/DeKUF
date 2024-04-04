@@ -5,7 +5,8 @@ test-client:
         - >
             apt-get update -yqq &&
             apt-get install -yqq
-            cmake qt6-base-dev clang-format
+            cmake clang qt6-base-dev clang-tidy clang-format
+        - update-alternatives --set c++ /usr/bin/clang++
         - cd client
     script:
         - make lint
