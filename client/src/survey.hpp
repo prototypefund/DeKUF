@@ -8,7 +8,7 @@ class Query {
 public:
     const QString dataKey;
 
-    Query(const QString& dataKey);
+    explicit Query(const QString& dataKey);
 };
 
 class Survey {

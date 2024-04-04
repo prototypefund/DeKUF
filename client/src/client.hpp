@@ -11,7 +11,7 @@ class Client : public QObject {
     Q_OBJECT
 
 public:
-    Client(QObject* parent = 0);
+    explicit Client(QObject* parent = 0);
     void fetchSurveys();
 
 public slots:
