@@ -13,8 +13,9 @@ struct DataPoint {
 class Storage {
 public:
     virtual ~Storage() {};
-    virtual QList<DataPoint> listDataPoints(const QString& key) = 0;
+    virtual QList<DataPoint> listDataPoints(const QString& key) const = 0;
     virtual void addDataPoint(const QString& key, const QString& value) = 0;
-    virtual QList<QSharedPointer<SurveyResponse>> listSurveyResponses() = 0;
+    virtual QList<QSharedPointer<SurveyResponse>>
+    listSurveyResponses() const = 0;
     virtual void addSurveyResponse(const SurveyResponse& response) = 0;
 };

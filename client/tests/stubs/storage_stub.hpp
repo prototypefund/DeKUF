@@ -9,7 +9,7 @@ private:
     QList<QSharedPointer<SurveyResponse>> surveyResponses;
 
 public:
-    QList<DataPoint> listDataPoints(const QString& key)
+    QList<DataPoint> listDataPoints(const QString& key) const
     {
         QList<DataPoint> matchingValues;
         for (auto dataPoint : dataPoints)
@@ -22,7 +22,7 @@ public:
         dataPoints.push_back(QPair<QString, QString>(dataKey, data));
     }
 
-    QList<QSharedPointer<SurveyResponse>> listSurveyResponses()
+    QList<QSharedPointer<SurveyResponse>> listSurveyResponses() const
     {
         return surveyResponses;
     }

@@ -63,7 +63,7 @@ SqliteStorage::SqliteStorage()
 {
 }
 
-QList<DataPoint> SqliteStorage::listDataPoints(const QString& key)
+QList<DataPoint> SqliteStorage::listDataPoints(const QString& key) const
 {
     QList<DataPoint> dataPoints;
     QSqlQuery query;
@@ -89,7 +89,7 @@ void SqliteStorage::addDataPoint(const QString& key, const QString& value)
     execQuery(query);
 }
 
-QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses()
+QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
 {
     QList<QSharedPointer<SurveyResponse>> responses;
     QSqlQuery query;

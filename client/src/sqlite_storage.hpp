@@ -9,9 +9,9 @@ public:
     explicit SqliteStorage(const QString& databasePath);
     SqliteStorage();
 
-    QList<DataPoint> listDataPoints(const QString& key);
+    QList<DataPoint> listDataPoints(const QString& key) const;
     void addDataPoint(const QString& key, const QString& value);
-    QList<QSharedPointer<SurveyResponse>> listSurveyResponses();
+    QList<QSharedPointer<SurveyResponse>> listSurveyResponses() const;
     void addSurveyResponse(const SurveyResponse& response);
 
 private:
