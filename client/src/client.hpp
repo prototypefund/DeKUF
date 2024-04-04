@@ -26,6 +26,4 @@ private:
 
     void handleSurveysResponse(const QByteArray& data);
     void postSurveyResponse(QSharedPointer<SurveyResponse>);
-    QSharedPointer<SurveyResponse> createSurveyResponse(
-        QSharedPointer<Survey> survey);
 };
