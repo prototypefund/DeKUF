@@ -63,8 +63,7 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
 
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    QNetworkReply* reply
-        = manager->post(request, surveyResponse->toJsonByteArray());
+    manager->post(request, surveyResponse->toJsonByteArray());
 
     connect(
         manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
