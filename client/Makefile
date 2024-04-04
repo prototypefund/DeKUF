@@ -19,11 +19,11 @@ build:
 
 .PHONY: lint
 lint:
-	@$(call clang_format,"--dry-run")
+	$(call clang_format,"--dry-run")
 
 .PHONY: lint-fix
 lint-fix:
-	@$(call clang_format,"-i")
+	$(call clang_format,"-i")
 
 .PHONY: clean
 clean:
