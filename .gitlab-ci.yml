@@ -9,8 +9,8 @@ test-client:
         - update-alternatives --set c++ /usr/bin/clang++
         - cd client
     script:
-        - make lint
         - make
+        - make lint
         - make test
     rules:
         - changes:
