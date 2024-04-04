@@ -20,7 +20,7 @@ build:
 .PHONY: lint
 lint:
 	$(call clang_format,"--dry-run")
-	run-clang-tidy -p build
+	run-clang-tidy -q -p build
 
 .PHONY: lint-fix
 lint-fix:
