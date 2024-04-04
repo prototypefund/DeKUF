@@ -13,7 +13,7 @@ void SurveyTest::testListFromByteArrayForEmptyArray()
 
 void SurveyTest::testListFromByteArrayForSingleSurvey()
 {
-    auto data = QString("[{\"id\": \"1234\" ,\"name\": \"test\"}]").toUtf8();
+    auto data = QString(R"([{"id": "1234" ,"name": "test"}])").toUtf8();
     auto surveys = Survey::listFromByteArray(data);
     QCOMPARE(surveys.count(), 1);
     QCOMPARE(surveys.first()->id, "1234");

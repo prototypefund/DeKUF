@@ -41,7 +41,7 @@ QSharedPointer<SurveyResponse> SurveyResponse::create(
             [&](const QSharedPointer<Commissioner>& commissioner) {
                 return commissioner->name == kdeName;
             }))
-        return QSharedPointer<SurveyResponse>();
+        return {};
 
     auto surveyResponse = QSharedPointer<SurveyResponse>::create();
     surveyResponse->commissioners.append(
