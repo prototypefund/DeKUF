@@ -50,3 +50,11 @@ it before committing any changes:
 It can fix issues directly, should save you some time:
 
     make lint-fix
+
+### Running the daemon
+
+    make run-daemon
+
+### Running the UI
+
+    make run-ui

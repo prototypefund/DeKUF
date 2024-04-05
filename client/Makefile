@@ -26,6 +26,14 @@ lint:
 lint-fix:
 	$(call clang_format,"-i")
 
+.PHONY: run-daemon
+run-daemon:
+	build/dekuf-client
+
+.PHONY: run-ui
+run-ui:
+	build/dekuf-client-ui
+
 .PHONY: clean
 clean:
 	$(RM) -r build
