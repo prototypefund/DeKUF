@@ -1,11 +1,1 @@
-function(add_executable_test source)
-    get_filename_component(name ${source} NAME_WE)
-    add_executable(${name} ${source})
-    target_link_libraries(${name} PRIVATE dekuf-client-lib Qt::Test)
-    add_test(NAME ${name} COMMAND ${name})
-endfunction()
-
-file(GLOB DEKUF_CLIENT_TESTS CONFIGURE_DEPENDS "*_test.cpp")
-foreach(TEST ${DEKUF_CLIENT_TESTS})
-    add_executable_test(${TEST})
-endforeach()
+add_subdirectory(daemon)

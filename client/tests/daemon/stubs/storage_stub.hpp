@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../src/storage.hpp"
+#include "../../../src/daemon/storage.hpp"
 #include <QtCore>
 
 class StorageStub : public Storage {

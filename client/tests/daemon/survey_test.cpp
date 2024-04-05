@@ -1,6 +1,6 @@
 #include <QTest>
 
-#include "../src/survey.hpp"
+#include "../../src/daemon/survey.hpp"
 
 #include "survey_test.hpp"
 
