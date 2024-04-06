@@ -13,7 +13,7 @@ QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
         const auto object = item.toObject();
         const auto id = object["id"].toString();
         const auto name = object["name"].toString();
-        QSharedPointer<Survey> survey(new Survey(id, name));
+        auto survey = QSharedPointer<Survey>::create(id, name);
 
         for (const auto& item : object["commissioners"].toArray()) {
             const auto object = item.toObject();
