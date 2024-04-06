@@ -1,13 +1,8 @@
-file(GLOB DEKUF_CLIENT_LIB_SRC CONFIGURE_DEPENDS "*.cpp" "*.hpp")
-list(FILTER DEKUF_CLIENT_LIB_SRC EXCLUDE REGEX "/main\\.cpp$")
-
-add_library(dekuf-client-lib ${DEKUF_CLIENT_LIB_SRC})
-target_link_libraries(dekuf-client-lib PUBLIC
+file(GLOB DEKUF_CLIENT_SRC CONFIGURE_DEPENDS "*.cpp" "*.hpp")
+add_executable(dekuf-client ${DEKUF_CLIENT_SRC})
+target_link_libraries(dekuf-client PRIVATE
     Qt6::Core
     Qt6::Network
-    Qt6::Sql
+    dekuf-client-core
 )
-
-add_executable(dekuf-client main.cpp)
-target_link_libraries(dekuf-client PRIVATE dekuf-client-lib)
 set_target_properties(dekuf-client PROPERTIES RUNTIME_OUTPUT_DIRECTORY "../..")

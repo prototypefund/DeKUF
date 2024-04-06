@@ -2,9 +2,10 @@
 
 #include <QtCore>
 
-#include "sqlite_storage.hpp"
-#include "survey.hpp"
-#include "survey_response.hpp"
+#include <core/sqlite_storage.hpp>
+#include <core/survey.hpp>
+#include <core/survey_response.hpp>
+
 class QNetworkAccessManager;
 
 class Client : public QObject {

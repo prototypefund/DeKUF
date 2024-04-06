@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../../src/daemon/storage.hpp"
 #include <QtCore>
+#include <core/storage.hpp>
 
 class StorageStub : public Storage {
 private:

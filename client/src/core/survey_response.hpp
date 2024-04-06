@@ -28,6 +28,7 @@ public:
     QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
+    // TODO: This logic seems better suited for daemon than core
     static QSharedPointer<SurveyResponse> create(
         QSharedPointer<Survey> survey, Storage& storage);
 

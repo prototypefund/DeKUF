@@ -1,7 +1,7 @@
 #include <QTest>
 
-#include "../../src/daemon/sqlite_storage.hpp"
-#include "../../src/daemon/survey_response.hpp"
+#include <core/sqlite_storage.hpp>
+#include <core/survey_response.hpp>
 
 #include "sqlite_storage_test.hpp"
 

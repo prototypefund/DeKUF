@@ -3,8 +3,6 @@
 #include <QtNetwork>
 
 #include "client.hpp"
-#include "survey.hpp"
-#include "survey_response.hpp"
 
 Client::Client(QObject* parent)
     : QObject(parent)

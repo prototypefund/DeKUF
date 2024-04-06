@@ -1,9 +1,8 @@
 #include "main_window.hpp"
 #include "ui_main_window.h"
 
-// TODO: Move *Storage and SurveyResponse to a dedicated "core" library instead.
-#include "../daemon/sqlite_storage.hpp"
-#include "../daemon/survey_response.hpp"
+#include <core/sqlite_storage.hpp>
+#include <core/survey_response.hpp>
 
 namespace {
 void setupTableWidget(QTableWidget& tableWidget)
