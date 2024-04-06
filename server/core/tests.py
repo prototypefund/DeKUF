@@ -20,7 +20,7 @@ class SerializersTestCase(TestCase):
         self.survey_response_data = {
             "commissioners": [self.commissioner_data],
             "queryResponses": [
-                {"data_key": "question1", "data": {"answer": "Yes"}}
+                {"dataKey": "question1", "data": {"answer": "Yes"}}
             ],
         }
 
@@ -30,7 +30,6 @@ class SerializersTestCase(TestCase):
             serializer.data["name"], self.commissioner_data["name"]
         )
 
-    @unittest.skip("Needs fixing")
     def test_survey_response_serializer(self):
         serializer = SurveyResponseSerializer(data=self.survey_response_data)
         is_valid = serializer.is_valid()
