@@ -3,7 +3,7 @@
 define clang_format
 	find src tests \
 		\( -name "*.cpp" -or -name "*.hpp" \) \
-	-exec clang-format $(1) {} \;
+		-exec clang-format $(1) {} +
 endef
 
 .PHONY: all
@@ -19,12 +19,12 @@ build:
 
 .PHONY: lint
 lint:
-	$(call clang_format,"--dry-run")
+	$(call clang_format,--dry-run -Werror)
 	run-clang-tidy -q -p build
 
 .PHONY: lint-fix
 lint-fix:
-	$(call clang_format,"-i")
+	$(call clang_format,-i)
 
 .PHONY: run-daemon
 run-daemon:
