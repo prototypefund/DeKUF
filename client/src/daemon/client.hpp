@@ -2,7 +2,7 @@
 
 #include <QtCore>
 
-#include <core/sqlite_storage.hpp>
+#include <core/storage.hpp>
 #include <core/survey.hpp>
 #include <core/survey_response.hpp>
 
@@ -11,8 +11,10 @@ class QNetworkAccessManager;
 class Client : public QObject {
     Q_OBJECT
 
+    friend class ClientTest;
+
 public:
-    explicit Client(QObject* parent = 0);
+    Client(QObject* parent, QSharedPointer<Storage> storage);
     void fetchSurveys();
 
 public slots:
@@ -22,9 +24,11 @@ signals:
     void finished();
 
 private:
-    SqliteStorage storage;
+    QSharedPointer<Storage> storage;
     QNetworkAccessManager* manager;
 
     void handleSurveysResponse(const QByteArray& data);
+    QSharedPointer<SurveyResponse> createSurveyResponse(
+        const Survey& survey) const;
     void postSurveyResponse(QSharedPointer<SurveyResponse>);
 };

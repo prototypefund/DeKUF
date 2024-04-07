@@ -4,8 +4,9 @@
 
 #include "client.hpp"
 
-Client::Client(QObject* parent)
+Client::Client(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
+    , storage(storage)
     , manager(new QNetworkAccessManager(this))
 {
 }
@@ -30,10 +31,10 @@ void Client::fetchSurveys()
 
 void Client::run()
 {
-    storage.addDataPoint(
+    storage->addDataPoint(
         "timestamp", QString::number(QDateTime::currentSecsSinceEpoch()));
     qDebug() << "Stored timestamps: ";
-    for (const auto& dataPoint : storage.listDataPoints("timestamp"))
+    for (const auto& dataPoint : storage->listDataPoints("timestamp"))
         qDebug() << "-" << dataPoint.value;
     fetchSurveys();
 }
@@ -45,12 +46,38 @@ void Client::handleSurveysResponse(const QByteArray& data)
     QTextStream cout(stdout);
     const auto surveys = Survey::listFromByteArray(data);
     for (const auto& survey : surveys) {
-        const auto surveyResponse = SurveyResponse::create(survey, storage);
+        const auto surveyResponse = createSurveyResponse(*survey);
         if (surveyResponse == nullptr
             || surveyResponse->queryResponses.isEmpty())
             continue;
         postSurveyResponse(surveyResponse);
     }
+}
+
+QSharedPointer<SurveyResponse> Client::createSurveyResponse(
+    const Survey& survey) const
+{
+    // Only KDE allowed as commissioner
+    QString kdeName("KDE");
+    if (!std::any_of(survey.commissioners.begin(), survey.commissioners.end(),
+            [&](const QSharedPointer<Commissioner>& commissioner) {
+                return commissioner->name == kdeName;
+            }))
+        return {};
+
+    auto surveyResponse = QSharedPointer<SurveyResponse>::create();
+    surveyResponse->commissioners.append(
+        QSharedPointer<Commissioner>::create(kdeName));
+
+    for (const auto& query : survey.queries) {
+        const auto dataPoints = storage->listDataPoints(query->dataKey);
+        if (dataPoints.count() == 0)
+            continue;
+        surveyResponse->queryResponses.append(
+            QSharedPointer<QueryResponse>::create(
+                query->dataKey, dataPoints.first().value));
+    }
+    return surveyResponse;
 }
 
 void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
@@ -67,7 +94,7 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray response = reply->readAll();
                 qDebug() << "Response:" << response;
-                storage.addSurveyResponse(*surveyResponse);
+                storage->addSurveyResponse(*surveyResponse);
             } else {
                 QByteArray response = reply->readAll();
                 QString errorString = reply->errorString();

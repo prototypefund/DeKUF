@@ -35,32 +35,6 @@ QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
     return response;
 }
 
-QSharedPointer<SurveyResponse> SurveyResponse::create(
-    QSharedPointer<Survey> survey, Storage& storage)
-{
-    // Only KDE allowed as commissioner
-    QString kdeName("KDE");
-    if (!std::any_of(survey->commissioners.begin(), survey->commissioners.end(),
-            [&](const QSharedPointer<Commissioner>& commissioner) {
-                return commissioner->name == kdeName;
-            }))
-        return {};
-
-    auto surveyResponse = QSharedPointer<SurveyResponse>::create();
-    surveyResponse->commissioners.append(
-        QSharedPointer<Commissioner>::create(kdeName));
-
-    for (const auto& query : survey->queries) {
-        const auto dataPoints = storage.listDataPoints(query->dataKey);
-        if (dataPoints.count() == 0)
-            continue;
-        surveyResponse->queryResponses.append(
-            QSharedPointer<QueryResponse>::create(
-                query->dataKey, dataPoints.first().value));
-    }
-    return surveyResponse;
-}
-
 QByteArray SurveyResponse::toJsonByteArray() const
 {
     QJsonObject surveyJsonResponse;

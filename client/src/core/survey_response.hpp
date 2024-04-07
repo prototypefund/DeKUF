@@ -3,8 +3,6 @@
 #include <QtCore>
 
 #include "commissioner.hpp"
-#include "storage.hpp"
-#include "survey.hpp"
 #include "survey_response.hpp"
 
 class QueryResponse {
@@ -27,10 +25,6 @@ public:
 
     QList<QSharedPointer<Commissioner>> commissioners;
     QList<QSharedPointer<QueryResponse>> queryResponses;
-
-    // TODO: This logic seems better suited for daemon than core
-    static QSharedPointer<SurveyResponse> create(
-        QSharedPointer<Survey> survey, Storage& storage);
 
     QByteArray toJsonByteArray() const;
 };

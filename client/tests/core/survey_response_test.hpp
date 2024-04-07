@@ -9,6 +9,4 @@ private slots:
     void testToByteArrayForEmptyResponse();
     void testToByteArrayForResponse();
     void testToAndFromByteArray();
-    void testCreateSurveyResponseSucceedsForRightCommissioners();
-    void testNoSurveyResponseCreatedForWrongCommissioners();
 };

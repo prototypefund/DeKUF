@@ -2,7 +2,6 @@
 
 #include <core/survey_response.hpp>
 
-#include "stubs/storage_stub.hpp"
 #include "survey_response_test.hpp"
 
 QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
@@ -52,39 +51,6 @@ void SurveyResponseTest::testToAndFromByteArray()
     QCOMPARE(response.queryResponses.count(), 1);
     QCOMPARE(*response.queryResponses.first(),
         *deserialized->queryResponses.first());
-}
-
-void SurveyResponseTest::testCreateSurveyResponseSucceedsForRightCommissioners()
-{
-    StorageStub storage;
-
-    Survey survey("testId", "testName");
-    survey.queries.append(QSharedPointer<Query>::create("testKey"));
-    survey.commissioners.append(QSharedPointer<Commissioner>::create("KDE"));
-    storage.addDataPoint("testKey", "testValue");
-
-    const auto surveyResponse = SurveyResponse::create(
-        QSharedPointer<Survey>::create(survey), storage);
-
-    QVERIFY(!surveyResponse.isNull());
-    QCOMPARE(surveyResponse->queryResponses.first()->dataKey, "testKey");
-    QCOMPARE(surveyResponse->queryResponses.first()->data, "testValue");
-    QCOMPARE(surveyResponse->commissioners.first()->name, "KDE");
-}
-
-void SurveyResponseTest::testNoSurveyResponseCreatedForWrongCommissioners()
-{
-    StorageStub storage;
-
-    Survey survey("testId", "testName");
-    survey.queries.append(QSharedPointer<Query>::create("testKey"));
-    survey.commissioners.append(QSharedPointer<Commissioner>::create("Wrong"));
-    storage.addDataPoint("testKey", "testValue");
-
-    const auto surveyResponse = SurveyResponse::create(
-        QSharedPointer<Survey>::create(survey), storage);
-
-    QVERIFY(surveyResponse.isNull());
 }
 
 QTEST_MAIN(SurveyResponseTest)
