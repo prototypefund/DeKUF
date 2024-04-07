@@ -39,10 +39,9 @@ void SqliteStorageTest::testAddAndListSurveyResponses()
 {
     QCOMPARE(storage->listSurveyResponses().count(), 0);
 
-    auto survey = QSharedPointer<Survey>::create("id", "name");
-    survey->commissioners.append(QSharedPointer<Commissioner>::create("KDE"));
-    auto response = SurveyResponse::create(survey, *storage);
-    storage->addSurveyResponse(*response);
+    SurveyResponse response;
+    response.commissioners.append(QSharedPointer<Commissioner>::create("Foo"));
+    storage->addSurveyResponse(response);
 
     QCOMPARE(storage->listSurveyResponses().count(), 1);
 }
