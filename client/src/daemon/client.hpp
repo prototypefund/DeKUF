@@ -3,8 +3,9 @@
 #include <QtCore>
 
 #include <core/storage.hpp>
-#include <core/survey.hpp>
 #include <core/survey_response.hpp>
+
+#include "survey.hpp"
 
 class QNetworkAccessManager;
 
