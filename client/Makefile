@@ -22,8 +22,8 @@ lint:
 	$(call clang_format,--dry-run -Werror)
 	run-clang-tidy -q -p build
 
-.PHONY: lint-fix
-lint-fix:
+.PHONY: format
+format:
 	$(call clang_format,-i)
 
 .PHONY: run-daemon

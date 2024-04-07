@@ -47,9 +47,9 @@ it before committing any changes:
 
     make lint
 
-It can fix issues directly, should save you some time:
+To comply with the formatting rules, run:
 
-    make lint-fix
+    make format
 
 ### Running the daemon
 
