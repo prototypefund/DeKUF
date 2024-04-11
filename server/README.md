@@ -13,19 +13,15 @@ stage.
 
 ### Requirements
 
-Just Python 3.10.
+Just Python 3.10 and Poetry >= 0.12 for dependency management
 
-### Creating the virtual environment
+### Installing poetry dependencies
 
-    python3 -m venv venv
+    poetry install
 
-### Activating the virtual environment
+### Activate the poetry virtual env
 
-    . venv/bin/activate
-
-### Installing the dependencies
-
-    pip install -r requirements.txt
+    poetry shell
 
 ### Migrating the database
 

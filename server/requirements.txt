@@ -1,5 +1,0 @@
-black==24.2.0
-Django~=4.2.11
-isort==5.13.2
-mypy-extensions==1.0.0
-djangorestframework~=3.14.0
