@@ -25,9 +25,10 @@ test-server:
         - export POETRY_HOME=/opt/poetry
         - python3 -m venv $POETRY_HOME
         - $POETRY_HOME/bin/pip install poetry==1.2.0
-        - $POETRY_HOME/bin/poetry --version
+        - export PATH=$POETRY_HOME/bin:$PATH
+        - poetry --version
         - cd server
-        - $POETRY_HOME/bin/poetry install
+        - poetry install
     script:
         poetry run python3 lint.py
         poetry run python3 manage.py migrate
