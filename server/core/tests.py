@@ -1,13 +1,7 @@
-import unittest
-
 from django.test import TestCase
 
-from .json_serializers import (
-    CommissionerSerializer,
-    QueryResponseSerializer,
-    SurveyResponseSerializer,
-)
-from .models import Commissioner, QueryResponse, SurveyResponse
+from .json_serializers import CommissionerSerializer, SurveyResponseSerializer
+from .models import Commissioner
 
 
 class SerializersTestCase(TestCase):
