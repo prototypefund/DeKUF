@@ -27,8 +27,8 @@ test-server:
         - $POETRY_HOME/bin/pip install poetry==1.2.0
         - $POETRY_HOME/bin/poetry --version
         - cd server
-        - poetry install
-        - poetry shell
+        - $POETRY_HOME/bin/poetry install
+        - $POETRY_HOME/bin/poetry shell
     script:
         ./lint.py
         ./manage.py migrate
