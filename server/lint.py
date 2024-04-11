@@ -15,3 +15,4 @@ if __name__ == "__main__":
     extra_args = [] if fix else ["--check"]
     call(["isort", "--profile", "black", "."] + extra_args)
     call(["black", "-l", "80", "-C", "."] + extra_args)
+    call(["mypy", "."] + extra_args)
