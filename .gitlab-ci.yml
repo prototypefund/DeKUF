@@ -28,11 +28,10 @@ test-server:
         - $POETRY_HOME/bin/poetry --version
         - cd server
         - $POETRY_HOME/bin/poetry install
-        - $POETRY_HOME/bin/poetry shell
     script:
-        ./lint.py
-        ./manage.py migrate
-        ./manage.py test
+        poetry run python3 lint.py
+        poetry run python3 manage.py migrate
+        poetry run python3 manage.py test
     rules:
         - changes:
             - .gitlab-ci.yml
