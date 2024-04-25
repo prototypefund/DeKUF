@@ -31,10 +31,10 @@ void Client::fetchSurveys()
 
 void Client::run()
 {
-    storage->addDataPoint(
-        "timestamp", QString::number(QDateTime::currentSecsSinceEpoch()));
-    qDebug() << "Stored timestamps: ";
-    for (const auto& dataPoint : storage->listDataPoints("timestamp"))
+    storage->addDataPoint("num-data-points",
+        QVariant(storage->listDataPoints().size()).toString());
+    qDebug() << "Stored data points: ";
+    for (const auto& dataPoint : storage->listDataPoints())
         qDebug() << "-" << dataPoint.value;
     fetchSurveys();
 }

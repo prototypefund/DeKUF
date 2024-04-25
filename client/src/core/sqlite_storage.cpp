@@ -67,15 +67,20 @@ QList<DataPoint> SqliteStorage::listDataPoints(const QString& key) const
 {
     QList<DataPoint> dataPoints;
     QSqlQuery query;
-    query.prepare("SELECT value, created_at FROM data_point WHERE key = :key");
-    query.bindValue(":key", key);
+    if (key.isEmpty())
+        query.prepare("SELECT key, value, created_at FROM data_point");
+    else {
+        query.prepare(
+            "SELECT key, value, created_at FROM data_point WHERE key = :key");
+        query.bindValue(":key", key);
+    }
     if (!execQuery(query))
         return dataPoints;
 
     while (query.next())
-        dataPoints.push_back({ .key = key,
-            .value = query.value(0).toString(),
-            .createdAt = query.value(1).toDateTime() });
+        dataPoints.push_back({ .key = query.value(0).toString(),
+            .value = query.value(1).toString(),
+            .createdAt = query.value(2).toDateTime() });
     return dataPoints;
 }
 
