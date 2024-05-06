@@ -1,11 +1,9 @@
 import uuid
 
+from core.models.commissioner import Commissioner
 from django.apps import apps
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-
-from core.models.commissioner import Commissioner
-
 
 
 class Survey(models.Model):
@@ -23,11 +21,11 @@ class Query(models.Model):
         Survey, on_delete=models.CASCADE, related_name="queries"
     )
     data_key = models.CharField(max_length=100)
-    '''
+    """
     cohorts can be discrete eg. ["Yes", "No", "Unclear"] or can be continuous
     by adding a "-" to indicate a range (last number is not included) eg.
     ["0-10", "10-20"] resulting in 0<=x<10 , 10<=x<20
-    '''
+    """
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
     aggregated_results = models.JSONField(default=dict)
@@ -37,12 +35,16 @@ class Query(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.aggregated_results:
-            self.aggregated_results = {str(cohort): 0 for cohort in self.cohorts}
+            self.aggregated_results = {
+                str(cohort): 0 for cohort in self.cohorts
+            }
         super().save(*args, **kwargs)
 
     def aggregate_query_response(self, query_response):
         if isinstance(query_response.data, dict):
             for key, value in query_response.data.items():
+                if isinstance(value, str):
+                    raise ValueError("The value should not be a string")
                 self.aggregated_results[key] += value
         else:
             raise ValueError("query_response.data must be a dictionary.")

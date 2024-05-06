@@ -1,8 +1,10 @@
-from django.test import TestCase
-
-from core.json_serializers import CommissionerSerializer, SurveyResponseSerializer
+from core.json_serializers import (
+    CommissionerSerializer,
+    SurveyResponseSerializer,
+)
 from core.models.commissioner import Commissioner
-from core.models.survey import Survey, Query
+from core.models.survey import Query, Survey
+from django.test import TestCase
 
 
 class CommissionerSerializersTestCase(TestCase):
@@ -22,16 +24,22 @@ class CommissionerSerializersTestCase(TestCase):
 class SurveyResponseSerializerTestCase(TestCase):
     def setUp(self):
         self.commissioner = Commissioner.objects.create(name="test")
-        self.survey = Survey.objects.create(name="Customer Feedback",
-                                            commissioner=self.commissioner)
-        self.query = Query.objects.create(survey=self.survey, data_key="test",
-                                          cohorts=["Yes", "No"])
+        self.survey = Survey.objects.create(
+            name="Customer Feedback", commissioner=self.commissioner
+        )
+        self.query = Query.objects.create(
+            survey=self.survey, data_key="test", cohorts=["Yes", "No"]
+        )
 
     def test_survey_response_serializer(self):
         survey_response_data = {
             "surveyId": self.survey.id,
             "queryResponses": [
-                {"queryId": self.query.id, "dataKey": "question1", "data": {"Yes": 1, "No": 0}}
+                {
+                    "queryId": self.query.id,
+                    "dataKey": "question1",
+                    "data": {"Yes": 1, "No": 0},
+                }
             ],
         }
         serializer = SurveyResponseSerializer(data=survey_response_data)
@@ -44,13 +52,12 @@ class SurveyResponseSerializerTestCase(TestCase):
 
         query_response = survey_response.query_responses.first()
         self.assertIsNotNone(query_response)
-        self.assertEqual(query_response.data_key, "question1")
-        self.assertDictEqual(query_response.data, {'No': 0, 'Yes': 1})
+        self.assertDictEqual(query_response.data, {"No": 0, "Yes": 1})
 
     def test_survey_response_serializer_with_id_relationship(self):
         survey_response_data = {
             "surveyId": self.survey.id,
-            "queryResponses": []
+            "queryResponses": [],
         }
 
         serializer = SurveyResponseSerializer(data=survey_response_data)

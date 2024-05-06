@@ -1,9 +1,8 @@
 import uuid
 
+from core.models.survey import Query, Survey
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-
-from core.models.survey import Survey, Query
 
 
 class SurveyResponse(models.Model):
@@ -17,5 +16,4 @@ class QueryResponse(models.Model):
         SurveyResponse, on_delete=models.CASCADE, related_name="query_responses"
     )
     query = models.ForeignKey(Query, on_delete=models.CASCADE)
-    data_key = models.CharField(max_length=100)
     data = models.JSONField(default=dict)

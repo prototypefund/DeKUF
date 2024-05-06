@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
 from .models.commissioner import Commissioner
-from .models.survey import  Query, Survey
-from .models.response import SurveyResponse, QueryResponse
+from .models.response import QueryResponse, SurveyResponse
+from .models.survey import Query, Survey
 
 
 class CommissionerSerializer(serializers.ModelSerializer):
@@ -33,11 +33,10 @@ class QueryResponseSerializer(serializers.ModelSerializer):
     queryId = serializers.PrimaryKeyRelatedField(
         queryset=Query.objects.all(), source="query"
     )
-    dataKey = serializers.CharField(source="data_key")
 
     class Meta:
         model = QueryResponse
-        fields = ("dataKey", "data", "queryId")
+        fields = ("data", "queryId")
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
@@ -51,7 +50,7 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
         fields = ("surveyId", "queryResponses")
 
     def create(self, validated_data):
-        query_responses_data = validated_data.pop('queryResponses')
+        query_responses_data = validated_data.pop("queryResponses")
         survey_response = SurveyResponse.objects.create(**validated_data)
 
         for query_response_data in query_responses_data:
