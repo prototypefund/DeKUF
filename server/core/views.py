@@ -1,7 +1,7 @@
 import json
 
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
-from core.models import Survey
+from core.models.survey import Survey
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods

@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Commissioner, Query, QueryResponse, Survey, SurveyResponse
+from .models.commissioner import Commissioner
+from .models.survey import  Query, Survey
+from .models.response import SurveyResponse, QueryResponse
 
 
 @admin.register(Commissioner)

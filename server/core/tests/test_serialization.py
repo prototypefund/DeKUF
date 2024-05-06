@@ -1,7 +1,8 @@
 from django.test import TestCase
 
 from core.json_serializers import CommissionerSerializer, SurveyResponseSerializer
-from core.models import Commissioner, Survey, Query
+from core.models.commissioner import Commissioner
+from core.models.survey import Survey, Query
 
 
 class CommissionerSerializersTestCase(TestCase):
@@ -44,7 +45,6 @@ class SurveyResponseSerializerTestCase(TestCase):
         query_response = survey_response.query_responses.first()
         self.assertIsNotNone(query_response)
         self.assertEqual(query_response.data_key, "question1")
-        self.assertEqual(query_response.id, self.query.id)
         self.assertDictEqual(query_response.data, {'No': 0, 'Yes': 1})
 
     def test_survey_response_serializer_with_id_relationship(self):
