@@ -57,25 +57,26 @@ class QueryResponseAggregationTestCase(TestCase):
 
         survey_response = SurveyResponse.objects.create(survey=self.survey)
         query_response = QueryResponse.objects.create(
-            survey_response=survey_response, query=query, data=response_data_wrong_cohort_name
+            survey_response=survey_response,
+            query=query,
+            data=response_data_wrong_cohort_name,
         )
 
         with self.assertRaises(KeyError):
             query.aggregate_query_response(query_response)
 
         query_response = QueryResponse.objects.create(
-            survey_response=survey_response, query=query,
-            data=response_data_no_number
+            survey_response=survey_response,
+            query=query,
+            data=response_data_no_number,
         )
 
         with self.assertRaises(ValueError):
             query.aggregate_query_response(query_response)
 
         query_response = QueryResponse.objects.create(
-            survey_response=survey_response, query=query,
-            data=response_no_dict
+            survey_response=survey_response, query=query, data=response_no_dict
         )
 
         with self.assertRaises(ValueError):
             query.aggregate_query_response(query_response)
-
