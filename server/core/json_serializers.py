@@ -28,11 +28,14 @@ class SurveySerializer(serializers.ModelSerializer):
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
+    queryId = serializers.PrimaryKeyRelatedField(
+        queryset=Query.objects.all(), source="query"
+    )
     dataKey = serializers.CharField(source="data_key")
 
     class Meta:
         model = QueryResponse
-        fields = ("dataKey", "data")
+        fields = ("dataKey", "data", "queryId")
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):

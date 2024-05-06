@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from .json_serializers import CommissionerSerializer, SurveyResponseSerializer
-from .models import Commissioner, Survey
+from .models import Commissioner, Survey, Query
 
 
 class CommissionerSerializersTestCase(TestCase):
@@ -23,12 +23,14 @@ class SurveyResponseSerializerTestCase(TestCase):
         self.commissioner = Commissioner.objects.create(name="test")
         self.survey = Survey.objects.create(name="Customer Feedback",
                                             commissioner=self.commissioner)
+        self.query = Query.objects.create(survey=self.survey, data_key="test",
+                                          cohorts=["Yes", "No"])
 
     def test_survey_response_serializer(self):
         survey_response_data = {
             "surveyId": self.survey.id,
             "queryResponses": [
-                {"dataKey": "question1", "data": {"Yes": 1, "No": 0}}
+                {"queryId": self.query.id, "dataKey": "question1", "data": {"Yes": 1, "No": 0}}
             ],
         }
         serializer = SurveyResponseSerializer(data=survey_response_data)

@@ -50,5 +50,6 @@ class QueryResponse(models.Model):
     survey_response = models.ForeignKey(
         SurveyResponse, on_delete=models.CASCADE, related_name="query_responses"
     )
+    query = models.ForeignKey(Query, on_delete=models.CASCADE)
     data_key = models.CharField(max_length=100)
     data = models.JSONField()
