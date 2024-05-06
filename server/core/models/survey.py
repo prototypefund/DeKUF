@@ -1,7 +1,6 @@
 import uuid
 
 from core.models.commissioner import Commissioner
-from django.apps import apps
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 

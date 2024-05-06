@@ -1,7 +1,6 @@
 import uuid
 
 from core.models.survey import Query, Survey
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 
