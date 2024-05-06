@@ -4,7 +4,7 @@ from .json_serializers import CommissionerSerializer, SurveyResponseSerializer
 from .models import Commissioner, Survey
 
 
-class SerializersTestCase(TestCase):
+class CommissionerSerializersTestCase(TestCase):
     def setUp(self):
         self.commissioner_data = {"name": "test commissioner"}
         self.commissioner_obj = Commissioner.objects.create(
