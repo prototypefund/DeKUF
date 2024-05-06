@@ -15,7 +15,7 @@ class QuerySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Query
-        fields = ["dataKey", "cohorts", "discrete"]
+        fields = ["id", "dataKey", "cohorts", "discrete"]
 
 
 class SurveySerializer(serializers.ModelSerializer):
