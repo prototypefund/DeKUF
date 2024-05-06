@@ -1,3 +1,4 @@
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 
@@ -21,6 +22,11 @@ class Query(models.Model):
         Survey, on_delete=models.CASCADE, related_name="queries"
     )
     data_key = models.CharField(max_length=100)
+    cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
+
+    @property
+    def discrete(self):
+        return all(isinstance(item, str) for item in self.cohorts)
 
     def __str__(self):
         return f"Query on {self.data_key}"

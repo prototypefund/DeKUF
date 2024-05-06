@@ -11,10 +11,11 @@ class CommissionerSerializer(serializers.ModelSerializer):
 
 class QuerySerializer(serializers.ModelSerializer):
     dataKey = serializers.CharField(source="data_key")
+    discrete = serializers.ReadOnlyField()
 
     class Meta:
         model = Query
-        fields = ["dataKey"]
+        fields = ["dataKey", "cohorts", "discrete"]
 
 
 class SurveySerializer(serializers.ModelSerializer):
