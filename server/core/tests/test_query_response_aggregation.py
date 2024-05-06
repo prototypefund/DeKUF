@@ -24,6 +24,7 @@ class QueryResponseAggregationTestCase(TestCase):
         query.aggregate_query_response(query_response)
 
         self.assertEqual(query.aggregated_results, response_data)
+        self.assertEqual(query.number_participants, 1)
 
     def test_correct_aggregation_with_multiple_query_responses(self):
         query = Query.objects.create(
@@ -46,6 +47,7 @@ class QueryResponseAggregationTestCase(TestCase):
         query.aggregate_query_response(query_response_1)
 
         self.assertEqual(query.aggregated_results, {"Yes": 12, "No": 2})
+        self.assertEqual(query.number_participants, 2)
 
     def test_wrong_response_leads_to_value_or_key_error(self):
         query = Query.objects.create(

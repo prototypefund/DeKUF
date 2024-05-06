@@ -27,13 +27,15 @@ class Query(models.Model):
     """
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
-    aggregated_results = models.JSONField(default=dict)
+    number_participants = models.IntegerField(default=0, editable=False)
+    aggregated_results = models.JSONField(default=dict, editable=False)
 
     def __str__(self):
         return f"Query on {self.data_key}"
 
     def save(self, *args, **kwargs):
-        if not self.aggregated_results:
+        # TODO: Improve comparison
+        if not set(self.aggregated_results.keys()) == set(self.cohorts):
             self.aggregated_results = {
                 str(cohort): 0 for cohort in self.cohorts
             }
@@ -47,5 +49,5 @@ class Query(models.Model):
                 self.aggregated_results[key] += value
         else:
             raise ValueError("query_response.data must be a dictionary.")
-
+        self.number_participants += 1
         self.save()

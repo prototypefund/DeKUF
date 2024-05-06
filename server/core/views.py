@@ -17,6 +17,7 @@ def save_survey_response(request):
         serializer = SurveyResponseSerializer(data=survey_response_data)
 
         if serializer.is_valid():
+
             return JsonResponse(serializer.data, status=201)
         else:
             return JsonResponse(serializer.errors, status=400)
