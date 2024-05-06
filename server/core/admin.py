@@ -16,10 +16,8 @@ class QueryInline(admin.TabularInline):
 
 @admin.register(Survey)
 class SurveyAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "commissioner")
     inlines = [QueryInline]
-    search_fields = ("commissioners__name",)
-    filter_horizontal = ("commissioners",)
 
 
 class QueryResponseInline(admin.TabularInline):

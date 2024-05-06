@@ -11,7 +11,7 @@ class CommissionerSerializer(serializers.ModelSerializer):
 
 class QuerySerializer(serializers.ModelSerializer):
     dataKey = serializers.CharField(source="data_key")
-    discrete = serializers.ReadOnlyField()
+    discrete = serializers.BooleanField(source="discrete")
 
     class Meta:
         model = Query
@@ -19,12 +19,12 @@ class QuerySerializer(serializers.ModelSerializer):
 
 
 class SurveySerializer(serializers.ModelSerializer):
-    commissioners = CommissionerSerializer(many=True, read_only=True)
+    commissioner = CommissionerSerializer(many=True, read_only=True)
     queries = QuerySerializer(many=True)
 
     class Meta:
         model = Survey
-        fields = ["id", "name", "commissioners", "queries"]
+        fields = ["id", "name", "commissioner", "queries"]
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
@@ -36,27 +36,20 @@ class QueryResponseSerializer(serializers.ModelSerializer):
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
-    commissioners = CommissionerSerializer(many=True)
     queryResponses = QueryResponseSerializer(many=True)
+    surveyId = serializers.PrimaryKeyRelatedField(
+        queryset=Survey.objects.all(), source="survey"
+    )
 
     class Meta:
         model = SurveyResponse
-        fields = ("commissioners", "queryResponses")
+        fields = ("surveyId", "queryResponses")
 
     def create(self, validated_data):
-        commissioner_data = validated_data.pop("commissioners")
-        query_responses_data = validated_data.pop("queryResponses")
-        survey_response = SurveyResponse.objects.create()
+        query_responses_data = validated_data.pop('queryResponses')
+        survey_response = SurveyResponse.objects.create(**validated_data)
 
-        for commissioner in commissioner_data:
-            commission, created = Commissioner.objects.get_or_create(
-                **commissioner
-            )
-            survey_response.commissioners.add(commission)
-
-        for query_response in query_responses_data:
-            QueryResponse.objects.create(
-                survey_response=survey_response, **query_response
-            )
+        for query_response_data in query_responses_data:
+            survey_response.query_responses.create(**query_response_data)
 
         return survey_response
