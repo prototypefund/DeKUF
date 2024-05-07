@@ -14,7 +14,7 @@ class CommissionerAdmin(admin.ModelAdmin):
 class QueryInline(admin.TabularInline):
     model = Query
     extra = 1
-    readonly_fields = ('aggregated_results', "number_participants")
+    readonly_fields = ("aggregated_results", "number_participants")
 
 
 @admin.register(Survey)
