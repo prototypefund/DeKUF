@@ -30,27 +30,27 @@ class SurveySerializer(serializers.ModelSerializer):
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
-    queryId = serializers.PrimaryKeyRelatedField(
+    query_id = serializers.PrimaryKeyRelatedField(
         queryset=Query.objects.all(), source="query"
     )
 
     class Meta:
         model = QueryResponse
-        fields = ("data", "queryId")
+        fields = ("data", "query_id")
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
-    queryResponses = QueryResponseSerializer(many=True)
-    surveyId = serializers.PrimaryKeyRelatedField(
+    query_responses = QueryResponseSerializer(many=True)
+    survey_id = serializers.PrimaryKeyRelatedField(
         queryset=Survey.objects.all(), source="survey"
     )
 
     class Meta:
         model = SurveyResponse
-        fields = ("surveyId", "queryResponses")
+        fields = ("survey_id", "query_responses")
 
     def create(self, validated_data):
-        query_responses_data = validated_data.pop("queryResponses")
+        query_responses_data = validated_data.pop("query_responses")
         survey_response = SurveyResponse.objects.create(**validated_data)
 
         for query_response_data in query_responses_data:
