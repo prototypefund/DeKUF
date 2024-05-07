@@ -29,6 +29,6 @@ def save_survey_response(request):
 
 @require_http_methods(["GET"])
 def get_surveys(request):
-    surveys = Survey.objects.all().prefetch_related("commissioners")
+    surveys = Survey.objects.all()
     serializer = SurveySerializer(surveys, many=True)
     return JsonResponse(serializer.data, safe=False)

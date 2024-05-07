@@ -33,11 +33,11 @@ class SurveyResponseSerializerTestCase(TestCase):
 
     def test_survey_response_serializer(self):
         survey_response_data = {
-            "surveyId": self.survey.id,
-            "queryResponses": [
+            "survey_id": self.survey.id,
+            "query_responses": [
                 {
-                    "queryId": self.query.id,
-                    "dataKey": "question1",
+                    "query_id": self.query.id,
+                    "data_key": "question1",
                     "data": {"Yes": 1, "No": 0},
                 }
             ],
@@ -56,8 +56,8 @@ class SurveyResponseSerializerTestCase(TestCase):
 
     def test_survey_response_serializer_with_id_relationship(self):
         survey_response_data = {
-            "surveyId": self.survey.id,
-            "queryResponses": [],
+            "survey_id": self.survey.id,
+            "query_responses": [],
         }
 
         serializer = SurveyResponseSerializer(data=survey_response_data)

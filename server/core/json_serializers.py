@@ -12,16 +12,16 @@ class CommissionerSerializer(serializers.ModelSerializer):
 
 
 class QuerySerializer(serializers.ModelSerializer):
-    dataKey = serializers.CharField(source="data_key")
-    discrete = serializers.BooleanField(source="discrete")
+    data_key = serializers.CharField()
+    discrete = serializers.BooleanField()
 
     class Meta:
         model = Query
-        fields = ["id", "dataKey", "cohorts", "discrete"]
+        fields = ["id", "data_key", "cohorts", "discrete"]
 
 
 class SurveySerializer(serializers.ModelSerializer):
-    commissioner = CommissionerSerializer(many=True, read_only=True)
+    commissioner = CommissionerSerializer(read_only=True)
     queries = QuerySerializer(many=True)
 
     class Meta:
