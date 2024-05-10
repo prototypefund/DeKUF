@@ -6,7 +6,7 @@
 class StorageStub : public Storage {
 private:
     QList<QPair<QString, QString>> dataPoints;
-    QList<QSharedPointer<SurveyResponse>> surveyResponses;
+    QList<SurveyResponseRecord> surveyResponses;
 
 public:
     QList<DataPoint> listDataPoints(const QString& key) const
@@ -22,7 +22,7 @@ public:
         dataPoints.push_back(QPair<QString, QString>(dataKey, data));
     }
 
-    QList<QSharedPointer<SurveyResponse>> listSurveyResponses() const
+    QList<SurveyResponseRecord> listSurveyResponses() const
     {
         return surveyResponses;
     }
@@ -30,6 +30,7 @@ public:
     void addSurveyResponse(const SurveyResponse& response)
     {
         surveyResponses.push_back(
-            QSharedPointer<SurveyResponse>::create(response));
+            { .response = QSharedPointer<SurveyResponse>::create(response),
+                .createdAt = QDateTime::currentDateTime() });
     }
 };

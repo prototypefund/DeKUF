@@ -11,7 +11,7 @@ public:
 
     QList<DataPoint> listDataPoints(const QString& key) const;
     void addDataPoint(const QString& key, const QString& value);
-    QList<QSharedPointer<SurveyResponse>> listSurveyResponses() const;
+    QList<SurveyResponseRecord> listSurveyResponses() const;
     void addSurveyResponse(const SurveyResponse& response);
 
 private:

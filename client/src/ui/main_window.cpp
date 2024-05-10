@@ -7,25 +7,29 @@
 namespace {
 void setupTableWidget(QTableWidget& tableWidget)
 {
-    // TODO: Probably better to set these in the designer.
-    tableWidget.setColumnCount(1);
-    tableWidget.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    tableWidget.setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableWidget.horizontalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
 
     // For a first PoC, we're reading data directly from the daemon's SQLite
     // database, but we plan to switch to IPC:
     // https://gitlab.com/privact/dekuf/-/issues/14
     SqliteStorage storage;
     int row = 0;
-    for (const auto& response : storage.listSurveyResponses()) {
+    for (const auto& responseEntry : storage.listSurveyResponses()) {
         tableWidget.insertRow(row);
+
+        auto createdAtItem = new QTableWidgetItem; // NOLINT
+        createdAtItem->setText(responseEntry.createdAt.toString());
+        tableWidget.setItem(row, 0, createdAtItem);
+
         // TODO: Show something more user-friendly than the serialized
         //       response.
-        QString text(response->toJsonByteArray());
-        text.replace("\n", " ");
-        auto item = new QTableWidgetItem; // NOLINT
-        item->setText(text);
-        tableWidget.setItem(row, 0, item);
+        QString data(responseEntry.response->toJsonByteArray());
+        data.replace("\n", " ");
+        auto dataItem = new QTableWidgetItem; // NOLINT
+        dataItem->setText(data);
+        tableWidget.setItem(row, 1, dataItem);
+
         row++;
     }
 }
