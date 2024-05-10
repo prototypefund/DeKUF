@@ -29,7 +29,7 @@ void setupTableWidget(QTableWidget& tableWidget)
         comissionersItem->setText(commissionerNames.join(", "));
         tableWidget.setItem(row, 1, comissionersItem);
 
-        auto dataTable = new QTableWidget; // NOLINT
+        auto dataTable = new QTableWidget(&tableWidget); // NOLINT
         dataTable->setColumnCount(2);
         dataTable->setHorizontalHeaderLabels({ "Key", "Data" });
         dataTable->horizontalHeader()->setSectionResizeMode(
