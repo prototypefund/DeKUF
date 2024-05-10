@@ -5,6 +5,7 @@ add_library(dekuf-client-daemon-lib ${DEKUF_CLIENT_DAEMON_LIB_SRC})
 target_link_libraries(dekuf-client-daemon-lib PUBLIC
     Qt6::Core
     Qt6::Network
+    Qt6::DBus
     dekuf-client-core
 )
 

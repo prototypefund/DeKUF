@@ -8,6 +8,7 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
     , storage(storage)
     , manager(new QNetworkAccessManager(this))
+    , dbusService(storage)
 {
 }
 
