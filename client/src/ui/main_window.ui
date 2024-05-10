@@ -34,7 +34,7 @@
            <bool>true</bool>
           </property>
           <property name="columnCount">
-           <number>2</number>
+           <number>3</number>
           </property>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -45,6 +45,11 @@
           <column>
            <property name="text">
             <string>Response time</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Survey commissioners</string>
            </property>
           </column>
           <column>

@@ -9,10 +9,9 @@ void setupTableWidget(QTableWidget& tableWidget)
 {
     tableWidget.horizontalHeader()->setSectionResizeMode(
         QHeaderView::ResizeToContents);
+    tableWidget.verticalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
 
-    // For a first PoC, we're reading data directly from the daemon's SQLite
-    // database, but we plan to switch to IPC:
-    // https://gitlab.com/privact/dekuf/-/issues/14
     SqliteStorage storage;
     int row = 0;
     for (const auto& responseEntry : storage.listSurveyResponses()) {
@@ -22,13 +21,36 @@ void setupTableWidget(QTableWidget& tableWidget)
         createdAtItem->setText(responseEntry.createdAt.toString());
         tableWidget.setItem(row, 0, createdAtItem);
 
-        // TODO: Show something more user-friendly than the serialized
-        //       response.
-        QString data(responseEntry.response->toJsonByteArray());
-        data.replace("\n", " ");
-        auto dataItem = new QTableWidgetItem; // NOLINT
-        dataItem->setText(data);
-        tableWidget.setItem(row, 1, dataItem);
+        auto& response = responseEntry.response;
+        QStringList commissionerNames;
+        for (const auto& commissioner : response->commissioners)
+            commissionerNames.push_back(commissioner->name);
+        auto comissionersItem = new QTableWidgetItem; // NOLINT
+        comissionersItem->setText(commissionerNames.join(", "));
+        tableWidget.setItem(row, 1, comissionersItem);
+
+        auto dataTable = new QTableWidget; // NOLINT
+        dataTable->setColumnCount(2);
+        dataTable->setHorizontalHeaderLabels({ "Key", "Data" });
+        dataTable->horizontalHeader()->setSectionResizeMode(
+            QHeaderView::ResizeToContents);
+        dataTable->horizontalHeader()->setStretchLastSection(true);
+        dataTable->verticalHeader()->setVisible(false);
+        dataTable->verticalHeader()->setSectionResizeMode(
+            QHeaderView::ResizeToContents);
+        dataTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        int dataRow = 0;
+        for (const auto& queryResponse : response->queryResponses) {
+            dataTable->insertRow(dataRow);
+            auto dataKeyItem = new QTableWidgetItem; // NOLINT
+            dataKeyItem->setText(queryResponse->dataKey);
+            dataTable->setItem(dataRow, 0, dataKeyItem);
+            auto dataItem = new QTableWidgetItem; // NOLINT
+            dataItem->setText(queryResponse->data);
+            dataTable->setItem(dataRow, 1, dataItem);
+            dataRow++;
+        }
+        tableWidget.setCellWidget(row, 2, dataTable);
 
         row++;
     }
