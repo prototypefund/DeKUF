@@ -43,14 +43,17 @@ void IntervalTest::testMixed()
     QCOMPARE(second.isInInterval(3), false);
 }
 
-void IntervalTest::testInvalid()
+void IntervalTest::testValid()
 {
     (Interval("[1, 2]"));
     (Interval("(1, 2)"));
     (Interval("[1, 2)"));
     (Interval("(1, 2]"));
     (Interval("[1,2]"));
+}
 
+void IntervalTest::testInvalid()
+{
     QVERIFY_EXCEPTION_THROWN((Interval("")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("1")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("1, 2")), std::invalid_argument);

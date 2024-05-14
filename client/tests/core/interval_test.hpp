@@ -9,5 +9,6 @@ private slots:
     void testOpen();
     void testClosed();
     void testMixed();
+    void testValid();
     void testInvalid();
 };
