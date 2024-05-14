@@ -30,6 +30,31 @@ void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
         surveyResponse->queryResponses.first()->cohortData, testCohortData);
 }
 
+void ClientTest::testCreateSurveyResponseSucceedsForIntervals()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+
+    Survey survey("testId", "testName");
+    QList<QString> cohorts = { "[8, 16)", "[16, 32)", "[32, 64)" };
+    survey.queries.append(
+        QSharedPointer<Query>::create("1", "testKey", cohorts, false));
+    survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    storage->addDataPoint("testKey", "8");
+    storage->addDataPoint("testKey", "16");
+    storage->addDataPoint("testKey", "31");
+
+    Client client(nullptr, storage);
+    const auto surveyResponse = client.createSurveyResponse(survey);
+
+    QMap<QString, int> testCohortData
+        = { { "[8, 16)", 1 }, { "[16, 32)", 2 }, { "[32, 64)", 0 } };
+
+    QVERIFY(!surveyResponse.isNull());
+    QCOMPARE(surveyResponse->queryResponses.first()->queryId, "1");
+    QCOMPARE(
+        surveyResponse->queryResponses.first()->cohortData, testCohortData);
+}
+
 void ClientTest::testCreateSurveyResponseNullForWrongCommissioner()
 {
     auto storage = QSharedPointer<StorageStub>::create();

@@ -7,5 +7,6 @@ class ClientTest : public QObject {
 
 private slots:
     void testCreateSurveyResponseSucceedsForRightCommissioner();
+    void testCreateSurveyResponseSucceedsForIntervals();
     void testCreateSurveyResponseNullForWrongCommissioner();
 };
