@@ -11,6 +11,9 @@ Interval::Interval(const QString& interval)
     QStringList bounds = interval.mid(1, interval.length() - 2).split(",");
     lowerBound = bounds[0].trimmed().toDouble();
     upperBound = bounds[1].trimmed().toDouble();
+
+    if (lowerBound >= upperBound)
+        throw std::invalid_argument("Lower bound greater or equal upper bound");
 }
 
 bool Interval::isValidInterval(const QString& interval)

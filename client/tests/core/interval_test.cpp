@@ -62,6 +62,7 @@ void IntervalTest::testInvalid()
     QVERIFY_EXCEPTION_THROWN((Interval("1, 2]")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("[ 1, 2]")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("[1, 2 ]")), std::invalid_argument);
+    QVERIFY_EXCEPTION_THROWN((Interval("[2, 1]")), std::invalid_argument);
 }
 
 QTEST_MAIN(IntervalTest)
