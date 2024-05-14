@@ -49,8 +49,6 @@ QByteArray SurveyResponse::toJsonByteArray() const
     QJsonObject surveyJsonResponse;
     QJsonArray queryJsonResponses;
 
-    qDebug() << "sjdbfjhsbdhjbsdjhbfj";
-
     for (const auto& queryResponse : queryResponses) {
         QJsonObject queryJsonResponse;
 

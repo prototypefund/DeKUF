@@ -88,7 +88,7 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     if (dataPoints.count() == 0)
         return nullptr;
 
-    qDebug() << "Found data:" << dataPoints.count();
+    qDebug() << "Found dataPoints:" << dataPoints.count();
 
     QMap<QString, int> cohortData;
 
