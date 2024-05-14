@@ -4,7 +4,7 @@
 
 class Interval {
 public:
-    Interval(const QString& interval);
+    explicit Interval(const QString& interval);
 
     bool isInInterval(const double& value);
 
