@@ -14,6 +14,7 @@ def save_survey_response(request):
     try:
         survey_response_data = JSONParser().parse(request)
 
+        print(survey_response_data)
         serializer = SurveyResponseSerializer(data=survey_response_data)
 
         if serializer.is_valid():

@@ -23,7 +23,7 @@ class Query(models.Model):
     """
     cohorts can be discrete eg. ["Yes", "No", "Unclear"] or can be continuous
     by adding a "-" to indicate a range (last number is not included) eg.
-    ["0-10", "10-20"] resulting in 0<=x<10 , 10<=x<20
+    ["-0", "0-10", "10-20", "20-"] resulting in 0<=x<10 , 10<=x<20
     """
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
