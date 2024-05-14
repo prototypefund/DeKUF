@@ -6,9 +6,13 @@
 
 class Query {
 public:
+    const QString id;
     const QString dataKey;
+    const QList<QString> cohorts;
+    const bool discrete;
 
-    explicit Query(const QString& dataKey);
+    explicit Query(const QString& id, const QString& dataKey,
+        const QList<QString>& cohorts, const bool& discrete);
 };
 
 class Survey {
@@ -18,7 +22,7 @@ public:
 
     const QString id;
     const QString name;
-    QList<QSharedPointer<Commissioner>> commissioners;
+    QSharedPointer<Commissioner> commissioner;
     QList<QSharedPointer<Query>> queries;
 
     Survey(const QString& id, const QString& name);

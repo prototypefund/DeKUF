@@ -7,35 +7,44 @@
 
 #include "client_test.hpp"
 
-void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioners()
+void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
 {
     auto storage = QSharedPointer<StorageStub>::create();
 
     Survey survey("testId", "testName");
-    survey.queries.append(QSharedPointer<Query>::create("testKey"));
-    survey.commissioners.append(QSharedPointer<Commissioner>::create("KDE"));
-    storage->addDataPoint("testKey", "testValue");
+    QList<QString> cohorts = { "[8, 16)", "[16, 32)", "[32, 60)" };
+    survey.queries.append(
+        QSharedPointer<Query>::create("1", "testKey", cohorts, true));
+    survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    storage->addDataPoint("testKey", "8");
 
     Client client(nullptr, storage);
     const auto surveyResponse = client.createSurveyResponse(survey);
+
+    QMap<QString, int> testCohortData
+        = { { "[8, 16)", 1 }, { "[16, 32)", 0 }, { "[32, 60)", 0 } };
 
     QVERIFY(!surveyResponse.isNull());
-    QCOMPARE(surveyResponse->queryResponses.first()->dataKey, "testKey");
-    QCOMPARE(surveyResponse->queryResponses.first()->data, "testValue");
-    QCOMPARE(surveyResponse->commissioners.first()->name, "KDE");
+    QCOMPARE(surveyResponse->queryResponses.first()->queryId, "1");
+    QCOMPARE(
+        surveyResponse->queryResponses.first()->cohortData, testCohortData);
 }
 
-void ClientTest::testCreateSurveyResponseNullForWrongCommissioners()
+void ClientTest::testCreateSurveyResponseNullForWrongCommissioner()
 {
     auto storage = QSharedPointer<StorageStub>::create();
 
     Survey survey("testId", "testName");
-    survey.queries.append(QSharedPointer<Query>::create("testKey"));
-    survey.commissioners.append(QSharedPointer<Commissioner>::create("Wrong"));
-    storage->addDataPoint("testKey", "testValue");
+    QList<QString> cohorts = { "8", "16", "32" };
+    survey.queries.append(
+        QSharedPointer<Query>::create("1", "testKey", cohorts, true));
+    survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
+    storage->addDataPoint("testKey", "8");
 
     Client client(nullptr, storage);
     const auto surveyResponse = client.createSurveyResponse(survey);
+
+    qPrintable(survey.name);
 
     QVERIFY(surveyResponse.isNull());
 }

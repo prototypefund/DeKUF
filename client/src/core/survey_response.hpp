@@ -7,14 +7,14 @@
 
 class QueryResponse {
 public:
-    const QString dataKey;
-    const QString data;
+    const QString queryId;
+    const QMap<QString, int> cohortData;
 
-    QueryResponse(const QString& dataKey, const QString& data);
+    QueryResponse(const QString& queryId, const QMap<QString, int>& cohortData);
 
     bool operator==(const QueryResponse& other) const
     {
-        return dataKey == other.dataKey && data == other.data;
+        return queryId == other.queryId;
     }
 };
 
@@ -23,7 +23,7 @@ public:
     static QSharedPointer<SurveyResponse> fromJsonByteArray(
         const QByteArray& responseData);
 
-    QList<QSharedPointer<Commissioner>> commissioners;
+    QSharedPointer<Commissioner> commissioner;
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     QByteArray toJsonByteArray() const;

@@ -23,7 +23,9 @@ void SurveyTest::testListFromByteArrayForSingleSurvey()
 void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
 {
     const auto data = QString("[{\"id\": \"1234\", \"name\": \"test\", "
-                              "\"queries\": [{\"dataKey\": \"timestamp\"}]}]")
+                              "\"queries\": [{\"id\": \"1\", "
+                              "\"data_key\": \"timestamp\", \"cohorts\": "
+                              "[\"1\", \"2\"], \"discrete\": true}]}]")
                           .toUtf8();
     const auto surveys = Survey::listFromByteArray(data);
 
@@ -33,6 +35,8 @@ void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
     QCOMPARE(survey->id, "1234");
     QCOMPARE(survey->name, "test");
     QCOMPARE(survey->queries.count(), 1);
+    QCOMPARE(survey->queries.first()->id, "1");
+    QCOMPARE(survey->queries.first()->discrete, true);
     QCOMPARE(survey->queries.first()->dataKey, "timestamp");
 }
 

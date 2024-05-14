@@ -31,5 +31,7 @@ private:
     void handleSurveysResponse(const QByteArray& data);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
+    QSharedPointer<QueryResponse> createQueryResponse(
+        const QSharedPointer<Query>& query) const;
     void postSurveyResponse(QSharedPointer<SurveyResponse>);
 };

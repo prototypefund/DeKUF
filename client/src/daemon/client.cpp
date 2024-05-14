@@ -1,8 +1,12 @@
 #include <QDateTime>
+#include <QRegularExpression>
 #include <QTextStream>
 #include <QtNetwork>
 
 #include "client.hpp"
+#include "core/interval.hpp"
+#include "core/storage.hpp"
+#include "core/survey_response.hpp"
 
 Client::Client(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
@@ -59,25 +63,48 @@ QSharedPointer<SurveyResponse> Client::createSurveyResponse(
 {
     // Only KDE allowed as commissioner
     QString kdeName("KDE");
-    if (!std::any_of(survey.commissioners.begin(), survey.commissioners.end(),
-            [&](const QSharedPointer<Commissioner>& commissioner) {
-                return commissioner->name == kdeName;
-            }))
+    if (survey.commissioner->name != kdeName)
         return {};
 
     auto surveyResponse = QSharedPointer<SurveyResponse>::create();
-    surveyResponse->commissioners.append(
-        QSharedPointer<Commissioner>::create(kdeName));
+    surveyResponse->commissioner
+        = QSharedPointer<Commissioner>::create(kdeName);
 
     for (const auto& query : survey.queries) {
-        const auto dataPoints = storage->listDataPoints(query->dataKey);
-        if (dataPoints.count() == 0)
+        auto queryResponse = createQueryResponse(query);
+        if (queryResponse == nullptr)
             continue;
-        surveyResponse->queryResponses.append(
-            QSharedPointer<QueryResponse>::create(
-                query->dataKey, dataPoints.first().value));
+        surveyResponse->queryResponses.append(queryResponse);
     }
     return surveyResponse;
+}
+
+QSharedPointer<QueryResponse> Client::createQueryResponse(
+    const QSharedPointer<Query>& query) const
+{
+    const auto dataPoints = storage->listDataPoints(query->dataKey);
+    if (dataPoints.count() == 0)
+        return nullptr;
+
+    QMap<QString, int> cohortData;
+
+    for (const QString& cohort : query->cohorts) {
+        cohortData[cohort] = 0;
+
+        try {
+            auto interval = Interval(cohort);
+
+            for (const DataPoint& dataPoint : dataPoints) {
+                if (interval.isInInterval(dataPoint.value.toDouble())) {
+                    cohortData[cohort]++;
+                }
+            }
+        } catch (std::invalid_argument) {
+            // Error handling here
+        }
+    }
+
+    return QSharedPointer<QueryResponse>::create(query->id, cohortData);
 }
 
 void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)

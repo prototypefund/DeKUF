@@ -1,7 +1,11 @@
 #include "survey.hpp"
 
-Query::Query(const QString& dataKey)
-    : dataKey(dataKey)
+Query::Query(const QString& id, const QString& dataKey,
+    const QList<QString>& cohorts, const bool& discrete)
+    : id(id)
+    , dataKey(dataKey)
+    , cohorts(cohorts)
+    , discrete(discrete)
 {
 }
 
@@ -15,17 +19,24 @@ QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
         const auto name = object["name"].toString();
         auto survey = QSharedPointer<Survey>::create(id, name);
 
-        for (const auto& item : object["commissioners"].toArray()) {
-            const auto object = item.toObject();
-            const auto name = object["name"].toString();
-            survey->commissioners.push_back(
-                QSharedPointer<Commissioner>::create(name));
-        }
+        const auto commissionerJson = object["commissioner"].toObject();
+        const auto commissionerName = object["name"].toString();
+        survey->commissioner = QSharedPointer<Commissioner>::create(name);
 
         for (const auto& item : object["queries"].toArray()) {
             const auto object = item.toObject();
-            const auto dataKey = object["dataKey"].toString();
-            survey->queries.push_back(QSharedPointer<Query>::create(dataKey));
+            const auto id = object["id"].toString();
+            const auto dataKey = object["data_key"].toString();
+
+            const auto cohortsJson = object["cohorts"].toArray();
+            QList<QString> cohorts;
+            for (const auto& item : cohortsJson)
+                cohorts.append(item.toString());
+
+            const auto discrete = object["discrete"].toBool();
+
+            survey->queries.push_back(
+                QSharedPointer<Query>::create(id, dataKey, cohorts, discrete));
         }
         surveys.push_back(survey);
     }

@@ -48,7 +48,7 @@ void SqliteStorageTest::testAddAndListSurveyResponses()
     QCOMPARE(storage->listSurveyResponses().count(), 0);
 
     SurveyResponse response;
-    response.commissioners.append(QSharedPointer<Commissioner>::create("Foo"));
+    response.commissioner = QSharedPointer<Commissioner>::create("Foo");
     storage->addSurveyResponse(response);
 
     QCOMPARE(storage->listSurveyResponses().count(), 1);
