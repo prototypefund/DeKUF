@@ -5,6 +5,7 @@
 #include <core/storage.hpp>
 #include <core/survey_response.hpp>
 
+#include "dbus_service.hpp"
 #include "survey.hpp"
 
 class QNetworkAccessManager;
@@ -27,6 +28,7 @@ signals:
 private:
     QSharedPointer<Storage> storage;
     QNetworkAccessManager* manager;
+    DBusService dbusService;
 
     void handleSurveysResponse(const QByteArray& data);
     QSharedPointer<SurveyResponse> createSurveyResponse(

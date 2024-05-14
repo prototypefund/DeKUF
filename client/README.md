@@ -58,3 +58,9 @@ To comply with the formatting rules, run:
 ### Running the UI
 
     make run-ui
+
+### Submitting data
+
+The daemon receives data from suppliers via D-Bus. See
+[example_supplier](example_supplier) for an example supplier you can use to
+submit arbitrary data.

@@ -7,25 +7,56 @@
 namespace {
 void setupTableWidget(QTableWidget& tableWidget)
 {
-    // TODO: Probably better to set these in the designer.
-    tableWidget.setColumnCount(1);
-    tableWidget.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    tableWidget.setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tableWidget.horizontalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
+    tableWidget.verticalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
 
-    // For a first PoC, we're reading data directly from the daemon's SQLite
-    // database, but we plan to switch to IPC:
-    // https://gitlab.com/privact/dekuf/-/issues/14
     SqliteStorage storage;
     int row = 0;
-    for (const auto& response : storage.listSurveyResponses()) {
+    for (const auto& responseEntry : storage.listSurveyResponses()) {
         tableWidget.insertRow(row);
-        // TODO: Show something more user-friendly than the serialized
-        //       response.
-        QString text(response->toJsonByteArray());
-        text.replace("\n", " ");
-        auto item = new QTableWidgetItem; // NOLINT
-        item->setText(text);
-        tableWidget.setItem(row, 0, item);
+
+        auto createdAtItem = new QTableWidgetItem; // NOLINT
+        createdAtItem->setText(responseEntry.createdAt.toString());
+        tableWidget.setItem(row, 0, createdAtItem);
+
+        auto& response = responseEntry.response;
+
+        auto comissionersItem = new QTableWidgetItem; // NOLINT
+        comissionersItem->setText(responseEntry.commissionerName);
+        tableWidget.setItem(row, 1, comissionersItem);
+
+        auto dataTable = new QTableWidget(&tableWidget); // NOLINT
+        dataTable->setColumnCount(2);
+        dataTable->setHorizontalHeaderLabels({ "Key", "Data" });
+        dataTable->horizontalHeader()->setSectionResizeMode(
+            QHeaderView::ResizeToContents);
+        dataTable->horizontalHeader()->setStretchLastSection(true);
+        dataTable->verticalHeader()->setVisible(false);
+        dataTable->verticalHeader()->setSectionResizeMode(
+            QHeaderView::ResizeToContents);
+        dataTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        int dataRow = 0;
+        for (const auto& queryResponse : response->queryResponses) {
+            dataTable->insertRow(dataRow);
+            auto dataKeyItem = new QTableWidgetItem; // NOLINT
+            dataKeyItem->setText(queryResponse->queryId);
+            dataTable->setItem(dataRow, 0, dataKeyItem);
+            auto dataItem = new QTableWidgetItem; // NOLINT
+            QString cohortDataString;
+            for (auto it = queryResponse->cohortData.keyValueBegin();
+                 it != queryResponse->cohortData.keyValueEnd(); ++it) {
+                cohortDataString
+                    += it->first + ": " + QString::number(it->second) + ", ";
+                qDebug() << it->first << it->second;
+            }
+            dataItem->setText(cohortDataString);
+            dataTable->setItem(dataRow, 1, dataItem);
+            dataRow++;
+        }
+        tableWidget.setCellWidget(row, 2, dataTable);
+
         row++;
     }
 }

@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "dekuf-client-example-supplier"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pyside6 = "^6.7.0"
+black = "^24.4.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

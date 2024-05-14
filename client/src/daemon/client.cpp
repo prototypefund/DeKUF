@@ -12,6 +12,7 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
     , storage(storage)
     , manager(new QNetworkAccessManager(this))
+    , dbusService(storage)
 {
 }
 
@@ -125,8 +126,8 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
 
     manager->post(request, surveyResponse->toJsonByteArray());
 
-    connect(
-        manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
+    connect(manager, &QNetworkAccessManager::finished,
+        [&, surveyResponse](QNetworkReply* reply) {
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray response = reply->readAll();
                 storage->addSurveyResponse(*surveyResponse);

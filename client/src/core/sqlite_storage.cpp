@@ -1,5 +1,7 @@
 #include <QtSql>
 
+#include "core/storage.hpp"
+#include "daemon/survey.hpp"
 #include "survey_response.hpp"
 
 #include "sqlite_storage.hpp"
@@ -42,7 +44,6 @@ void migrate()
     query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
                   "    id INTEGER PRIMARY KEY,"
                   "    data TEXT,"
-                  "    survey_id Text,"
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
@@ -95,11 +96,11 @@ void SqliteStorage::addDataPoint(const QString& key, const QString& value)
     execQuery(query);
 }
 
-QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
+QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 {
-    QList<QSharedPointer<SurveyResponse>> responses;
+    QList<SurveyResponseRecord> responses;
     QSqlQuery query;
-    query.prepare("SELECT data, survey_id FROM survey_response");
+    query.prepare("SELECT data, created_at FROM survey_response");
     if (!execQuery(query))
         return responses;
 
@@ -107,7 +108,10 @@ QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
         const auto data = query.value(0).toByteArray();
         QSharedPointer<SurveyResponse> response(
             SurveyResponse::fromJsonByteArray(data));
-        responses.push_back(response);
+        const auto createdAt = query.value(1).toDateTime();
+        responses.push_back({ .response = response,
+            .createdAt = createdAt,
+            .commissionerName = "KDE" });
     }
 
     return responses;
@@ -116,9 +120,8 @@ QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
 void SqliteStorage::addSurveyResponse(const SurveyResponse& response)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO survey_response (data, survey_id created_at)"
-                  "values (:data, :survey_id, CURRENT_TIMESTAMP)");
+    query.prepare("INSERT INTO survey_response (data, created_at)"
+                  "values (:data, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
-    query.bindValue(":survey_id", response.surveyId);
     execQuery(query);
 }

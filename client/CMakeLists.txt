@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Gui Widgets Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Gui Widgets Test DBus)
 
 enable_testing(true)
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
