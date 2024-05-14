@@ -23,13 +23,13 @@ void setupTableWidget(QTableWidget& tableWidget)
 
         auto& response = responseEntry.response;
 
-        auto comissionersItem = new QTableWidgetItem; // NOLINT
-        comissionersItem->setText(responseEntry.commissionerName);
-        tableWidget.setItem(row, 1, comissionersItem);
+        auto commissionerItem = new QTableWidgetItem; // NOLINT
+        commissionerItem->setText(responseEntry.commissionerName);
+        tableWidget.setItem(row, 1, commissionerItem);
 
         auto dataTable = new QTableWidget(&tableWidget); // NOLINT
         dataTable->setColumnCount(2);
-        dataTable->setHorizontalHeaderLabels({ "Key", "Data" });
+        dataTable->setHorizontalHeaderLabels({ "Data point", "Cohorts" });
         dataTable->horizontalHeader()->setSectionResizeMode(
             QHeaderView::ResizeToContents);
         dataTable->horizontalHeader()->setStretchLastSection(true);
@@ -40,9 +40,9 @@ void setupTableWidget(QTableWidget& tableWidget)
         int dataRow = 0;
         for (const auto& queryResponse : response->queryResponses) {
             dataTable->insertRow(dataRow);
-            auto dataKeyItem = new QTableWidgetItem; // NOLINT
-            dataKeyItem->setText(queryResponse->queryId);
-            dataTable->setItem(dataRow, 0, dataKeyItem);
+            auto dataPointItem = new QTableWidgetItem; // NOLINT
+            dataPointItem->setText(queryResponse->queryId);
+            dataTable->setItem(dataRow, 0, dataPointItem);
             auto dataItem = new QTableWidgetItem; // NOLINT
             QString cohortDataString;
             for (auto it = queryResponse->cohortData.keyValueBegin();

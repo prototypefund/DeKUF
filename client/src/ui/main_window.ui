@@ -49,7 +49,7 @@
           </column>
           <column>
            <property name="text">
-            <string>Survey commissioners</string>
+            <string>Survey commissioner</string>
            </property>
           </column>
           <column>
@@ -71,7 +71,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>19</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
