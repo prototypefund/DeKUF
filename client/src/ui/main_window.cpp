@@ -44,16 +44,32 @@ void setupTableWidget(QTableWidget& tableWidget)
             // TODO: Look up the data point key by queryId here.
             dataPointItem->setText(queryResponse->queryId);
             dataTable->setItem(dataRow, 0, dataPointItem);
-            auto dataItem = new QTableWidgetItem; // NOLINT
-            QString cohortDataString;
+
+            auto cohortTable = new QTableWidget(dataTable); // NOLINT
+            cohortTable->setColumnCount(2);
+            cohortTable->setHorizontalHeaderLabels({ "Cohort", "Delta" });
+            cohortTable->horizontalHeader()->setSectionResizeMode(
+                QHeaderView::Stretch);
+            cohortTable->verticalHeader()->setVisible(false);
+            cohortTable->setSizeAdjustPolicy(
+                QAbstractScrollArea::AdjustToContents);
+            int cohortRow = 0;
             for (auto it = queryResponse->cohortData.keyValueBegin();
                  it != queryResponse->cohortData.keyValueEnd(); ++it) {
-                cohortDataString
-                    += it->first + ": " + QString::number(it->second) + ", ";
-                qDebug() << it->first << it->second;
+                cohortTable->insertRow(cohortRow);
+
+                auto cohortItem = new QTableWidgetItem; // NOLINT
+                cohortItem->setText(it->first);
+                cohortTable->setItem(cohortRow, 0, cohortItem);
+
+                auto deltaItem = new QTableWidgetItem; // NOLINT
+                deltaItem->setText(QString::number(it->second));
+                cohortTable->setItem(cohortRow, 1, deltaItem);
+
+                cohortRow++;
             }
-            dataItem->setText(cohortDataString);
-            dataTable->setItem(dataRow, 1, dataItem);
+            dataTable->setCellWidget(dataRow, 1, cohortTable);
+
             dataRow++;
         }
         tableWidget.setCellWidget(row, 2, dataTable);
