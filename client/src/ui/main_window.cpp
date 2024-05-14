@@ -41,6 +41,7 @@ void setupTableWidget(QTableWidget& tableWidget)
         for (const auto& queryResponse : response->queryResponses) {
             dataTable->insertRow(dataRow);
             auto dataPointItem = new QTableWidgetItem; // NOLINT
+            // TODO: Look up the data point key by queryId here.
             dataPointItem->setText(queryResponse->queryId);
             dataTable->setItem(dataRow, 0, dataPointItem);
             auto dataItem = new QTableWidgetItem; // NOLINT
