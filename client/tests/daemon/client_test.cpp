@@ -12,7 +12,7 @@ void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
     auto storage = QSharedPointer<StorageStub>::create();
 
     Survey survey("testId", "testName");
-    QList<QString> cohorts = { "[8, 16)", "[16, 32)", "[32, 60)" };
+    QList<QString> cohorts = { "8", "16", "32" };
     survey.queries.append(
         QSharedPointer<Query>::create("1", "testKey", cohorts, true));
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
@@ -22,7 +22,7 @@ void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
     const auto surveyResponse = client.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
-        = { { "[8, 16)", 1 }, { "[16, 32)", 0 }, { "[32, 60)", 0 } };
+        = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
 
     QVERIFY(!surveyResponse.isNull());
     QCOMPARE(surveyResponse->queryResponses.first()->queryId, "1");

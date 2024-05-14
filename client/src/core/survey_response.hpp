@@ -23,7 +23,9 @@ public:
     static QSharedPointer<SurveyResponse> fromJsonByteArray(
         const QByteArray& responseData);
 
-    QSharedPointer<Commissioner> commissioner;
+    explicit SurveyResponse(const QString& surveyId);
+
+    const QString surveyId;
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     QByteArray toJsonByteArray() const;

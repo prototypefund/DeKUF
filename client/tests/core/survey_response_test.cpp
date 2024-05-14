@@ -13,8 +13,7 @@ QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
 
 void SurveyResponseTest::testToByteArrayForEmptyResponse()
 {
-    SurveyResponse surveyResponse;
-    surveyResponse.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    SurveyResponse surveyResponse("1");
 
     const auto jsonSurveyResponse
         = QJsonDocument::fromJson(surveyResponse.toJsonByteArray()).object();
@@ -24,8 +23,7 @@ void SurveyResponseTest::testToByteArrayForEmptyResponse()
 
 void SurveyResponseTest::testToByteArrayForResponse()
 {
-    SurveyResponse surveyResponse;
-    surveyResponse.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    SurveyResponse surveyResponse("1");
 
     QMap<QString, int> cohortTestData
         = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
@@ -51,8 +49,7 @@ void SurveyResponseTest::testToByteArrayForResponse()
 
 void SurveyResponseTest::testToAndFromByteArray()
 {
-    SurveyResponse response;
-    response.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    SurveyResponse response("1");
 
     QMap<QString, int> cohortTestData
         = { { "8", 1 }, { "16", 0 }, { "32", 0 } };

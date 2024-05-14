@@ -42,6 +42,7 @@ void migrate()
     query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
                   "    id INTEGER PRIMARY KEY,"
                   "    data TEXT,"
+                  "    survey_id Text,"
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
@@ -98,7 +99,7 @@ QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
 {
     QList<QSharedPointer<SurveyResponse>> responses;
     QSqlQuery query;
-    query.prepare("SELECT data FROM survey_response");
+    query.prepare("SELECT data, survey_id FROM survey_response");
     if (!execQuery(query))
         return responses;
 
@@ -115,8 +116,9 @@ QList<QSharedPointer<SurveyResponse>> SqliteStorage::listSurveyResponses() const
 void SqliteStorage::addSurveyResponse(const SurveyResponse& response)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO survey_response (data, created_at)"
-                  "values (:data, CURRENT_TIMESTAMP)");
+    query.prepare("INSERT INTO survey_response (data, survey_id created_at)"
+                  "values (:data, :survey_id, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
+    query.bindValue(":survey_id", response.surveyId);
     execQuery(query);
 }

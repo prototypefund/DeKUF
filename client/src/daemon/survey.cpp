@@ -20,8 +20,8 @@ QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
         auto survey = QSharedPointer<Survey>::create(id, name);
 
         const auto commissionerJson = object["commissioner"].toObject();
-        const auto commissionerName = object["name"].toString();
-        survey->commissioner = QSharedPointer<Commissioner>::create(name);
+        survey->commissioner = QSharedPointer<Commissioner>::create(
+            commissionerJson["name"].toString());
 
         for (const auto& item : object["queries"].toArray()) {
             const auto object = item.toObject();

@@ -7,21 +7,24 @@ QueryResponse::QueryResponse(
 {
 }
 
+SurveyResponse::SurveyResponse(const QString& surveyId)
+    : surveyId(surveyId)
+{
+}
+
 QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
     const QByteArray& responseData)
 {
-    auto response = QSharedPointer<SurveyResponse>::create();
+
     const auto surveyResponseObject
         = QJsonDocument::fromJson(responseData).object();
 
-    const auto commissionerObject
-        = surveyResponseObject["commissioner"].toObject();
-
-    response->commissioner = QSharedPointer<Commissioner>::create(
-        commissionerObject["name"].toString());
+    const auto surveyId = surveyResponseObject["survey_id"].toString();
+    auto response = QSharedPointer<SurveyResponse>::create(surveyId);
 
     const auto queryResponseArray
         = surveyResponseObject["query_responses"].toArray();
+
     for (const auto& queryResponseItem : queryResponseArray) {
         const auto queryResponseObject = queryResponseItem.toObject();
         const auto queryId = queryResponseObject["query_id"].toString();
@@ -45,10 +48,12 @@ QByteArray SurveyResponse::toJsonByteArray() const
 {
     QJsonObject surveyJsonResponse;
     QJsonArray queryJsonResponses;
-    QJsonArray commissionersJson;
+
+    qDebug() << "sjdbfjhsbdhjbsdjhbfj";
 
     for (const auto& queryResponse : queryResponses) {
         QJsonObject queryJsonResponse;
+
         queryJsonResponse["query_id"] = queryResponse->queryId;
 
         QJsonObject cohortJsonResponse;
@@ -61,13 +66,8 @@ QByteArray SurveyResponse::toJsonByteArray() const
         queryJsonResponses.push_back(queryJsonResponse);
     }
 
-    QJsonObject commissionerJson;
-
-    commissionerJson["name"] = commissioner->name;
-    commissionersJson.push_back(commissionerJson);
-
     surveyJsonResponse["query_responses"] = queryJsonResponses;
-    surveyJsonResponse["commissioner"] = commissionersJson;
+    surveyJsonResponse["survey_id"] = surveyId;
 
     QJsonDocument root;
     root.setObject(surveyJsonResponse);

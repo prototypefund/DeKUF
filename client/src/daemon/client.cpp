@@ -37,7 +37,6 @@ void Client::run()
 {
     storage->addDataPoint("num-data-points",
         QVariant(storage->listDataPoints().size()).toString());
-    qDebug() << "Stored data points: ";
     for (const auto& dataPoint : storage->listDataPoints())
         qDebug() << "-" << dataPoint.value;
     fetchSurveys();
@@ -49,6 +48,7 @@ void Client::handleSurveysResponse(const QByteArray& data)
 
     QTextStream cout(stdout);
     const auto surveys = Survey::listFromByteArray(data);
+    qDebug() << "Fetched surveys:" << surveys.count();
     for (const auto& survey : surveys) {
         const auto surveyResponse = createSurveyResponse(*survey);
         if (surveyResponse == nullptr
@@ -66,9 +66,7 @@ QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     if (survey.commissioner->name != kdeName)
         return {};
 
-    auto surveyResponse = QSharedPointer<SurveyResponse>::create();
-    surveyResponse->commissioner
-        = QSharedPointer<Commissioner>::create(kdeName);
+    auto surveyResponse = QSharedPointer<SurveyResponse>::create(survey.id);
 
     for (const auto& query : survey.queries) {
         auto queryResponse = createQueryResponse(query);
@@ -83,24 +81,35 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     const QSharedPointer<Query>& query) const
 {
     const auto dataPoints = storage->listDataPoints(query->dataKey);
+
+    qDebug() << "Datakey" << query->dataKey;
+
     if (dataPoints.count() == 0)
         return nullptr;
+
+    qDebug() << "Found data:" << dataPoints.count();
 
     QMap<QString, int> cohortData;
 
     for (const QString& cohort : query->cohorts) {
         cohortData[cohort] = 0;
 
-        try {
-            auto interval = Interval(cohort);
+        for (const DataPoint& dataPoint : dataPoints) {
+            if (query->discrete) {
+                if (cohort == dataPoint.value) {
+                    cohortData[cohort]++;
+                }
+                continue;
+            }
+            try {
+                auto interval = Interval(cohort);
 
-            for (const DataPoint& dataPoint : dataPoints) {
                 if (interval.isInInterval(dataPoint.value.toDouble())) {
                     cohortData[cohort]++;
                 }
+            } catch (std::invalid_argument) {
+                // Error handling here
             }
-        } catch (std::invalid_argument) {
-            // Error handling here
         }
     }
 
@@ -120,7 +129,6 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
         manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray response = reply->readAll();
-                qDebug() << "Response:" << response;
                 storage->addSurveyResponse(*surveyResponse);
             } else {
                 QByteArray response = reply->readAll();
