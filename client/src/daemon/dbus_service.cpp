@@ -21,9 +21,10 @@ DBusService::DBusService(QSharedPointer<Storage> storage)
 {
     auto connection = QDBusConnection::sessionBus();
 
-    if (!connection.isConnected())
-        throw "DBusService: Failed to connect to D-Bus session bus";
-
+    if (!connection.isConnected()) {
+        qDebug() << "DBusService: Failed to connect to D-Bus session bus";
+        return;
+    }
     if (!connection.registerService("org.privact.data"))
         throw QString("DBusService: ")
             + qPrintable(connection.lastError().message());
