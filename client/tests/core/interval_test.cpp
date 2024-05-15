@@ -50,6 +50,8 @@ void IntervalTest::testValid()
     (Interval("[1, 2)"));
     (Interval("(1, 2]"));
     (Interval("[1,2]"));
+    (Interval("[1,inf)"));
+    (Interval("(-inf,2)"));
 }
 
 void IntervalTest::testInvalid()
@@ -63,6 +65,30 @@ void IntervalTest::testInvalid()
     QVERIFY_EXCEPTION_THROWN((Interval("[ 1, 2]")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("[1, 2 ]")), std::invalid_argument);
     QVERIFY_EXCEPTION_THROWN((Interval("[2, 1]")), std::invalid_argument);
+    QVERIFY_EXCEPTION_THROWN((Interval("[2, inf]")), std::invalid_argument);
+    QVERIFY_EXCEPTION_THROWN((Interval("[2, -inf]")), std::invalid_argument);
+    QVERIFY_EXCEPTION_THROWN((Interval("[inf, 2]")), std::invalid_argument);
+    QVERIFY_EXCEPTION_THROWN((Interval("[-inf, 2]")), std::invalid_argument);
+}
+
+void IntervalTest::testPositiveInfinite()
+{
+    Interval first("[0, inf)");
+    QCOMPARE(first.isInInterval(-1), false);
+    QCOMPARE(first.isInInterval(0), true);
+    QCOMPARE(first.isInInterval(1000), true);
+    QCOMPARE(first.isInInterval(-20000000), false);
+    QCOMPARE(first.isInInterval(3000000000), true);
+}
+
+void IntervalTest::testNegativeInfinite()
+{
+    Interval first("(-inf, 0]");
+    QCOMPARE(first.isInInterval(1), false);
+    QCOMPARE(first.isInInterval(0), true);
+    QCOMPARE(first.isInInterval(-1000), true);
+    QCOMPARE(first.isInInterval(20000000), false);
+    QCOMPARE(first.isInInterval(-3000000000), true);
 }
 
 QTEST_MAIN(IntervalTest)

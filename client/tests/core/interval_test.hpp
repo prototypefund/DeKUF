@@ -11,4 +11,6 @@ private slots:
     void testMixed();
     void testValid();
     void testInvalid();
+    void testPositiveInfinite();
+    void testNegativeInfinite();
 };

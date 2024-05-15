@@ -9,18 +9,38 @@ Interval::Interval(const QString& interval)
     upperInclusive = interval[interval.length() - 1] == ']';
 
     QStringList bounds = interval.mid(1, interval.length() - 2).split(",");
-    lowerBound = bounds[0].trimmed().toDouble();
-    upperBound = bounds[1].trimmed().toDouble();
+    auto lowerStr = bounds[0].trimmed();
+    auto upperStr = bounds[1].trimmed();
 
-    if (lowerBound >= upperBound)
-        throw std::invalid_argument("Lower bound greater or equal upper bound");
+    if (lowerStr == "-inf") {
+        lowerBound = -std::numeric_limits<double>::infinity();
+    } else {
+        lowerBound = lowerStr.toDouble();
+    }
+
+    if (upperStr == "inf") {
+        upperBound = std::numeric_limits<double>::infinity();
+    } else {
+        upperBound = upperStr.toDouble();
+    }
+
+    if ((!std::isinf(lowerBound) || !std::isinf(upperBound))
+        && lowerBound >= upperBound) {
+        throw std::invalid_argument(
+            "Lower bound greater than or equal upper bound");
+    }
 }
 
 bool Interval::isValidInterval(const QString& interval)
 {
-    QRegularExpression intervalExp(
+    QRegularExpression finiteInfExp(R"(^(\[)(-?\d+(\.\d+)?),\s*(inf)(\))$)");
+    QRegularExpression infFiniteExp(
+        R"(^(\()(-inf),\s*(-?\d+(\.\d+)?|\binf\b)(\]|\))$)");
+    QRegularExpression finiteExp(
         R"(^(\[|\()(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)(\]|\))$)");
-    return intervalExp.match(interval).hasMatch();
+    return finiteExp.match(interval).hasMatch()
+        || finiteInfExp.match(interval).hasMatch()
+        || infFiniteExp.match(interval).hasMatch();
 }
 
 bool Interval::isInInterval(const double& value)
