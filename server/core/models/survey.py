@@ -1,5 +1,6 @@
 import uuid
 
+from core.models.check_intervals import check_intervals
 from core.models.commissioner import Commissioner
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -20,11 +21,6 @@ class Query(models.Model):
         Survey, on_delete=models.CASCADE, related_name="queries"
     )
     data_key = models.CharField(max_length=100)
-    """
-    cohorts can be discrete eg. ["Yes", "No", "Unclear"] or can be continuous
-    by adding a "-" to indicate a range (last number is not included) eg.
-    ["-0", "0-10", "10-20", "20-"] resulting in 0<=x<10 , 10<=x<20
-    """
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
     number_participants = models.IntegerField(default=0, editable=False)
@@ -34,6 +30,8 @@ class Query(models.Model):
         return f"Query on {self.data_key}"
 
     def save(self, *args, **kwargs):
+        if not self.discrete:
+            check_intervals(self.cohorts)
         # TODO: Improve comparison
         if not set(self.aggregated_results.keys()) == set(self.cohorts):
             self.aggregated_results = {
