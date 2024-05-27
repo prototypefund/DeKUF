@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore>
+#include <daemon/survey.hpp>
 
 class SurveyResponse;
 
@@ -12,6 +13,7 @@ struct DataPoint {
 
 struct SurveyResponseRecord {
     QSharedPointer<SurveyResponse> response;
+    QSharedPointer<Survey> survey;
     QDateTime createdAt;
     QString commissionerName;
 };
@@ -22,5 +24,7 @@ public:
     virtual QList<DataPoint> listDataPoints(const QString& key = "") const = 0;
     virtual void addDataPoint(const QString& key, const QString& value) = 0;
     virtual QList<SurveyResponseRecord> listSurveyResponses() const = 0;
-    virtual void addSurveyResponse(const SurveyResponse& response) = 0;
+    virtual void addSurveyResponse(
+        const SurveyResponse& response, const Survey& survey)
+        = 0;
 };

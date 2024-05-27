@@ -117,11 +117,13 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
     return responses;
 }
 
-void SqliteStorage::addSurveyResponse(const SurveyResponse& response)
+void SqliteStorage::addSurveyResponse(
+    const SurveyResponse& response, const Survey& survey)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO survey_response (data, created_at)"
-                  "values (:data, CURRENT_TIMESTAMP)");
+    query.prepare("INSERT INTO survey_response (data, survey, created_at)"
+                  "values (:data, :survey CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
+    query.bindValue(":survey", "");
     execQuery(query);
 }

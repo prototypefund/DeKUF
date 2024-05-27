@@ -35,5 +35,6 @@ private:
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    void postSurveyResponse(QSharedPointer<SurveyResponse>);
+    void postSurveyResponse(
+        QSharedPointer<SurveyResponse>, QSharedPointer<Survey>);
 };

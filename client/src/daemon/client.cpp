@@ -55,7 +55,7 @@ void Client::handleSurveysResponse(const QByteArray& data)
         if (surveyResponse == nullptr
             || surveyResponse->queryResponses.isEmpty())
             continue;
-        postSurveyResponse(surveyResponse);
+        postSurveyResponse(surveyResponse, survey);
     }
 }
 
@@ -117,7 +117,8 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     return QSharedPointer<QueryResponse>::create(query->id, cohortData);
 }
 
-void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
+void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse,
+    QSharedPointer<Survey> survey)
 {
     QUrl url("http://localhost:8000/api/survey-response/");
     QNetworkRequest request(url);
@@ -127,10 +128,10 @@ void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse)
     manager->post(request, surveyResponse->toJsonByteArray());
 
     connect(manager, &QNetworkAccessManager::finished,
-        [&, surveyResponse](QNetworkReply* reply) {
+        [&, surveyResponse, survey](QNetworkReply* reply) {
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray response = reply->readAll();
-                storage->addSurveyResponse(*surveyResponse);
+                storage->addSurveyResponse(*surveyResponse, *survey);
             } else {
                 QByteArray response = reply->readAll();
                 QString errorString = reply->errorString();

@@ -12,7 +12,8 @@ public:
     QList<DataPoint> listDataPoints(const QString& key) const;
     void addDataPoint(const QString& key, const QString& value);
     QList<SurveyResponseRecord> listSurveyResponses() const;
-    void addSurveyResponse(const SurveyResponse& response);
+    void addSurveyResponse(
+        const SurveyResponse& response, const Survey& survey);
 
 private:
     QSqlDatabase db;

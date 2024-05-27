@@ -1,5 +1,6 @@
 #include <QTest>
 
+#include "daemon/survey.hpp"
 #include <core/sqlite_storage.hpp>
 #include <core/survey_response.hpp>
 
@@ -47,8 +48,9 @@ void SqliteStorageTest::testAddAndListSurveyResponses()
 {
     QCOMPARE(storage->listSurveyResponses().count(), 0);
 
+    Survey survey("1", "testName");
     SurveyResponse response("1");
-    storage->addSurveyResponse(response);
+    storage->addSurveyResponse(response, survey);
 
     QCOMPARE(storage->listSurveyResponses().count(), 1);
 }
