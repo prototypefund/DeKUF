@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models.commissioner import Commissioner
 from .models.response import QueryResponse, SurveyResponse
 from .models.survey import Query, Survey
+from .models.survey_signup import SurveySignup
 
 
 @admin.register(Commissioner)
@@ -33,3 +34,11 @@ class QueryResponseInline(admin.TabularInline):
 @admin.register(SurveyResponse)
 class SurveyResponseAdmin(admin.ModelAdmin):
     inlines = [QueryResponseInline]
+
+
+@admin.register(SurveySignup)
+class SurveySignupAdmin(admin.ModelAdmin):
+    list_display = ("id", "survey", "time")
+    list_display_links = ("id", "survey")
+    list_filter = ("survey", "time")
+    search_fields = ("id", "survey__name")
