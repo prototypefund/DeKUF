@@ -23,6 +23,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/survey-response/", save_survey_response, name="survey-response"),
     path("api/surveys/", get_surveys, name="get-surveys"),
-    path('api/survey-signup/<uuid:survey_id>/', signup_to_survey,
-         name='survey-signup'),
+    path(
+        "api/survey-signup/<uuid:survey_id>/",
+        signup_to_survey,
+        name="survey-signup",
+    ),
 ]

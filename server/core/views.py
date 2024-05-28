@@ -1,15 +1,13 @@
 import json
 
-from django.shortcuts import get_object_or_404
-
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
 from core.models.survey import Survey
+from core.models.survey_signup import SurveySignup
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from rest_framework.parsers import JSONParser
-
-from core.models.survey_signup import SurveySignup
 
 
 @csrf_exempt
@@ -47,9 +45,9 @@ def signup_to_survey(request, survey_id):
         survey_signup = SurveySignup.objects.create(survey=survey)
 
         response_data = {
-            'client_id': str(survey_signup.id),
-            'survey_id': str(survey.id),
-            'time': survey_signup.time.isoformat()
+            "client_id": str(survey_signup.id),
+            "survey_id": str(survey.id),
+            "time": survey_signup.time.isoformat(),
         }
 
         return JsonResponse(response_data, status=201)
