@@ -55,3 +55,36 @@ QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
     }
     return surveys;
 }
+
+QByteArray Survey::toByteArray() {
+    QJsonObject object;
+    object["id"] = id;
+    object["name"] = name;
+
+    if (commissioner) {
+        QJsonObject commissionerJson;
+        commissionerJson["name"] = commissioner->name;
+        object["commissioner"] = commissionerJson;
+    }
+
+    QJsonArray queriesArray;
+    for (const auto& query : queries) {
+        QJsonObject queryObject;
+        queryObject["id"] = query->id;
+        queryObject["data_key"] = query->dataKey;
+
+        QJsonArray cohortsArray;
+        for (const auto& cohort : query->cohorts) {
+            cohortsArray.append(QJsonValue(cohort));
+        }
+
+        queryObject["cohorts"] = cohortsArray;
+        queryObject["discrete"] = query->discrete;
+        queriesArray.append(queryObject);
+    }
+
+    object["queries"] = queriesArray;
+
+    const QJsonDocument doc(object);
+    return doc.toJson(QJsonDocument::Compact);
+}

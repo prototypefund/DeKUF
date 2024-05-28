@@ -1,7 +1,7 @@
 #include <QtSql>
 
 #include "core/storage.hpp"
-#include "daemon/survey.hpp"
+#include "core/survey.hpp"
 #include "survey_response.hpp"
 
 #include "sqlite_storage.hpp"

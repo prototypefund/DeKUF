@@ -22,6 +22,8 @@ public:
 
     static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
 
+    QByteArray toByteArray();
+
     const QString id;
     const QString name;
     QSharedPointer<Commissioner> commissioner;

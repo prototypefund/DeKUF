@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QtCore>
-#include <daemon/survey.hpp>
+#include <core/survey.hpp>
 
 class SurveyResponse;
 

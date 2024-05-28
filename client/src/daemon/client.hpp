@@ -5,8 +5,8 @@
 #include <core/storage.hpp>
 #include <core/survey_response.hpp>
 
+#include "core/survey.hpp"
 #include "dbus_service.hpp"
-#include "survey.hpp"
 
 class QNetworkAccessManager;
 
