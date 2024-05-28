@@ -1,6 +1,5 @@
 #include <QTest>
 
-
 #include "../core/survey_test.hpp"
 
 #include "core/survey.hpp"
@@ -60,17 +59,17 @@ void SurveyTest::testListFromByteArrayForSingleSurveyWithQuery()
 
 void SurveyTest::testToByteArrayForSingleSurveyWithQuery()
 {
-    const QList<QString> cohorts = {"1", "2", "3"};
+    const QList<QString> cohorts = { "1", "2", "3" };
     Survey survey("1234", "test");
-    const auto query = QSharedPointer<Query>::create("1111", "testKey", cohorts , true);
+    const auto query
+        = QSharedPointer<Query>::create("1111", "testKey", cohorts, true);
     survey.queries.append(query);
 
     const auto jsonSurvey
-    = QJsonDocument::fromJson(survey.toByteArray()).object();
+        = QJsonDocument::fromJson(survey.toByteArray()).object();
 
     QCOMPARE(jsonSurvey["id"], survey.id);
     QCOMPARE(jsonSurvey["name"], survey.name);
-
 
     const auto jsonQuery = jsonSurvey["queries"].toArray().first();
 
@@ -87,9 +86,10 @@ void SurveyTest::testToByteArrayForSingleSurveyWithQuery()
 
 void SurveyTest::testToByteArrayAndBackWorks()
 {
-    const QList<QString> cohorts = {"1", "2", "3"};
+    const QList<QString> cohorts = { "1", "2", "3" };
     Survey survey("1234", "test");
-    const auto query = QSharedPointer<Query>::create("1111", "testKey", cohorts , true);
+    const auto query
+        = QSharedPointer<Query>::create("1111", "testKey", cohorts, true);
     survey.queries.append(query);
 
     const auto reimportedSurvey = Survey::fromByteArray(survey.toByteArray());
