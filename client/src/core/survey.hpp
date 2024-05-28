@@ -22,7 +22,7 @@ public:
 
     static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
 
-    QByteArray toByteArray();
+    QByteArray toByteArray() const;
 
     const QString id;
     const QString name;

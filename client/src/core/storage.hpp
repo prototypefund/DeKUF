@@ -15,7 +15,6 @@ struct SurveyResponseRecord {
     QSharedPointer<SurveyResponse> response;
     QSharedPointer<Survey> survey;
     QDateTime createdAt;
-    QString commissionerName;
 };
 
 class Storage {

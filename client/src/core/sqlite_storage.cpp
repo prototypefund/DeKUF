@@ -44,6 +44,7 @@ void migrate()
     query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
                   "    id INTEGER PRIMARY KEY,"
                   "    data TEXT,"
+                  "    survey TEXT,"
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
@@ -100,18 +101,20 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 {
     QList<SurveyResponseRecord> responses;
     QSqlQuery query;
-    query.prepare("SELECT data, created_at FROM survey_response");
+    query.prepare("SELECT data, survey, created_at FROM survey_response");
     if (!execQuery(query))
         return responses;
 
     while (query.next()) {
         const auto data = query.value(0).toByteArray();
+        const auto surveyData = query.value(1).toByteArray();
         QSharedPointer<SurveyResponse> response(
             SurveyResponse::fromJsonByteArray(data));
-        const auto createdAt = query.value(1).toDateTime();
+        QSharedPointer<Survey> survey(Survey::fromByteArray(surveyData));
+        const auto createdAt = query.value(2).toDateTime();
         responses.push_back({ .response = response,
             .createdAt = createdAt,
-            .commissionerName = "KDE" });
+            .survey = survey });
     }
 
     return responses;
@@ -122,8 +125,8 @@ void SqliteStorage::addSurveyResponse(
 {
     QSqlQuery query;
     query.prepare("INSERT INTO survey_response (data, survey, created_at)"
-                  "values (:data, :survey CURRENT_TIMESTAMP)");
+                  "values (:data, :survey, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
-    query.bindValue(":survey", "");
+    query.bindValue(":survey", survey.toByteArray());
     execQuery(query);
 }
