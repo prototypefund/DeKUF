@@ -27,7 +27,7 @@ public:
         return surveyResponses;
     }
 
-    void addSurveyResponse(const SurveyResponse& response)
+    void addSurveyResponse(const SurveyResponse& response, const Survey& survey)
     {
         surveyResponses.push_back(
             { .response = QSharedPointer<SurveyResponse>::create(response),

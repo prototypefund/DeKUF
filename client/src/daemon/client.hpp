@@ -5,8 +5,8 @@
 #include <core/storage.hpp>
 #include <core/survey_response.hpp>
 
+#include "core/survey.hpp"
 #include "dbus_service.hpp"
-#include "survey.hpp"
 
 class QNetworkAccessManager;
 
@@ -35,5 +35,6 @@ private:
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    void postSurveyResponse(QSharedPointer<SurveyResponse>);
+    void postSurveyResponse(
+        QSharedPointer<SurveyResponse>, QSharedPointer<Survey>);
 };

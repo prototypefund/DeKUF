@@ -20,6 +20,10 @@ public:
     static QList<QSharedPointer<Survey>> listFromByteArray(
         const QByteArray& data);
 
+    static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
+
+    QByteArray toByteArray() const;
+
     const QString id;
     const QString name;
     QSharedPointer<Commissioner> commissioner;

@@ -1,7 +1,7 @@
 #include <QtSql>
 
 #include "core/storage.hpp"
-#include "daemon/survey.hpp"
+#include "core/survey.hpp"
 #include "survey_response.hpp"
 
 #include "sqlite_storage.hpp"
@@ -44,6 +44,7 @@ void migrate()
     query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
                   "    id INTEGER PRIMARY KEY,"
                   "    data TEXT,"
+                  "    survey TEXT,"
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
@@ -100,28 +101,31 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 {
     QList<SurveyResponseRecord> responses;
     QSqlQuery query;
-    query.prepare("SELECT data, created_at FROM survey_response");
+    query.prepare("SELECT data, survey, created_at FROM survey_response");
     if (!execQuery(query))
         return responses;
 
     while (query.next()) {
         const auto data = query.value(0).toByteArray();
+        const auto surveyData = query.value(1).toByteArray();
         QSharedPointer<SurveyResponse> response(
             SurveyResponse::fromJsonByteArray(data));
-        const auto createdAt = query.value(1).toDateTime();
-        responses.push_back({ .response = response,
-            .createdAt = createdAt,
-            .commissionerName = "KDE" });
+        QSharedPointer<Survey> survey(Survey::fromByteArray(surveyData));
+        const auto createdAt = query.value(2).toDateTime();
+        responses.push_back(
+            { .response = response, .survey = survey, .createdAt = createdAt });
     }
 
     return responses;
 }
 
-void SqliteStorage::addSurveyResponse(const SurveyResponse& response)
+void SqliteStorage::addSurveyResponse(
+    const SurveyResponse& response, const Survey& survey)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO survey_response (data, created_at)"
-                  "values (:data, CURRENT_TIMESTAMP)");
+    query.prepare("INSERT INTO survey_response (data, survey, created_at)"
+                  "values (:data, :survey, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
+    query.bindValue(":survey", survey.toByteArray());
     execQuery(query);
 }

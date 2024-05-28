@@ -2,7 +2,6 @@
 
 #include <core/survey_response.hpp>
 
-#include "core/commissioner.hpp"
 #include "survey_response_test.hpp"
 
 QJsonArray readQueriesFromSurveyJsonObject(QJsonObject jsonSurvey)
