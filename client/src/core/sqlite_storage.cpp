@@ -62,7 +62,7 @@ SqliteStorage::SqliteStorage(const QString& databasePath)
 
 SqliteStorage::SqliteStorage()
     : SqliteStorage(QDir::homePath() + QDir::separator() + userDir
-        + QDir::separator() + dbFileName)
+          + QDir::separator() + dbFileName)
 {
 }
 
@@ -112,9 +112,8 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
             SurveyResponse::fromJsonByteArray(data));
         QSharedPointer<Survey> survey(Survey::fromByteArray(surveyData));
         const auto createdAt = query.value(2).toDateTime();
-        responses.push_back({ .response = response,
-            .createdAt = createdAt,
-            .survey = survey });
+        responses.push_back(
+            { .response = response, .survey = survey, .createdAt = createdAt });
     }
 
     return responses;
