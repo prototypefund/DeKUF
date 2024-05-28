@@ -85,4 +85,23 @@ void SurveyTest::testToByteArrayForSingleSurveyWithQuery()
     }
 }
 
+void SurveyTest::testToByteArrayAndBackWorks()
+{
+    const QList<QString> cohorts = {"1", "2", "3"};
+    Survey survey("1234", "test");
+    const auto query = QSharedPointer<Query>::create("1111", "testKey", cohorts , true);
+    survey.queries.append(query);
+
+    const auto reimportedSurvey = Survey::fromByteArray(survey.toByteArray());
+    const auto reimportedQuery = reimportedSurvey->queries.first();
+
+    QCOMPARE(survey.id, reimportedSurvey->id);
+    QCOMPARE(survey.name, reimportedSurvey->name);
+
+    QCOMPARE(query->id, reimportedQuery->id);
+    QCOMPARE(query->dataKey, reimportedQuery->dataKey);
+    QCOMPARE(query->cohorts, reimportedQuery->cohorts);
+    QCOMPARE(query->discrete, reimportedQuery->discrete);
+}
+
 QTEST_MAIN(SurveyTest)

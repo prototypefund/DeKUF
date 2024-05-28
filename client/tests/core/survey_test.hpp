@@ -11,4 +11,5 @@ private slots:
     void testFromByteArrayForSingleSurveyWithQuery();
     void testListFromByteArrayForSingleSurveyWithQuery();
     void testToByteArrayForSingleSurveyWithQuery();
+    void testToByteArrayAndBackWorks();
 };
