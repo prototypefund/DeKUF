@@ -16,4 +16,4 @@ if __name__ == "__main__":
     call(["isort", "-l", "80", "--profile", "black", "."] + extra_args)
     call(["black", "-l", "80", "-C", "."] + extra_args)
     call(["mypy", "."] + extra_args)
-    call(["flake8", "--max-line-length=80", "."])
+    call(["flake8", "."])
