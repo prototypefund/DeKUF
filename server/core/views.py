@@ -1,6 +1,7 @@
 import json
 
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
+from core.models.grouping_logic import group_ungrouped_signups
 from core.models.survey import Survey
 from core.models.survey_signup import SurveySignup
 from django.http import HttpResponse, JsonResponse
@@ -49,6 +50,11 @@ def signup_to_survey(request, survey_id):
             "survey_id": str(survey.id),
             "time": survey_signup.time.isoformat(),
         }
+
+        group_ungrouped_signups(
+            ungrouped_signups=SurveySignup.objects.filter(group__isnull=True),
+            survey=survey,
+        )
 
         return JsonResponse(response_data, status=201)
     except json.JSONDecodeError:
