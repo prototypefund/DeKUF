@@ -24,7 +24,7 @@ test-server:
         - pip install --upgrade pip
         - export POETRY_HOME=/opt/poetry
         - python3 -m venv $POETRY_HOME
-        - $POETRY_HOME/bin/pip install poetry==1.2.0
+        - $POETRY_HOME/bin/pip install poetry==1.8.2
         - export PATH=$POETRY_HOME/bin:$PATH
         - poetry --version
         - cd server
