@@ -95,7 +95,7 @@ def message_to_delegate(request, delegate_id):
         AggregationGroup, delegate=delegate_id
     )
     if request.body is None:
-        HttpResponse("Message content required", status=400)
+        return HttpResponse("Message content required", status=400)
 
     try:
         body_data = json.loads(request.body.decode("utf-8"))

@@ -11,3 +11,5 @@ class ClientToDelegateMessage(models.Model):
         AggregationGroup, on_delete=models.DO_NOTHING, editable=False
     )
     content = models.JSONField(editable=False)
+
+    objects = models.Manager()

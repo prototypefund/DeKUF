@@ -39,7 +39,9 @@ class MessagingToDelegateTest(TestCase):
         self.assertEqual(len(ClientToDelegateMessage.objects.all()), 1)
         self.assertEqual(response.status_code, 201)
 
-    def test_messages_to_delegate_fails_with_incorrect_message_types(self):
+    def test_messages_to_delegate_fails_with_incorrect_message_types(
+        self,
+    ) -> None:
         url = reverse(
             "message-to-delegate", args=[self.aggregation_group.delegate.id]
         )
