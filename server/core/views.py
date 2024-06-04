@@ -1,10 +1,12 @@
 import json
 
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
+from core.models.aggregation_group import AggregationGroup
+from core.models.client_to_delegate_message import ClientToDelegateMessage
 from core.models.grouping_logic import group_ungrouped_signups
 from core.models.survey import Survey
 from core.models.survey_signup import SurveySignup
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -84,3 +86,27 @@ def get_signup_state(request, client_id):
         return JsonResponse(response_data, status=200)
     except json.JSONDecodeError:
         return HttpResponse("Invalid JSON", status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def message_to_delegate(request, delegate_id):
+    aggregation_group = get_object_or_404(
+        AggregationGroup, delegate=delegate_id
+    )
+    if request.body is None:
+        HttpResponse("Message content required", status=400)
+
+    try:
+        body_data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON")
+
+    if not isinstance(body_data, dict):
+        return HttpResponseBadRequest("Invalid data format")
+
+    ClientToDelegateMessage.objects.create(
+        delegate=delegate_id, group=aggregation_group, content=body_data
+    )
+
+    return HttpResponse(status=201)

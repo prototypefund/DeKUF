@@ -18,6 +18,7 @@ Including another URLconf
 from core.views import (
     get_signup_state,
     get_surveys,
+    message_to_delegate,
     save_survey_response,
     signup_to_survey,
 )
@@ -37,5 +38,10 @@ urlpatterns = [
         "api/signup-state/<uuid:client_id>/",
         get_signup_state,
         name="get-signup-state",
+    ),
+    path(
+        "api/message-to-delegate/<uuid:delegate_id>/",
+        message_to_delegate,
+        name="message-to-delegate",
     ),
 ]

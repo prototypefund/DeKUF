@@ -9,7 +9,6 @@ from django.urls import reverse
 
 
 class SurveySignupTest(TestCase):
-
     def setUp(self):
         commissioner = Commissioner.objects.create(name="TestCommissioner")
         self.survey = Survey.objects.create(
