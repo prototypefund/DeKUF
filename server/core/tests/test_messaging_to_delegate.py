@@ -59,3 +59,70 @@ class MessagingToDelegateTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_retrieving_for_messageless_delegate_fails(self):
+        url = reverse(
+            "get-messages-for-delegate",
+            args=[self.aggregation_group.delegate.id],
+        )
+
+        response = self.client.get(
+            url, content_type="application/x-www-form-urlencoded"
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_messages_to_delegate_can_be_retrieved_correctly(self):
+        post_url = reverse(
+            "message-to-delegate", args=[self.aggregation_group.delegate.id]
+        )
+
+        post_response = self.client.post(
+            post_url,
+            json.dumps({"testKey": "testValue"}),
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(len(ClientToDelegateMessage.objects.all()), 1)
+        self.assertEqual(post_response.status_code, 201)
+
+        get_url = reverse(
+            "get-messages-for-delegate",
+            args=[self.aggregation_group.delegate.id],
+        )
+
+        get_response = self.client.get(
+            get_url, content_type="application/x-www-form-urlencoded"
+        )
+
+        response_content = get_response.content.decode("utf-8")
+
+        self.assertJSONEqual(
+            response_content, '{"messages": [{"testKey": "testValue"}]}'
+        )
+
+        post_response = self.client.post(
+            post_url,
+            json.dumps({"testKey2": "testValue2"}),
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(len(ClientToDelegateMessage.objects.all()), 2)
+        self.assertEqual(post_response.status_code, 201)
+
+        get_url = reverse(
+            "get-messages-for-delegate",
+            args=[self.aggregation_group.delegate.id],
+        )
+
+        get_response = self.client.get(
+            get_url, content_type="application/x-www-form-urlencoded"
+        )
+
+        response_content = get_response.content.decode("utf-8")
+
+        self.assertJSONEqual(
+            response_content,
+            '{"messages": '
+            '[{"testKey": "testValue"}, {"testKey2": "testValue2"}]}',
+        )

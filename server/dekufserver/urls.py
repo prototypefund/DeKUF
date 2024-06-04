@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from core.views import (
+    get_messages_for_delegate,
     get_signup_state,
     get_surveys,
     message_to_delegate,
@@ -43,5 +44,10 @@ urlpatterns = [
         "api/message-to-delegate/<uuid:delegate_id>/",
         message_to_delegate,
         name="message-to-delegate",
+    ),
+    path(
+        "api/messages-for-delegate/<uuid:delegate_id>/",
+        get_messages_for_delegate,
+        name="get-messages-for-delegate",
     ),
 ]

@@ -110,3 +110,17 @@ def message_to_delegate(request, delegate_id):
     )
 
     return HttpResponse(status=201)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_messages_for_delegate(request, delegate_id):
+
+    messages = ClientToDelegateMessage.objects.filter(delegate=delegate_id)
+
+    if len(messages) == 0:
+        return HttpResponseBadRequest(f"No messages found for: {delegate_id}")
+
+    return JsonResponse(
+        {"messages": [message.content for message in messages]}, status=200
+    )
