@@ -22,7 +22,8 @@ class UngroupedSignupsGroupingTest(TestCase):
         with patch("core.models.grouping_logic.GROUP_SIZE", 4) and patch(
             "core.models.grouping_logic.GROUP_COUNT", 4
         ):
-            group_ungrouped_signups(SurveySignup.objects.all(), self.survey)
+            group_ungrouped_signups(list(SurveySignup.objects.all()),
+                                    self.survey)
 
             self.assertEqual(SurveySignup.objects.count(), 5)
             self.assertEqual(
@@ -35,7 +36,8 @@ class UngroupedSignupsGroupingTest(TestCase):
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
             with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(SurveySignup.objects.all(), self.survey)
+                group_ungrouped_signups(list(SurveySignup.objects.all()),
+                                        self.survey)
 
                 self.assertEqual(
                     len(SurveySignup.objects.filter(group__isnull=False)), 4
@@ -53,7 +55,8 @@ class UngroupedSignupsGroupingTest(TestCase):
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
             with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(SurveySignup.objects.all(), self.survey)
+                group_ungrouped_signups(list(SurveySignup.objects.all()),
+                                        self.survey)
 
                 self.assertEqual(
                     len(

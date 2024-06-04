@@ -52,7 +52,8 @@ def signup_to_survey(request, survey_id):
         }
 
         group_ungrouped_signups(
-            ungrouped_signups=SurveySignup.objects.filter(group__isnull=True),
+            ungrouped_signups=list(
+                SurveySignup.objects.filter(group__isnull=True)),
             survey=survey,
         )
 
