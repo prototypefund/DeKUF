@@ -33,7 +33,7 @@ class UngroupedSignupsGroupingTest(TestCase):
                 len(SurveySignup.objects.filter(group__isnull=True)), 0
             )
 
-    def test_grouping_works_for_multiple_groups(self):
+    def test_grouping_works_for_multiple_groups(self) -> None:
         for i in range(4):
             SurveySignup.objects.create(survey=self.survey)
 
@@ -57,7 +57,7 @@ class UngroupedSignupsGroupingTest(TestCase):
                 SurveySignup.objects.filter(group=group).count(), 2
             )
 
-    def test_grouping_works_for_multiple_groups_with_delegate(self):
+    def test_grouping_works_for_multiple_groups_with_delegate(self) -> None:
         for i in range(4):
             SurveySignup.objects.create(survey=self.survey)
 
