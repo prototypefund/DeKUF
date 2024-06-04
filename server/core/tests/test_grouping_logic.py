@@ -1,4 +1,6 @@
+from typing import Optional, Union
 from unittest.mock import patch
+from uuid import UUID
 
 from core.models.aggregation_group import AggregationGroup
 from core.models.commissioner import Commissioner
@@ -47,8 +49,12 @@ class UngroupedSignupsGroupingTest(TestCase):
 
                 signup = SurveySignup.objects.first()
 
+                group: Optional[Union[AggregationGroup, UUID]] = signup.group
+
+                self.assertTrue(group)
+
                 self.assertEqual(
-                    len(SurveySignup.objects.filter(group=signup.group)), 2
+                    len(SurveySignup.objects.filter(group=group)), 2
                 )
 
     def test_grouping_works_for_multiple_groups_with_delegate(self):
@@ -72,4 +78,5 @@ class UngroupedSignupsGroupingTest(TestCase):
                 signups_with_group = SurveySignup.objects.filter(
                     group=aggregation_group
                 )
+                self.assertTrue(aggregation_group.delegate)
                 self.assertIn(aggregation_group.delegate, signups_with_group)
