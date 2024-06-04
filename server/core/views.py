@@ -52,12 +52,33 @@ def signup_to_survey(request, survey_id):
         }
 
         group_ungrouped_signups(
-            ungrouped_signups=list(
-                SurveySignup.objects.filter(group__isnull=True)
-            ),
+            ungrouped_signups=list(SurveySignup.objects.filter(group__isnull=True)),
             survey=survey,
         )
 
         return JsonResponse(response_data, status=201)
+    except json.JSONDecodeError:
+        return HttpResponse("Invalid JSON", status=400)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_signup_state(request, client_id):
+    try:
+        survey_signup = get_object_or_404(SurveySignup, id=client_id)
+        aggregation_group = survey_signup.group
+
+        if not aggregation_group:
+            response_data = {"delegate_id": "", "aggregation_started": False}
+            return JsonResponse(response_data, status=200)
+
+        delegate = aggregation_group.delegate
+
+        response_data = {
+            "delegate_id": str(delegate.id),
+            "aggregation_started": True,
+        }
+
+        return JsonResponse(response_data, status=200)
     except json.JSONDecodeError:
         return HttpResponse("Invalid JSON", status=400)
