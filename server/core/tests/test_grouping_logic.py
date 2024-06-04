@@ -39,23 +39,22 @@ class UngroupedSignupsGroupingTest(TestCase):
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
             with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(
-                    list(SurveySignup.objects.all()), self.survey
-                )
+                group_ungrouped_signups(list(SurveySignup.objects.all()),
+                                        self.survey)
 
-                self.assertEqual(
-                    len(SurveySignup.objects.filter(group__isnull=False)), 4
-                )
+        self.assertEqual(
+            SurveySignup.objects.filter(group__isnull=False).count(), 4)
 
-                signup = SurveySignup.objects.first()
+        signup: Optional[SurveySignup] = SurveySignup.objects.first()
+        self.assertIsNotNone(
+            signup)
 
-                group: Optional[Union[AggregationGroup, UUID]] = signup.group
-
-                self.assertTrue(group)
-
-                self.assertEqual(
-                    len(SurveySignup.objects.filter(group=group)), 2
-                )
+        if signup:
+            group: Optional[Union[AggregationGroup, UUID]] = signup.group
+            self.assertIsNotNone(
+                group)
+            self.assertEqual(SurveySignup.objects.filter(group=group).count(),
+                             2)
 
     def test_grouping_works_for_multiple_groups_with_delegate(self):
         for i in range(4):
@@ -63,20 +62,21 @@ class UngroupedSignupsGroupingTest(TestCase):
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
             with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(
-                    list(SurveySignup.objects.all()), self.survey
-                )
+                group_ungrouped_signups(list(SurveySignup.objects.all()),
+                                        self.survey)
 
-                self.assertEqual(
-                    len(
-                        AggregationGroup.objects.filter(delegate__isnull=False)
-                    ),
-                    2,
-                )
+        self.assertEqual(
+            AggregationGroup.objects.filter(delegate__isnull=False).count(), 2)
 
-                aggregation_group = AggregationGroup.objects.first()
-                signups_with_group = SurveySignup.objects.filter(
-                    group=aggregation_group
-                )
-                self.assertTrue(aggregation_group.delegate)
+        aggregation_group: Optional[
+            AggregationGroup] = AggregationGroup.objects.first()
+        self.assertIsNotNone(
+            aggregation_group)
+
+        if aggregation_group:
+            signups_with_group = SurveySignup.objects.filter(
+                group=aggregation_group)
+            self.assertTrue(hasattr(aggregation_group,
+                                    'delegate') and aggregation_group.delegate)
+            if aggregation_group.delegate:
                 self.assertIn(aggregation_group.delegate, signups_with_group)
