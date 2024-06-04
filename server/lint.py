@@ -15,5 +15,5 @@ if __name__ == "__main__":
     extra_args = [] if fix else ["--check"]
     call(["isort", "-l", "80", "--profile", "black", "."] + extra_args)
     call(["black", "-l", "80", "-C", "."] + extra_args)
-    call(["mypy", "."] + extra_args)
+    call(["mypy", ".", "--check"])
     call(["flake8", "."])
