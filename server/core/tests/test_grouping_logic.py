@@ -34,9 +34,7 @@ class UngroupedSignupsGroupingTest(TestCase):
             SurveySignup.objects.create(survey=self.survey)
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
-            with patch(
-                "core.models.grouping_logic.GROUP_COUNT", 2
-            ):
+            with patch("core.models.grouping_logic.GROUP_COUNT", 2):
                 group_ungrouped_signups(SurveySignup.objects.all(), self.survey)
 
                 self.assertEqual(
@@ -46,26 +44,26 @@ class UngroupedSignupsGroupingTest(TestCase):
                 signup = SurveySignup.objects.first()
 
                 self.assertEqual(
-                    len(SurveySignup.objects.filter(group=signup.group)), 2)
+                    len(SurveySignup.objects.filter(group=signup.group)), 2
+                )
 
-    def test_grouping_works_for_multiple_groups(self):
+    def test_grouping_works_for_multiple_groups_with_delegate(self):
         for i in range(4):
             SurveySignup.objects.create(survey=self.survey)
 
         with patch("core.models.grouping_logic.GROUP_SIZE", 2):
-            with patch(
-                "core.models.grouping_logic.GROUP_COUNT", 2
-            ):
+            with patch("core.models.grouping_logic.GROUP_COUNT", 2):
                 group_ungrouped_signups(SurveySignup.objects.all(), self.survey)
 
                 self.assertEqual(
-                    len(AggregationGroup.objects.filter(
-                        delegate__isnull=False)), 2
+                    len(
+                        AggregationGroup.objects.filter(delegate__isnull=False)
+                    ),
+                    2,
                 )
 
                 aggregation_group = AggregationGroup.objects.first()
                 signups_with_group = SurveySignup.objects.filter(
-                    group=aggregation_group)
-                self.assertIn(aggregation_group.delegate,
-                              signups_with_group
-                              )
+                    group=aggregation_group
+                )
+                self.assertIn(aggregation_group.delegate, signups_with_group)
