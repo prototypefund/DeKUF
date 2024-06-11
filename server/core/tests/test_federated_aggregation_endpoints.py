@@ -133,3 +133,27 @@ class ResultPostingTest(TestCase):
         self.assertEqual(query.aggregated_results["yes"], 4)
         self.assertEqual(query.aggregated_results["no"], 6)
         self.assertEqual(response.status_code, 201)
+
+    def test_correctly_posted_aggregation_result_deletes_group_and_signup(self):
+
+        url = reverse("post-aggregation-result", args=[self.signup.id])
+
+        result = {
+            "survey_id": str(self.survey.id),
+            "query_responses": [
+                {"query_id": str(self.query.id), "data": {"yes": 4, "no": 6}}
+            ],
+        }
+
+        self.client.post(
+            url, data=json.dumps(result), content_type="application/json"
+        )
+
+        with self.assertRaises(SurveySignup.DoesNotExist):
+            SurveySignup.objects.get(id=self.signup.id)
+
+        with self.assertRaises(SurveySignup.DoesNotExist):
+            SurveySignup.objects.get(id=self.signup2.id)
+
+        with self.assertRaises(AggregationGroup.DoesNotExist):
+            AggregationGroup.objects.get(id=self.aggregation_group.id)
