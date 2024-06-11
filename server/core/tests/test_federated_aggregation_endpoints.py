@@ -3,7 +3,7 @@ import uuid
 
 from core.models.aggregation_group import AggregationGroup
 from core.models.commissioner import Commissioner
-from core.models.survey import Survey, Query
+from core.models.survey import Query, Survey
 from core.models.survey_signup import SurveySignup
 from django.test import TestCase
 from django.urls import reverse
@@ -120,17 +120,12 @@ class ResultPostingTest(TestCase):
         result = {
             "survey_id": str(self.survey.id),
             "query_responses": [
-                {
-                    "query_id": str(self.query.id),
-                    "data": {"yes": 4, "no": 6},
-                }
+                {"query_id": str(self.query.id), "data": {"yes": 4, "no": 6}}
             ],
         }
 
         response = self.client.post(
-            url,
-            data=json.dumps(result),
-            content_type="application/json",
+            url, data=json.dumps(result), content_type="application/json"
         )
 
         query = Query.objects.get(id=self.query.id)

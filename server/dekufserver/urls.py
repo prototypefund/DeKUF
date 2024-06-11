@@ -20,9 +20,9 @@ from core.views import (
     get_signup_state,
     get_surveys,
     message_to_delegate,
+    post_aggregation_result,
     save_survey_response,
     signup_to_survey,
-    post_aggregation_result,
 )
 from django.contrib import admin
 from django.urls import path
