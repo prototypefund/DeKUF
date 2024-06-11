@@ -22,6 +22,7 @@ from core.views import (
     message_to_delegate,
     save_survey_response,
     signup_to_survey,
+    post_aggregation_result,
 )
 from django.contrib import admin
 from django.urls import path
@@ -49,5 +50,10 @@ urlpatterns = [
         "api/messages-for-delegate/<uuid:delegate_id>/",
         get_messages_for_delegate,
         name="get-messages-for-delegate",
+    ),
+    path(
+        "api/post-aggregation-result/<uuid:delegate_id>/",
+        post_aggregation_result,
+        name="post-aggregation-result",
     ),
 ]

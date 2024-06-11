@@ -124,3 +124,33 @@ def get_messages_for_delegate(request, delegate_id):
     return JsonResponse(
         {"messages": [message.content for message in messages]}, status=200
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def post_aggregation_result(request, delegate_id):
+
+    aggregation_group = AggregationGroup.objects.get(delegate=delegate_id)
+
+    if not aggregation_group:
+        return HttpResponseBadRequest(
+            f"No aggregation group found for: {delegate_id}"
+        )
+
+    try:
+        survey_response_data = JSONParser().parse(request)
+
+        serializer = SurveyResponseSerializer(data=survey_response_data)
+
+        if serializer.is_valid():
+            survey_response = serializer.save()
+            for query_response in survey_response.query_responses.all():
+                query_response.query.aggregate_query_response(query_response)
+
+            SurveySignup.objects.filter(group=aggregation_group).delete()
+            aggregation_group.delete()
+            return JsonResponse(serializer.data, status=201)
+        else:
+            return JsonResponse(serializer.errors, status=400)
+    except json.JSONDecodeError:
+        return HttpResponse("Invalid JSON", status=400)
