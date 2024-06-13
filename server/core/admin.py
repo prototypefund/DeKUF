@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .models.aggregation_group import AggregationGroup
 from .models.commissioner import Commissioner
 from .models.response import QueryResponse, SurveyResponse
 from .models.survey import Query, Survey
@@ -42,3 +43,9 @@ class SurveySignupAdmin(admin.ModelAdmin):
     list_display_links = ("id", "survey")
     list_filter = ("survey", "time")
     search_fields = ("id", "survey__name")
+
+
+@admin.register(AggregationGroup)
+class AggregationGroupAdmin(admin.ModelAdmin):
+    list_display = ("id", "survey", "delegate")
+    search_fields = ("survey__name", "delegate__name")
