@@ -36,8 +36,7 @@ void Client::fetchSurveys()
 
 void Client::run()
 {
-    storage->addDataPoint("num-data-points",
-        QVariant(storage->listDataPoints().size()).toString());
+    qDebug() << "Stored datapoints:";
     for (const auto& dataPoint : storage->listDataPoints())
         qDebug() << "-" << dataPoint.value;
     fetchSurveys();
