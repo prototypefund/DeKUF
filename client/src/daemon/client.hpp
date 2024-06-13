@@ -9,6 +9,7 @@
 #include "dbus_service.hpp"
 
 class QNetworkAccessManager;
+class QNetworkReply;
 
 class Client : public QObject {
     Q_OBJECT
@@ -35,6 +36,9 @@ private:
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    void postSurveyResponse(
-        QSharedPointer<SurveyResponse>, QSharedPointer<Survey>);
+    void signUpForSurvey(const QSharedPointer<const Survey> survey);
+    void getRequest(
+        const QString& url, std::function<void(QNetworkReply*)> callback);
+    void postRequest(const QString& url, const QByteArray& data,
+        std::function<void(QNetworkReply*)> callback);
 };

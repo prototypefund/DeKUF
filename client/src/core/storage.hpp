@@ -17,6 +17,13 @@ struct SurveyResponseRecord {
     QDateTime createdAt;
 };
 
+struct SurveySignup {
+    QSharedPointer<Survey> survey;
+    QString state;
+    QString clientId;
+    QString delegateId;
+};
+
 class Storage {
 public:
     virtual ~Storage() {};
@@ -25,5 +32,9 @@ public:
     virtual QList<SurveyResponseRecord> listSurveyResponses() const = 0;
     virtual void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey)
+        = 0;
+    virtual QList<SurveySignup> listSurveySignups() const = 0;
+    virtual void addSurveySignup(const Survey& survey, const QString& state,
+        const QString& clientId, const QString& delegateId)
         = 0;
 };

@@ -48,6 +48,15 @@ void migrate()
                   "    created_at DATETIME"
                   ")");
     execQuery(query);
+
+    query.prepare("CREATE TABLE IF NOT EXISTS survey_signup("
+                  "    id INTEGER PRIMARY KEY,"
+                  "    survey TEXT,"
+                  "    state VARCHAR(255),"
+                  "    client_id VARCHAR(255),"
+                  "    delegate_id VARCHAR(255)"
+                  ")");
+    execQuery(query);
 }
 }
 
@@ -127,5 +136,43 @@ void SqliteStorage::addSurveyResponse(
                   "values (:data, :survey, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
     query.bindValue(":survey", survey.toByteArray());
+    execQuery(query);
+}
+
+QList<SurveySignup> SqliteStorage::listSurveySignups() const
+{
+    QList<SurveySignup> signups;
+    QSqlQuery query;
+    query.prepare(
+        "SELECT survey, state, client_id, delegate_id FROM survey_signup");
+    if (!execQuery(query))
+        return signups;
+
+    while (query.next()) {
+        const auto surveyData = query.value(0).toByteArray();
+        QSharedPointer<Survey> survey(Survey::fromByteArray(surveyData));
+        const auto state = query.value(1).toString();
+        const auto clientId = query.value(2).toString();
+        const auto delegateId = query.value(3).toString();
+        signups.push_back({ .survey = survey,
+            .state = state,
+            .clientId = clientId,
+            .delegateId = delegateId });
+    }
+
+    return signups;
+}
+
+void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
+    const QString& clientId, const QString& delegateId)
+{
+    QSqlQuery query;
+    query.prepare(
+        "INSERT INTO survey_signup (survey, state, client_id, delegate_id)"
+        "values (:survey, :state, :client_id, :delegate_id)");
+    query.bindValue(":survey", survey.toByteArray());
+    query.bindValue(":state", state);
+    query.bindValue(":client_id", clientId);
+    query.bindValue(":delegate_id", delegateId);
     execQuery(query);
 }

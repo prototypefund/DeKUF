@@ -19,20 +19,15 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 void Client::fetchSurveys()
 {
     qDebug() << "Fetching surveys ...";
-    QUrl url("http://localhost:8000/api/surveys");
-    QNetworkRequest request(url);
-    manager->get(request);
-    connect(
-        manager, &QNetworkAccessManager::finished, [&](QNetworkReply* reply) {
-            if (reply->error() == QNetworkReply::NoError) {
-                const auto responseData = reply->readAll();
-                handleSurveysResponse(responseData);
-            } else {
-                qCritical() << "Error:" << reply->errorString();
-                emit finished();
-            }
-            reply->deleteLater();
-        });
+    getRequest("http://localhost:8000/api/surveys", [&](QNetworkReply* reply) {
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical() << "Error:" << reply->errorString();
+            emit finished();
+            return;
+        }
+        const auto responseData = reply->readAll();
+        handleSurveysResponse(responseData);
+    });
 }
 
 void Client::run()
@@ -40,6 +35,11 @@ void Client::run()
     qDebug() << "Stored datapoints:";
     for (const auto& dataPoint : storage->listDataPoints())
         qDebug() << "-" << dataPoint.value;
+
+    qDebug() << "Survey signups:";
+    for (const auto& signup : storage->listSurveySignups())
+        qDebug() << "-" << signup.survey->id << "as" << signup.clientId;
+
     fetchSurveys();
 }
 
@@ -49,24 +49,50 @@ void Client::handleSurveysResponse(const QByteArray& data)
 
     QTextStream cout(stdout);
     const auto surveys = Survey::listFromByteArray(data);
+
     qDebug() << "Fetched surveys:" << surveys.count();
+
+    QSet<QString> signedUpSurveys;
+    for (const auto& signup : storage->listSurveySignups())
+        signedUpSurveys.insert(signup.survey->id);
+
     for (const auto& survey : surveys) {
-        const auto surveyResponse = createSurveyResponse(*survey);
-        if (surveyResponse == nullptr
-            || surveyResponse->queryResponses.isEmpty())
+        if (signedUpSurveys.contains(survey->id))
             continue;
-        postSurveyResponse(surveyResponse, survey);
+
+        // Only KDE allowed as commissioner
+        QString kdeName("KDE");
+        if (survey->commissioner->name != kdeName)
+            continue;
+
+        signUpForSurvey(survey);
     }
+
+    // TODO: In principle, we should wait for all survey signups to finish.
+    emit finished();
+}
+
+void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
+{
+    auto url = QString("http://localhost:8000/api/survey-signup/%1/")
+                   .arg(survey->id);
+    postRequest(url, "", [&, survey](QNetworkReply* reply) {
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical() << "Error:" << reply->errorString();
+            return;
+        }
+
+        const auto responseData = reply->readAll();
+        const auto responseObject
+            = QJsonDocument::fromJson(responseData).object();
+        const auto clientId = responseObject["client_id"].toString();
+        storage->addSurveySignup(*survey, "TODO", clientId, "");
+    });
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     const Survey& survey) const
 {
-    // Only KDE allowed as commissioner
-    QString kdeName("KDE");
-    if (survey.commissioner->name != kdeName)
-        return {};
-
     auto surveyResponse = QSharedPointer<SurveyResponse>::create(survey.id);
 
     for (const auto& query : survey.queries) {
@@ -117,28 +143,31 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     return QSharedPointer<QueryResponse>::create(query->id, cohortData);
 }
 
-void Client::postSurveyResponse(QSharedPointer<SurveyResponse> surveyResponse,
-    QSharedPointer<Survey> survey)
+void Client::getRequest(
+    const QString& url, std::function<void(QNetworkReply*)> callback)
 {
-    QUrl url("http://localhost:8000/api/survey-response/");
     QNetworkRequest request(url);
-
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    manager->post(request, surveyResponse->toJsonByteArray());
-
-    connect(manager, &QNetworkAccessManager::finished,
-        [&, surveyResponse, survey](QNetworkReply* reply) {
-            if (reply->error() == QNetworkReply::NoError) {
-                QByteArray response = reply->readAll();
-                storage->addSurveyResponse(*surveyResponse, *survey);
-            } else {
-                QByteArray response = reply->readAll();
-                QString errorString = reply->errorString();
-                qCritical() << "Response error:" << response;
-                qCritical() << "Error string:" << reply->errorString();
-            }
+    manager->get(request);
+    connect(
+        manager, &QNetworkAccessManager::finished, this,
+        [&, callback](QNetworkReply* reply) {
+            callback(reply);
             reply->deleteLater();
-            emit finished();
-        });
+        },
+        static_cast<Qt::ConnectionType>(Qt::SingleShotConnection));
+}
+
+void Client::postRequest(const QString& url, const QByteArray& data,
+    std::function<void(QNetworkReply*)> callback)
+{
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    manager->post(request, data);
+    connect(
+        manager, &QNetworkAccessManager::finished, this,
+        [&, callback](QNetworkReply* reply) {
+            callback(reply);
+            reply->deleteLater();
+        },
+        static_cast<Qt::ConnectionType>(Qt::SingleShotConnection));
 }

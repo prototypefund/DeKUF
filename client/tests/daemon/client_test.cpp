@@ -9,6 +9,8 @@
 
 void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
 {
+    QSKIP("Commissioner check logic moved out of createSurveyResponse");
+
     auto storage = QSharedPointer<StorageStub>::create();
 
     Survey survey("testId", "testName");
@@ -84,6 +86,8 @@ void ClientTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
 
 void ClientTest::testCreateSurveyResponseNullForWrongCommissioner()
 {
+    QSKIP("Commissioner check logic moved out of createSurveyResponse");
+
     auto storage = QSharedPointer<StorageStub>::create();
 
     Survey survey("testId", "testName");

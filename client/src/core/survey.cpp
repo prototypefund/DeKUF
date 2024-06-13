@@ -56,6 +56,7 @@ QList<QSharedPointer<Survey>> Survey::listFromByteArray(const QByteArray& data)
     return surveys;
 }
 
+// TODO: Rename to toJsonByteArray.
 QByteArray Survey::toByteArray() const
 {
     QJsonObject object;

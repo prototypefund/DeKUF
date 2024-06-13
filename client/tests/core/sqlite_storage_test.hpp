@@ -18,4 +18,5 @@ private slots:
     void testListDataPointsByName();
     void testAddAndListSurveyResponses();
     void testAddAndListSurveyResponseWithSurvey();
+    void testAddAndListSurveySignups();
 };

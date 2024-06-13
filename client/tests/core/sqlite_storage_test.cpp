@@ -75,4 +75,17 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
     QCOMPARE(surveyResponse.survey->name, "testName");
 }
 
+void SqliteStorageTest::testAddAndListSurveySignups()
+{
+    QCOMPARE(storage->listSurveySignups().count(), 0);
+
+    Survey survey("1", "testName");
+    QString state("foo");
+    QString clientId("bar");
+    QString delegateId("");
+    storage->addSurveySignup(survey, state, clientId, delegateId);
+
+    QCOMPARE(storage->listSurveySignups().count(), 1);
+}
+
 QTEST_MAIN(SqliteStorageTest)
