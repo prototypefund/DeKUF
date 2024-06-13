@@ -18,6 +18,7 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 
 void Client::fetchSurveys()
 {
+    qDebug() << "Fetching surveys ...";
     QUrl url("http://localhost:8000/api/surveys");
     QNetworkRequest request(url);
     manager->get(request);
