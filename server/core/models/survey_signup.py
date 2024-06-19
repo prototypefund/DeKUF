@@ -12,5 +12,5 @@ class SurveySignup(models.Model):
     )
     time = models.DateTimeField(auto_now_add=True, editable=False)
     group = models.ForeignKey(
-        AggregationGroup, on_delete=models.DO_NOTHING, null=True
+        AggregationGroup, on_delete=models.SET_NULL, null=True
     )
