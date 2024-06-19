@@ -1,5 +1,6 @@
 import json
 import uuid
+from unittest.mock import patch
 
 from core.models.aggregation_group import AggregationGroup
 from core.models.commissioner import Commissioner
@@ -72,16 +73,21 @@ class GetSignupStateTest(TestCase):
         self.signup.save()
         url = reverse("get-signup-state", args=[self.signup.id])
 
-        response = self.client.get(
-            url, content_type="application/x-www-form-urlencoded"
-        )
+        with patch("core.models.grouping_logic.GROUP_SIZE", 1):
+            response = self.client.get(
+                url, content_type="application/x-www-form-urlencoded"
+            )
 
-        self.assertJSONEqual(
-            response.content.decode("utf-8"),
-            {"delegate_id": str(self.signup.id), "aggregation_started": True},
-        )
+            self.assertJSONEqual(
+                response.content.decode("utf-8"),
+                {
+                    "delegate_id": str(self.signup.id),
+                    "aggregation_started": True,
+                    "group_size": 1,
+                },
+            )
 
-        self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
 
     def test_404_with_incorrect_client_id(self):
         url = reverse("get-signup-state", args=[uuid.uuid4()])
@@ -114,7 +120,6 @@ class ResultPostingTest(TestCase):
         self.signup2.save()
 
     def test_correctly_posted_aggregation_result_is_aggregated(self):
-
         url = reverse("post-aggregation-result", args=[self.signup.id])
 
         result = {
@@ -135,7 +140,6 @@ class ResultPostingTest(TestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_correctly_posted_aggregation_result_deletes_group_and_signup(self):
-
         url = reverse("post-aggregation-result", args=[self.signup.id])
 
         result = {
