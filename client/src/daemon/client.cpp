@@ -86,7 +86,7 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
         const auto responseObject
             = QJsonDocument::fromJson(responseData).object();
         const auto clientId = responseObject["client_id"].toString();
-        storage->addSurveySignup(*survey, "TODO", clientId, "");
+        storage->addSurveySignup(*survey, "initial", clientId, "");
     });
 }
 

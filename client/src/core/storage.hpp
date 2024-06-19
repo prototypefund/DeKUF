@@ -19,7 +19,11 @@ struct SurveyResponseRecord {
 
 struct SurveySignup {
     QSharedPointer<Survey> survey;
+
+    // TODO: This probably deserves an enum and better named/documented states.
+    /// Possible states: initial, processing, done
     QString state;
+
     QString clientId;
     QString delegateId;
 };
