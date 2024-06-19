@@ -15,8 +15,10 @@ public:
     void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey);
     QList<SurveySignup> listSurveySignups() const;
+    QList<SurveySignup> listSurveySignupsForState(const QString& state) const;
     void addSurveySignup(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId);
+    void saveSurveySignup(const SurveySignup& signup);
 
 private:
     QSqlDatabase db;

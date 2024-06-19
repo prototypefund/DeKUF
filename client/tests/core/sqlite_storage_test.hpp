@@ -19,4 +19,6 @@ private slots:
     void testAddAndListSurveyResponses();
     void testAddAndListSurveyResponseWithSurvey();
     void testAddAndListSurveySignups();
+    void testListSurveySignupForState();
+    void testSaveSurveySignup();
 };

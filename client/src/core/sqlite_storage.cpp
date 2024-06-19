@@ -163,6 +163,16 @@ QList<SurveySignup> SqliteStorage::listSurveySignups() const
     return signups;
 }
 
+QList<SurveySignup> SqliteStorage::listSurveySignupsForState(
+    const QString& state) const
+{
+    QList<SurveySignup> signups;
+    for (auto signup : listSurveySignups())
+        if (signup.state == state)
+            signups.append(signup);
+    return signups;
+}
+
 void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
     const QString& clientId, const QString& delegateId)
 {
@@ -174,5 +184,18 @@ void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
     query.bindValue(":state", state);
     query.bindValue(":client_id", clientId);
     query.bindValue(":delegate_id", delegateId);
+    execQuery(query);
+}
+
+void SqliteStorage::saveSurveySignup(const SurveySignup& signup)
+{
+    // TODO: The only thing that can currently be changed is the state.
+    QSqlQuery query;
+    query.prepare(
+        R"(UPDATE survey_signup
+           SET state = :state
+           WHERE client_id = :client_id)");
+    query.bindValue(":state", signup.state);
+    query.bindValue(":client_id", signup.clientId);
     execQuery(query);
 }

@@ -37,6 +37,15 @@ public:
 
     QList<SurveySignup> listSurveySignups() const { return surveySignups; }
 
+    QList<SurveySignup> listSurveySignupsForState(const QString& state) const
+    {
+        QList<SurveySignup> signups;
+        for (auto signup : listSurveySignups())
+            if (signup.state == state)
+                signups.append(signup);
+        return signups;
+    }
+
     void addSurveySignup(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId)
     {
@@ -45,5 +54,16 @@ public:
                 .state = state,
                 .clientId = clientId,
                 .delegateId = delegateId });
+    }
+
+    void saveSurveySignup(const SurveySignup& signup)
+    {
+        // TODO: The only thing that can currently be changed is the state.
+        for (auto signup : surveySignups) {
+            if (signup.clientId != signup.clientId)
+                continue;
+            signup.state = signup.state;
+            break;
+        }
     }
 };

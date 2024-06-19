@@ -18,7 +18,7 @@ class Client : public QObject {
 
 public:
     Client(QObject* parent, QSharedPointer<Storage> storage);
-    void fetchSurveys();
+    void processSurveys(std::function<void()> callback);
 
 public slots:
     void run();
@@ -32,6 +32,8 @@ private:
     DBusService dbusService;
 
     void handleSurveysResponse(const QByteArray& data);
+    void processSignup(SurveySignup& signup);
+    void processSignups();
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(

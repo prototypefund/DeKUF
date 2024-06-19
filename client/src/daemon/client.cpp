@@ -16,18 +16,20 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 {
 }
 
-void Client::fetchSurveys()
+void Client::processSurveys(std::function<void()> callback)
 {
-    qDebug() << "Fetching surveys ...";
-    getRequest("http://localhost:8000/api/surveys", [&](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            emit finished();
-            return;
-        }
-        const auto responseData = reply->readAll();
-        handleSurveysResponse(responseData);
-    });
+    qDebug() << "Processing surveys ...";
+    getRequest("http://localhost:8000/api/surveys",
+        [&, callback](QNetworkReply* reply) {
+            if (reply->error() != QNetworkReply::NoError) {
+                qCritical() << "Error:" << reply->errorString();
+                callback();
+                return;
+            }
+            const auto responseData = reply->readAll();
+            handleSurveysResponse(responseData);
+            callback();
+        });
 }
 
 void Client::run()
@@ -38,9 +40,14 @@ void Client::run()
 
     qDebug() << "Survey signups:";
     for (const auto& signup : storage->listSurveySignups())
-        qDebug() << "-" << signup.survey->id << "as" << signup.clientId;
+        qDebug() << "-" << signup.survey->id << "as" << signup.clientId
+                 << "state:" << signup.state;
 
-    fetchSurveys();
+    // TODO: Use futures or something to get out of callback hell.
+    processSurveys([&]() { processSignups(); });
+
+    // TODO: Wait for all requests triggered above to finish.
+    emit finished();
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
@@ -67,9 +74,6 @@ void Client::handleSurveysResponse(const QByteArray& data)
 
         signUpForSurvey(survey);
     }
-
-    // TODO: In principle, we should wait for all survey signups to finish.
-    emit finished();
 }
 
 void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
@@ -88,6 +92,44 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
         const auto clientId = responseObject["client_id"].toString();
         storage->addSurveySignup(*survey, "initial", clientId, "");
     });
+}
+
+void Client::processSignup(SurveySignup& signup)
+{
+    qDebug() << "Processing signups ...";
+    const auto url = QString("http://localhost:8000/api/signup-state/%1/")
+                         .arg(signup.clientId);
+    getRequest(url, [&, signup](QNetworkReply* reply) mutable {
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical() << "Error:" << reply->errorString();
+            return;
+        }
+
+        const auto responseData = reply->readAll();
+        const auto responseDocument = QJsonDocument::fromJson(responseData);
+        const auto responseObject = responseDocument.object();
+        if (!responseObject["aggregation_started"].toBool())
+            return;
+
+        signup.delegateId = responseObject["delegate_id"].toString();
+
+        if (signup.clientId == signup.delegateId) {
+            signup.state = "processing";
+            // TODO: Save group_size.
+        } else {
+            // TODO: Send data to delegate.
+            signup.state = "done";
+        }
+
+        storage->saveSurveySignup(signup);
+    });
+}
+
+void Client::processSignups()
+{
+    auto signups = storage->listSurveySignupsForState("initial");
+    for (auto signup : signups)
+        processSignup(signup);
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
