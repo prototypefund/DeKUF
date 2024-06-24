@@ -109,10 +109,12 @@ void SqliteStorageTest::testSaveSurveySignup()
     auto signup = storage->listSurveySignups().first();
     signup.state = "bar";
     signup.delegateId = "2";
+    signup.groupSize = 1337;
     storage->saveSurveySignup(signup);
     auto retrievedSignup = storage->listSurveySignups().first();
     QCOMPARE(retrievedSignup.state, signup.state);
     QCOMPARE(retrievedSignup.delegateId, signup.delegateId);
+    QCOMPARE(retrievedSignup.groupSize, signup.groupSize);
 }
 
 QTEST_MAIN(SqliteStorageTest)

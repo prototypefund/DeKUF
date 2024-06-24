@@ -118,7 +118,7 @@ void Client::processSignup(SurveySignup& signup, std::function<void()> callback)
 
         if (signup.clientId == signup.delegateId) {
             signup.state = "processing";
-            // TODO: Save group_size.
+            signup.groupSize = responseObject["group_size"].toInt();
             // TODO: Either send data to itself here, or implement some other
             //       logic to deal with the delegate's own data - also for the
             //       group_size = 1 case.

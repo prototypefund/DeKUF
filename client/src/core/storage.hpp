@@ -26,6 +26,7 @@ struct SurveySignup {
 
     QString clientId;
     QString delegateId;
+    int groupSize;
 };
 
 class Storage {

@@ -54,7 +54,8 @@ void migrate()
                   "    survey TEXT,"
                   "    state VARCHAR(255),"
                   "    client_id VARCHAR(255),"
-                  "    delegate_id VARCHAR(255)"
+                  "    delegate_id VARCHAR(255),"
+                  "    group_size INT"
                   ")");
     execQuery(query);
 }
@@ -143,8 +144,8 @@ QList<SurveySignup> SqliteStorage::listSurveySignups() const
 {
     QList<SurveySignup> signups;
     QSqlQuery query;
-    query.prepare(
-        "SELECT survey, state, client_id, delegate_id FROM survey_signup");
+    query.prepare("SELECT survey, state, client_id, delegate_id, group_size "
+                  "FROM survey_signup");
     if (!execQuery(query))
         return signups;
 
@@ -154,10 +155,12 @@ QList<SurveySignup> SqliteStorage::listSurveySignups() const
         const auto state = query.value(1).toString();
         const auto clientId = query.value(2).toString();
         const auto delegateId = query.value(3).toString();
+        const auto groupSize = query.value(4).toInt();
         signups.push_back({ .survey = survey,
             .state = state,
             .clientId = clientId,
-            .delegateId = delegateId });
+            .delegateId = delegateId,
+            .groupSize = groupSize });
     }
 
     return signups;
@@ -199,16 +202,18 @@ void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
 
 void SqliteStorage::saveSurveySignup(const SurveySignup& signup)
 {
-    // TODO: The only things that can currently be changed is the state and the
-    //       delegate ID.
+    // TODO: The only things that can currently be changed are state,delegate ID
+    //       and group size.
     QSqlQuery query;
     query.prepare(
         R"(UPDATE survey_signup
            SET state = :state,
-               delegate_id = :delegate_id
+               delegate_id = :delegate_id,
+               group_size = :group_size
            WHERE client_id = :client_id)");
     query.bindValue(":state", signup.state);
     query.bindValue(":delegate_id", signup.delegateId);
     query.bindValue(":client_id", signup.clientId);
+    query.bindValue(":group_size", signup.groupSize);
     execQuery(query);
 }
