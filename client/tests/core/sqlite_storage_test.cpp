@@ -100,8 +100,11 @@ void SqliteStorageTest::testSaveSurveySignup()
     storage->addSurveySignup(Survey("1", "1"), "foo", "1", "");
     auto signup = storage->listSurveySignups().first();
     signup.state = "bar";
+    signup.delegateId = "2";
     storage->saveSurveySignup(signup);
-    QCOMPARE(storage->listSurveySignups().first().state, signup.state);
+    auto retrievedSignup = storage->listSurveySignups().first();
+    QCOMPARE(retrievedSignup.state, signup.state);
+    QCOMPARE(retrievedSignup.delegateId, signup.delegateId);
 }
 
 QTEST_MAIN(SqliteStorageTest)

@@ -189,13 +189,16 @@ void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
 
 void SqliteStorage::saveSurveySignup(const SurveySignup& signup)
 {
-    // TODO: The only thing that can currently be changed is the state.
+    // TODO: The only things that can currently be changed is the state and the
+    //       delegate ID.
     QSqlQuery query;
     query.prepare(
         R"(UPDATE survey_signup
-           SET state = :state
+           SET state = :state,
+               delegate_id = :delegate_id
            WHERE client_id = :client_id)");
     query.bindValue(":state", signup.state);
+    query.bindValue(":delegate_id", signup.delegateId);
     query.bindValue(":client_id", signup.clientId);
     execQuery(query);
 }
