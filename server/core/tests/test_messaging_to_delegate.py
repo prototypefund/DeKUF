@@ -26,6 +26,9 @@ class MessagingToDelegateTest(TestCase):
         self.signup2.save()
 
     def test_messages_to_delegate_are_stored_correctly(self):
+        if not self.aggregation_group.delegate:
+            raise AttributeError("Delegate can't be null")
+
         url = reverse(
             "message-to-delegate", args=[self.aggregation_group.delegate.id]
         )
@@ -42,6 +45,9 @@ class MessagingToDelegateTest(TestCase):
     def test_messages_to_delegate_fails_with_incorrect_message_types(
         self,
     ) -> None:
+        if not self.aggregation_group.delegate:
+            raise AttributeError("Delegate can't be null")
+
         url = reverse(
             "message-to-delegate", args=[self.aggregation_group.delegate.id]
         )
@@ -61,6 +67,9 @@ class MessagingToDelegateTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_retrieving_for_messageless_delegate_fails(self):
+        if not self.aggregation_group.delegate:
+            raise AttributeError("Delegate can't be null")
+
         url = reverse(
             "get-messages-for-delegate",
             args=[self.aggregation_group.delegate.id],
@@ -73,6 +82,9 @@ class MessagingToDelegateTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_messages_to_delegate_can_be_retrieved_correctly(self):
+        if not self.aggregation_group.delegate:
+            raise AttributeError("Delegate can't be null")
+
         post_url = reverse(
             "message-to-delegate", args=[self.aggregation_group.delegate.id]
         )

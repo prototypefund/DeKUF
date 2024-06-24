@@ -72,11 +72,11 @@ def get_signup_state(request, client_id):
         survey_signup = get_object_or_404(SurveySignup, id=client_id)
         aggregation_group = survey_signup.group
 
-        if not aggregation_group:
+        if not aggregation_group or not aggregation_group.delegate:
             response_data = {"delegate_id": "", "aggregation_started": False}
             return JsonResponse(response_data, status=200)
 
-        delegate = aggregation_group.delegate
+        delegate: SurveySignup = aggregation_group.delegate
 
         response_data = {
             "delegate_id": str(delegate.id),
