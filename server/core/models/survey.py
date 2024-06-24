@@ -10,9 +10,14 @@ class Survey(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     commissioner = models.ForeignKey(Commissioner, on_delete=models.CASCADE)
+    group_size = models.IntegerField(default=2)
+    group_count = models.IntegerField(default=2)
 
     def __str__(self):
         return self.name
+
+    def group_factor(self):
+        return self.group_size * self.group_count
 
 
 class Query(models.Model):

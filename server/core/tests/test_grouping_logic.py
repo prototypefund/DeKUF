@@ -1,5 +1,4 @@
 from typing import Optional, Union
-from unittest.mock import patch
 from uuid import UUID
 
 from core.models.aggregation_group import AggregationGroup
@@ -12,36 +11,38 @@ from django.test import TestCase
 
 class UngroupedSignupsGroupingTest(TestCase):
     def setUp(self):
-        commissioner = Commissioner.objects.create(name="TestCommissioner")
+        self.commissioner = Commissioner.objects.create(name="TestCommissioner")
         self.survey = Survey.objects.create(
-            name="TestSurvey", commissioner=commissioner
+            name="TestSurvey",
+            commissioner=self.commissioner,
+            group_size=2,
+            group_count=2,
         )
 
     def test_no_grouping_when_size_and_number_not_met(self):
+        survey = Survey.objects.create(
+            name="TestSurvey",
+            commissioner=self.commissioner,
+            group_size=10,
+            group_count=2,
+        )
         for i in range(5):
-            SurveySignup.objects.create(survey=self.survey)
+            SurveySignup.objects.create(survey=survey)
 
-        with patch("core.models.grouping_logic.GROUP_SIZE", 4) and patch(
-            "core.models.grouping_logic.GROUP_COUNT", 4
-        ):
-            group_ungrouped_signups(
-                list(SurveySignup.objects.all()), self.survey
-            )
+        group_ungrouped_signups(list(SurveySignup.objects.all()), survey)
 
-            self.assertEqual(SurveySignup.objects.count(), 5)
-            self.assertEqual(
-                len(SurveySignup.objects.filter(group__isnull=True)), 0
-            )
+        self.assertEqual(SurveySignup.objects.count(), 5)
+        self.assertEqual(
+            SurveySignup.objects.filter(group__isnull=True).count(), 5
+        )
 
     def test_grouping_works_for_multiple_groups(self) -> None:
         for i in range(4):
             SurveySignup.objects.create(survey=self.survey)
 
-        with patch("core.models.grouping_logic.GROUP_SIZE", 2):
-            with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(
-                    list(SurveySignup.objects.all()), self.survey
-                )
+            group_ungrouped_signups(
+                list(SurveySignup.objects.all()), self.survey
+            )
 
         self.assertEqual(
             SurveySignup.objects.filter(group__isnull=False).count(), 4
@@ -61,11 +62,7 @@ class UngroupedSignupsGroupingTest(TestCase):
         for i in range(4):
             SurveySignup.objects.create(survey=self.survey)
 
-        with patch("core.models.grouping_logic.GROUP_SIZE", 2):
-            with patch("core.models.grouping_logic.GROUP_COUNT", 2):
-                group_ungrouped_signups(
-                    list(SurveySignup.objects.all()), self.survey
-                )
+        group_ungrouped_signups(list(SurveySignup.objects.all()), self.survey)
 
         self.assertEqual(
             AggregationGroup.objects.filter(delegate__isnull=False).count(), 2

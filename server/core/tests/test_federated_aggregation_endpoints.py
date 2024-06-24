@@ -1,6 +1,5 @@
 import json
 import uuid
-from unittest.mock import patch
 
 from core.models.aggregation_group import AggregationGroup
 from core.models.commissioner import Commissioner
@@ -14,7 +13,10 @@ class SurveySignupTest(TestCase):
     def setUp(self):
         commissioner = Commissioner.objects.create(name="TestCommissioner")
         self.survey = Survey.objects.create(
-            name="TestSurvey", commissioner=commissioner
+            name="TestSurvey",
+            commissioner=commissioner,
+            group_size=1,
+            group_count=1,
         )
 
     def test_post_endpoint_201_with_correct_survey(self):
@@ -45,7 +47,7 @@ class GetSignupStateTest(TestCase):
     def setUp(self):
         commissioner = Commissioner.objects.create(name="TestCommissioner")
         self.survey = Survey.objects.create(
-            name="TestSurvey", commissioner=commissioner
+            name="TestSurvey", commissioner=commissioner, group_size=1
         )
         self.signup = SurveySignup.objects.create(survey=self.survey)
         self.signup2 = SurveySignup.objects.create(survey=self.survey)
@@ -73,21 +75,20 @@ class GetSignupStateTest(TestCase):
         self.signup.save()
         url = reverse("get-signup-state", args=[self.signup.id])
 
-        with patch("core.models.grouping_logic.GROUP_SIZE", 1):
-            response = self.client.get(
-                url, content_type="application/x-www-form-urlencoded"
-            )
+        response = self.client.get(
+            url, content_type="application/x-www-form-urlencoded"
+        )
 
-            self.assertJSONEqual(
-                response.content.decode("utf-8"),
-                {
-                    "delegate_id": str(self.signup.id),
-                    "aggregation_started": True,
-                    "group_size": 1,
-                },
-            )
+        self.assertJSONEqual(
+            response.content.decode("utf-8"),
+            {
+                "delegate_id": str(self.signup.id),
+                "aggregation_started": True,
+                "group_size": 1,
+            },
+        )
 
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_404_with_incorrect_client_id(self):
         url = reverse("get-signup-state", args=[uuid.uuid4()])

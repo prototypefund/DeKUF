@@ -3,7 +3,7 @@ import json
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
 from core.models.aggregation_group import AggregationGroup
 from core.models.client_to_delegate_message import ClientToDelegateMessage
-from core.models.grouping_logic import GROUP_SIZE, group_ungrouped_signups
+from core.models.grouping_logic import group_ungrouped_signups
 from core.models.survey import Survey
 from core.models.survey_signup import SurveySignup
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -81,7 +81,7 @@ def get_signup_state(request, client_id):
         response_data = {
             "delegate_id": str(delegate.id),
             "aggregation_started": True,
-            "group_size": GROUP_SIZE,
+            "group_size": survey_signup.survey.group_size,
         }
 
         return JsonResponse(response_data, status=200)
