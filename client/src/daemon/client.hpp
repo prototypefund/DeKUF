@@ -34,6 +34,9 @@ private:
     void handleSurveysResponse(const QByteArray& data);
     void processSignup(SurveySignup& signup, std::function<void()> callback);
     void processSignups(std::function<void()> callback);
+    void processMessagesForDelegate(
+        const SurveySignup& signup, std::function<void()> callback);
+    void processMessagesForDelegate(std::function<void()> callback);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(

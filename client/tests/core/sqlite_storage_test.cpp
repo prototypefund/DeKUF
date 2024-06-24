@@ -95,6 +95,14 @@ void SqliteStorageTest::testListSurveySignupForState()
     QCOMPARE(storage->listSurveySignupsForState("foo").count(), 1);
 }
 
+void SqliteStorageTest::testListActiveDelegateSurveySignups()
+{
+    storage->addSurveySignup(Survey("1", "1"), "processing", "1", "1");
+    storage->addSurveySignup(Survey("2", "2"), "processing", "2", "1");
+    storage->addSurveySignup(Survey("3", "3"), "initial", "1", "1");
+    QCOMPARE(storage->listActiveDelegateSurveySignups().count(), 1);
+}
+
 void SqliteStorageTest::testSaveSurveySignup()
 {
     storage->addSurveySignup(Survey("1", "1"), "foo", "1", "");

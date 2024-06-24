@@ -44,7 +44,10 @@ void Client::run()
                  << "state:" << signup.state;
 
     // TODO: Use futures or something to get out of callback hell.
-    processSurveys([&]() { processSignups([&]() { emit finished(); }); });
+    processSurveys([&]() {
+        processSignups(
+            [&]() { processMessagesForDelegate([&]() { emit finished(); }); });
+    });
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
@@ -132,6 +135,45 @@ void Client::processSignups(std::function<void()> callback)
     auto pendingSignups = signups.size();
     for (auto signup : signups) {
         processSignup(signup, [&, callback]() {
+            pendingSignups--;
+            if (pendingSignups == 0)
+                callback();
+        });
+    }
+}
+
+void Client::processMessagesForDelegate(
+    const SurveySignup& signup, std::function<void()> callback)
+{
+    const auto url
+        = QString("http://localhost:8000/api/messages-for-delegate/%1/")
+              .arg(signup.delegateId);
+    getRequest(url, [&, callback](QNetworkReply* reply) {
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical() << "Error:" << reply->errorString();
+            callback();
+            return;
+        }
+
+        auto status
+            = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+        if (status != 200) {
+            callback();
+            return;
+        }
+
+        const auto responseData = reply->readAll();
+        // TODO: Ensure that the amount of messages equals group size.
+        // TODO: Aggregate responses and send them to the server.
+    });
+}
+
+void Client::processMessagesForDelegate(std::function<void()> callback)
+{
+    auto signups = storage->listActiveDelegateSurveySignups();
+    auto pendingSignups = signups.size();
+    for (auto signup : signups) {
+        processMessagesForDelegate(signup, [&, callback]() {
             pendingSignups--;
             if (pendingSignups == 0)
                 callback();

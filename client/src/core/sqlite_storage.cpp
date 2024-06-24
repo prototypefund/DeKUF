@@ -173,6 +173,16 @@ QList<SurveySignup> SqliteStorage::listSurveySignupsForState(
     return signups;
 }
 
+QList<SurveySignup> SqliteStorage::listActiveDelegateSurveySignups() const
+{
+    QList<SurveySignup> signups;
+    for (auto signup : listSurveySignups())
+        if (signup.state == "processing"
+            && signup.clientId == signup.delegateId)
+            signups.append(signup);
+    return signups;
+}
+
 void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
     const QString& clientId, const QString& delegateId)
 {

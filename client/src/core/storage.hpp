@@ -40,6 +40,7 @@ public:
     virtual QList<SurveySignup> listSurveySignups() const = 0;
     virtual QList<SurveySignup> listSurveySignupsForState(
         const QString& state) const = 0;
+    virtual QList<SurveySignup> listActiveDelegateSurveySignups() const = 0;
     virtual void addSurveySignup(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId)
         = 0;
