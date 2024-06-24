@@ -32,8 +32,8 @@ private:
     DBusService dbusService;
 
     void handleSurveysResponse(const QByteArray& data);
-    void processSignup(SurveySignup& signup);
-    void processSignups();
+    void processSignup(SurveySignup& signup, std::function<void()> callback);
+    void processSignups(std::function<void()> callback);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(

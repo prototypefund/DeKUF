@@ -44,10 +44,7 @@ void Client::run()
                  << "state:" << signup.state;
 
     // TODO: Use futures or something to get out of callback hell.
-    processSurveys([&]() { processSignups(); });
-
-    // TODO: Wait for all requests triggered above to finish.
-    emit finished();
+    processSurveys([&]() { processSignups([&]() { emit finished(); }); });
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
@@ -94,22 +91,25 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
     });
 }
 
-void Client::processSignup(SurveySignup& signup)
+void Client::processSignup(SurveySignup& signup, std::function<void()> callback)
 {
     qDebug() << "Processing signups ...";
     const auto url = QString("http://localhost:8000/api/signup-state/%1/")
                          .arg(signup.clientId);
-    getRequest(url, [&, signup](QNetworkReply* reply) mutable {
+    getRequest(url, [&, signup, callback](QNetworkReply* reply) mutable {
         if (reply->error() != QNetworkReply::NoError) {
             qCritical() << "Error:" << reply->errorString();
+            callback();
             return;
         }
 
         const auto responseData = reply->readAll();
         const auto responseDocument = QJsonDocument::fromJson(responseData);
         const auto responseObject = responseDocument.object();
-        if (!responseObject["aggregation_started"].toBool())
+        if (!responseObject["aggregation_started"].toBool()) {
+            callback();
             return;
+        }
 
         signup.delegateId = responseObject["delegate_id"].toString();
 
@@ -122,14 +122,21 @@ void Client::processSignup(SurveySignup& signup)
         }
 
         storage->saveSurveySignup(signup);
+        callback();
     });
 }
 
-void Client::processSignups()
+void Client::processSignups(std::function<void()> callback)
 {
     auto signups = storage->listSurveySignupsForState("initial");
-    for (auto signup : signups)
-        processSignup(signup);
+    auto pendingSignups = signups.size();
+    for (auto signup : signups) {
+        processSignup(signup, [&, callback]() {
+            pendingSignups--;
+            if (pendingSignups == 0)
+                callback();
+        });
+    }
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
