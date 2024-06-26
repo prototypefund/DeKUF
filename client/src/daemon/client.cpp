@@ -16,19 +16,17 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 {
 }
 
-void Client::processSurveys(std::function<void()> callback)
+QFuture<void> Client::processSurveys()
 {
     qDebug() << "Processing surveys ...";
-    getRequest("http://localhost:8000/api/surveys",
-        [&, callback](QNetworkReply* reply) {
+    return getRequest("http://localhost:8000/api/surveys/")
+        .then([&](QNetworkReply* reply) {
             if (reply->error() != QNetworkReply::NoError) {
                 qCritical() << "Error:" << reply->errorString();
-                callback();
                 return;
             }
             const auto responseData = reply->readAll();
             handleSurveysResponse(responseData);
-            callback();
         });
 }
 
@@ -43,11 +41,10 @@ void Client::run()
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
                  << "state:" << signup.state;
 
-    // TODO: Use futures or something to get out of callback hell.
-    processSurveys([&]() {
-        processSignups(
-            [&]() { processMessagesForDelegate([&]() { emit finished(); }); });
-    });
+    processSurveys()
+        .then([&] { processSignups(); })
+        .then([&] { processMessagesForDelegate(); })
+        .then([&] { emit finished(); });
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
@@ -94,15 +91,14 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
     });
 }
 
-void Client::processSignup(SurveySignup& signup, std::function<void()> callback)
+QFuture<void> Client::processSignup(SurveySignup& signup)
 {
     qDebug() << "Processing signups ...";
     const auto url = QString("http://localhost:8000/api/signup-state/%1/")
                          .arg(signup.clientId);
-    getRequest(url, [&, signup, callback](QNetworkReply* reply) mutable {
+    return getRequest(url).then([&, signup](QNetworkReply* reply) mutable {
         if (reply->error() != QNetworkReply::NoError) {
             qCritical() << "Error:" << reply->errorString();
-            callback();
             return;
         }
 
@@ -110,7 +106,6 @@ void Client::processSignup(SurveySignup& signup, std::function<void()> callback)
         const auto responseDocument = QJsonDocument::fromJson(responseData);
         const auto responseObject = responseDocument.object();
         if (!responseObject["aggregation_started"].toBool()) {
-            callback();
             return;
         }
 
@@ -128,40 +123,44 @@ void Client::processSignup(SurveySignup& signup, std::function<void()> callback)
         }
 
         storage->saveSurveySignup(signup);
-        callback();
     });
 }
 
-void Client::processSignups(std::function<void()> callback)
+QFuture<void> Client::processSignups()
 {
+    qDebug() << "Processing signups ...";
+    QPromise<void> promise;
     auto signups = storage->listSurveySignupsForState("initial");
     auto pendingSignups = signups.size();
+    if (pendingSignups == 0) {
+        promise.finish();
+        return promise.future();
+    }
+
     for (auto signup : signups) {
-        processSignup(signup, [&, callback]() {
+        processSignup(signup).then([&] {
             pendingSignups--;
             if (pendingSignups == 0)
-                callback();
+                promise.finish();
         });
     }
+    return promise.future();
 }
 
-void Client::processMessagesForDelegate(
-    const SurveySignup& signup, std::function<void()> callback)
+QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
 {
     const auto url
         = QString("http://localhost:8000/api/messages-for-delegate/%1/")
               .arg(signup.delegateId);
-    getRequest(url, [&, callback](QNetworkReply* reply) {
+    return getRequest(url).then([&](QNetworkReply* reply) {
         if (reply->error() != QNetworkReply::NoError) {
             qCritical() << "Error:" << reply->errorString();
-            callback();
             return;
         }
 
         auto status
             = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if (status != 200) {
-            callback();
             return;
         }
 
@@ -171,17 +170,24 @@ void Client::processMessagesForDelegate(
     });
 }
 
-void Client::processMessagesForDelegate(std::function<void()> callback)
+QFuture<void> Client::processMessagesForDelegate()
 {
+    QPromise<void> promise;
     auto signups = storage->listActiveDelegateSurveySignups();
     auto pendingSignups = signups.size();
+    if (pendingSignups == 0) {
+        promise.finish();
+        return promise.future();
+    }
+
     for (auto signup : signups) {
-        processMessagesForDelegate(signup, [&, callback]() {
+        processMessagesForDelegate(signup).then([&]() {
             pendingSignups--;
             if (pendingSignups == 0)
-                callback();
+                promise.finish();
         });
     }
+    return promise.future();
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
@@ -237,20 +243,15 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     return QSharedPointer<QueryResponse>::create(query->id, cohortData);
 }
 
-void Client::getRequest(
-    const QString& url, std::function<void(QNetworkReply*)> callback)
+QFuture<QNetworkReply*> Client::getRequest(const QString& url)
 {
     QNetworkRequest request(url);
-    manager->get(request);
-    connect(
-        manager, &QNetworkAccessManager::finished, this,
-        [&, callback](QNetworkReply* reply) {
-            callback(reply);
-            reply->deleteLater();
-        },
-        static_cast<Qt::ConnectionType>(Qt::SingleShotConnection));
+    auto reply = manager->get(request);
+    auto future = QtFuture::connect(reply, &QNetworkReply::finished);
+    return future.then([reply] { return reply; });
 }
 
+// TODO: Rewrite to return a future.
 void Client::postRequest(const QString& url, const QByteArray& data,
     std::function<void(QNetworkReply*)> callback)
 {
