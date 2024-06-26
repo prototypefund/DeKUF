@@ -119,7 +119,7 @@ def get_messages_for_delegate(request, delegate_id):
     messages = ClientToDelegateMessage.objects.filter(delegate=delegate_id)
 
     if len(messages) == 0:
-        return HttpResponseBadRequest(f"No messages found for: {delegate_id}")
+        return JsonResponse({"messages": []}, status=204)
 
     return JsonResponse(
         {"messages": [message.content for message in messages]}, status=200
