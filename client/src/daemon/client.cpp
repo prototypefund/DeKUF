@@ -8,6 +8,30 @@
 #include "core/storage.hpp"
 #include "core/survey_response.hpp"
 
+namespace {
+// TODO: Bit of a workaround, there must be a more elegant approach, some
+//       equivallent to Promise.all() in JS.
+QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
+    std::function<QFuture<void>(SurveySignup&)> callback)
+{
+    QPromise<void> promise;
+    auto pendingSignups = signups.size();
+    if (pendingSignups == 0) {
+        promise.finish();
+        return promise.future();
+    }
+
+    for (auto signup : signups) {
+        callback(signup).then([&]() {
+            pendingSignups--;
+            if (pendingSignups == 0)
+                promise.finish();
+        });
+    }
+    return promise.future();
+}
+};
+
 Client::Client(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
     , storage(storage)
@@ -138,22 +162,9 @@ QFuture<void> Client::processSignup(SurveySignup& signup)
 
 QFuture<void> Client::processSignups()
 {
-    QPromise<void> promise;
     auto signups = storage->listSurveySignupsForState("initial");
-    auto pendingSignups = signups.size();
-    if (pendingSignups == 0) {
-        promise.finish();
-        return promise.future();
-    }
-
-    for (auto signup : signups) {
-        processSignup(signup).then([&] {
-            pendingSignups--;
-            if (pendingSignups == 0)
-                promise.finish();
-        });
-    }
-    return promise.future();
+    return forEachSignup(
+        signups, [&](SurveySignup& signup) { return processSignup(signup); });
 }
 
 QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
@@ -181,22 +192,10 @@ QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
 
 QFuture<void> Client::processMessagesForDelegate()
 {
-    QPromise<void> promise;
     auto signups = storage->listActiveDelegateSurveySignups();
-    auto pendingSignups = signups.size();
-    if (pendingSignups == 0) {
-        promise.finish();
-        return promise.future();
-    }
-
-    for (auto signup : signups) {
-        processMessagesForDelegate(signup).then([&]() {
-            pendingSignups--;
-            if (pendingSignups == 0)
-                promise.finish();
-        });
-    }
-    return promise.future();
+    return forEachSignup(signups, [&](const SurveySignup& signup) {
+        return processMessagesForDelegate(signup);
+    });
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(
