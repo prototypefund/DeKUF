@@ -18,7 +18,6 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 
 QFuture<void> Client::processSurveys()
 {
-    qDebug() << "Processing surveys ...";
     return getRequest("http://localhost:8000/api/surveys/")
         .then([&](QNetworkReply* reply) {
             if (reply->error() != QNetworkReply::NoError) {
@@ -32,6 +31,8 @@ QFuture<void> Client::processSurveys()
 
 void Client::run()
 {
+    qDebug() << "Processing started.";
+
     qDebug() << "Stored datapoints:";
     for (const auto& dataPoint : storage->listDataPoints())
         qDebug() << "-" << dataPoint.value;
@@ -41,10 +42,20 @@ void Client::run()
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
                  << "state:" << signup.state;
 
+    qDebug() << "Processing surveys ...";
     processSurveys()
-        .then([&] { processSignups(); })
-        .then([&] { processMessagesForDelegate(); })
-        .then([&] { emit finished(); });
+        .then([&] {
+            qDebug() << "Processing signups ...";
+            processSignups();
+        })
+        .then([&] {
+            qDebug() << "Processing messages for delegate ...";
+            processMessagesForDelegate();
+        })
+        .then([&] {
+            qDebug() << "Processing finished.";
+            emit finished();
+        });
 }
 
 void Client::handleSurveysResponse(const QByteArray& data)
@@ -93,7 +104,6 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
 
 QFuture<void> Client::processSignup(SurveySignup& signup)
 {
-    qDebug() << "Processing signups ...";
     const auto url = QString("http://localhost:8000/api/signup-state/%1/")
                          .arg(signup.clientId);
     return getRequest(url).then([&, signup](QNetworkReply* reply) mutable {
@@ -128,7 +138,6 @@ QFuture<void> Client::processSignup(SurveySignup& signup)
 
 QFuture<void> Client::processSignups()
 {
-    qDebug() << "Processing signups ...";
     QPromise<void> promise;
     auto signups = storage->listSurveySignupsForState("initial");
     auto pendingSignups = signups.size();
