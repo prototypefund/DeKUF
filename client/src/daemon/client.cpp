@@ -74,7 +74,7 @@ void Client::run()
         })
         .then([&] {
             qDebug() << "Processing messages for delegate ...";
-            processMessagesForDelegate();
+            processMessagesForDelegates();
         })
         .then([&] {
             qDebug() << "Processing finished.";
@@ -190,7 +190,7 @@ QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
     });
 }
 
-QFuture<void> Client::processMessagesForDelegate()
+QFuture<void> Client::processMessagesForDelegates()
 {
     auto signups = storage->listActiveDelegateSurveySignups();
     return forEachSignup(signups, [&](const SurveySignup& signup) {
