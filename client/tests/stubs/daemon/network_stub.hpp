@@ -6,41 +6,47 @@ public:
 
     QFuture<QByteArray> listSurveys() const
     {
-        QPromise<QByteArray> promise;
-        promise.addResult(listSurveysResponse);
-        promise.finish();
-        return promise.future();
+        return dummyFuture(listSurveysResponse);
     }
 
     QFuture<QByteArray> surveySignup(const QString& surveyId)
     {
-        QPromise<QByteArray> promise;
-        promise.addResult(QByteArray());
-        promise.finish();
-        return promise.future();
+        return dummyFuture(QByteArray());
     }
 
     QFuture<QByteArray> getSignupState(const QString& clientId) const
     {
-        QPromise<QByteArray> promise;
-        promise.addResult(QByteArray());
-        promise.finish();
-        return promise.future();
+        return dummyFuture(QByteArray());
     }
 
     QFuture<QByteArray> getMessagesForDelegate(const QString& delegateId) const
     {
-        QPromise<QByteArray> promise;
-        promise.addResult(QByteArray());
-        promise.finish();
-        return promise.future();
+        return dummyFuture(QByteArray()).then([](QByteArray data) {
+            return data;
+        });
     }
 
     QFuture<void> postAggregationResult(
         const QString& delegateId, const QByteArray& data)
     {
-        QPromise<void> promise;
-        promise.finish();
-        return promise.future();
+        return dummyFuture();
+    }
+
+private:
+    QTimer timer;
+
+    template <typename T> QFuture<T> dummyFuture(T value) const
+    {
+        const auto t = const_cast<QTimer* const>(&timer); // nolint
+        auto future = QtFuture::connect(t, &QTimer::timeout).then([=] {
+            return value;
+        });
+        t->start(1);
+        return future;
+    }
+
+    QFuture<void> dummyFuture() const
+    {
+        return dummyFuture(true).then([](bool b) {});
     }
 };

@@ -12,21 +12,22 @@ namespace {
 QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
     std::function<QFuture<void>(SurveySignup&)> callback)
 {
-    QPromise<void> promise;
-    auto pendingSignups = signups.size();
-    if (pendingSignups == 0) {
-        promise.finish();
-        return promise.future();
+    auto promise = QSharedPointer<QPromise<void>>::create();
+    auto pendingSignups = QSharedPointer<int>::create(signups.size());
+    if (*pendingSignups == 0) {
+        promise->finish();
+        return promise->future();
     }
 
     for (auto signup : signups) {
-        callback(signup).then([&]() {
-            pendingSignups--;
-            if (pendingSignups == 0)
-                promise.finish();
+        callback(signup).then([=]() {
+            *pendingSignups = *pendingSignups - 1;
+            if (*pendingSignups == 0) {
+                promise->finish();
+            }
         });
     }
-    return promise.future();
+    return promise->future();
 }
 };
 
@@ -156,7 +157,7 @@ QFuture<void> Daemon::processSignups()
 QFuture<void> Daemon::processMessagesForDelegate(const SurveySignup& signup)
 {
     return network->getMessagesForDelegate(signup.delegateId)
-        .then([](QByteArray data) {
+        .then([](QByteArray) {
             // TODO: Store responses from other clients.
         });
 }
