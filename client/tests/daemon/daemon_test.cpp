@@ -8,6 +8,15 @@
 
 #include "daemon_test.hpp"
 
+void DaemonTest::testProcessSurveysIgnoresErrors()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
+    auto future = daemon.processSurveys();
+    future.waitForFinished();
+    QCOMPARE(storage->listSurveySignups().count(), 0);
+}
+
 void DaemonTest::testCreateSurveyResponseSucceedsForRightCommissioner()
 {
     QSKIP("Commissioner check logic moved out of createSurveyResponse");
