@@ -2,7 +2,7 @@
 
 #include <QObject>
 
-class ClientTest : public QObject {
+class DaemonTest : public QObject {
     Q_OBJECT
 
 private slots:

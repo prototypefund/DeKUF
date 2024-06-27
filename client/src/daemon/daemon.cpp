@@ -3,10 +3,10 @@
 #include <QTextStream>
 #include <QtNetwork>
 
-#include "client.hpp"
 #include "core/interval.hpp"
 #include "core/storage.hpp"
 #include "core/survey_response.hpp"
+#include "daemon.hpp"
 
 namespace {
 // TODO: Bit of a workaround, there must be a more elegant approach, some
@@ -32,7 +32,7 @@ QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
 }
 };
 
-Client::Client(QObject* parent, QSharedPointer<Storage> storage)
+Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage)
     : QObject(parent)
     , storage(storage)
     , manager(new QNetworkAccessManager(this))
@@ -40,7 +40,7 @@ Client::Client(QObject* parent, QSharedPointer<Storage> storage)
 {
 }
 
-QFuture<void> Client::processSurveys()
+QFuture<void> Daemon::processSurveys()
 {
     return getRequest("http://localhost:8000/api/surveys/")
         .then([&](QNetworkReply* reply) {
@@ -53,7 +53,7 @@ QFuture<void> Client::processSurveys()
         });
 }
 
-void Client::run()
+void Daemon::run()
 {
     qDebug() << "Processing started.";
 
@@ -86,7 +86,7 @@ void Client::run()
         });
 }
 
-void Client::handleSurveysResponse(const QByteArray& data)
+void Daemon::handleSurveysResponse(const QByteArray& data)
 {
     using Qt::endl;
 
@@ -114,7 +114,7 @@ void Client::handleSurveysResponse(const QByteArray& data)
     }
 }
 
-void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
+void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
     auto url = QString("http://localhost:8000/api/survey-signup/%1/")
                    .arg(survey->id);
@@ -132,7 +132,7 @@ void Client::signUpForSurvey(const QSharedPointer<const Survey> survey)
     });
 }
 
-QFuture<void> Client::processSignup(SurveySignup& signup)
+QFuture<void> Daemon::processSignup(SurveySignup& signup)
 {
     const auto url = QString("http://localhost:8000/api/signup-state/%1/")
                          .arg(signup.clientId);
@@ -166,14 +166,14 @@ QFuture<void> Client::processSignup(SurveySignup& signup)
     });
 }
 
-QFuture<void> Client::processSignups()
+QFuture<void> Daemon::processSignups()
 {
     auto signups = storage->listSurveySignupsForState("initial");
     return forEachSignup(
         signups, [&](SurveySignup& signup) { return processSignup(signup); });
 }
 
-QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
+QFuture<void> Daemon::processMessagesForDelegate(const SurveySignup& signup)
 {
     const auto url
         = QString("http://localhost:8000/api/messages-for-delegate/%1/")
@@ -195,7 +195,7 @@ QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
     });
 }
 
-QFuture<void> Client::processMessagesForDelegates()
+QFuture<void> Daemon::processMessagesForDelegates()
 {
     auto signups = storage->listActiveDelegateSurveySignups();
     return forEachSignup(signups, [&](const SurveySignup& signup) {
@@ -203,7 +203,7 @@ QFuture<void> Client::processMessagesForDelegates()
     });
 }
 
-QFuture<void> Client::postAggregationResult(SurveySignup& signup)
+QFuture<void> Daemon::postAggregationResult(SurveySignup& signup)
 {
     // TODO: Once messages are actually stored, ensure that the amount equals
     //       group size - 1.
@@ -230,14 +230,14 @@ QFuture<void> Client::postAggregationResult(SurveySignup& signup)
     return promise.future();
 }
 
-QFuture<void> Client::postAggregationResults()
+QFuture<void> Daemon::postAggregationResults()
 {
     auto signups = storage->listActiveDelegateSurveySignups();
     return forEachSignup(signups,
         [&](SurveySignup& signup) { return postAggregationResult(signup); });
 }
 
-QSharedPointer<SurveyResponse> Client::createSurveyResponse(
+QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(
     const Survey& survey) const
 {
     auto surveyResponse = QSharedPointer<SurveyResponse>::create(survey.id);
@@ -251,7 +251,7 @@ QSharedPointer<SurveyResponse> Client::createSurveyResponse(
     return surveyResponse;
 }
 
-QSharedPointer<QueryResponse> Client::createQueryResponse(
+QSharedPointer<QueryResponse> Daemon::createQueryResponse(
     const QSharedPointer<Query>& query) const
 {
     const auto dataPoints = storage->listDataPoints(query->dataKey);
@@ -290,7 +290,7 @@ QSharedPointer<QueryResponse> Client::createQueryResponse(
     return QSharedPointer<QueryResponse>::create(query->id, cohortData);
 }
 
-QFuture<QNetworkReply*> Client::getRequest(const QString& url)
+QFuture<QNetworkReply*> Daemon::getRequest(const QString& url)
 {
     QNetworkRequest request(url);
     auto reply = manager->get(request);
@@ -299,7 +299,7 @@ QFuture<QNetworkReply*> Client::getRequest(const QString& url)
 }
 
 // TODO: Rewrite to return a future.
-void Client::postRequest(const QString& url, const QByteArray& data,
+void Daemon::postRequest(const QString& url, const QByteArray& data,
     std::function<void(QNetworkReply*)> callback)
 {
     QNetworkRequest request(url);

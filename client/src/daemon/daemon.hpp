@@ -11,13 +11,13 @@
 class QNetworkAccessManager;
 class QNetworkReply;
 
-class Client : public QObject {
+class Daemon : public QObject {
     Q_OBJECT
 
-    friend class ClientTest;
+    friend class DaemonTest;
 
 public:
-    Client(QObject* parent, QSharedPointer<Storage> storage);
+    Daemon(QObject* parent, QSharedPointer<Storage> storage);
     QFuture<void> processSurveys();
 
 public slots:

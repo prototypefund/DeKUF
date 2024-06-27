@@ -1,13 +1,13 @@
 #include <QTest>
 
 #include <core/survey_response.hpp>
-#include <daemon/client.hpp>
+#include <daemon/daemon.hpp>
 
 #include "../stubs/core/storage_stub.hpp"
 
-#include "client_test.hpp"
+#include "daemon_test.hpp"
 
-void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
+void DaemonTest::testCreateSurveyResponseSucceedsForRightCommissioner()
 {
     QSKIP("Commissioner check logic moved out of createSurveyResponse");
 
@@ -20,8 +20,8 @@ void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
     storage->addDataPoint("testKey", "8");
 
-    Client client(nullptr, storage);
-    const auto surveyResponse = client.createSurveyResponse(survey);
+    Daemon daemon(nullptr, storage);
+    const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
         = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
@@ -32,7 +32,7 @@ void ClientTest::testCreateSurveyResponseSucceedsForRightCommissioner()
         surveyResponse->queryResponses.first()->cohortData, testCohortData);
 }
 
-void ClientTest::testCreateSurveyResponseSucceedsForIntervals()
+void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
 {
     auto storage = QSharedPointer<StorageStub>::create();
 
@@ -45,8 +45,8 @@ void ClientTest::testCreateSurveyResponseSucceedsForIntervals()
     storage->addDataPoint("testKey", "16");
     storage->addDataPoint("testKey", "31");
 
-    Client client(nullptr, storage);
-    const auto surveyResponse = client.createSurveyResponse(survey);
+    Daemon daemon(nullptr, storage);
+    const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
         = { { "[8, 16)", 1 }, { "[16, 32)", 2 }, { "[32, 64)", 0 } };
@@ -57,7 +57,7 @@ void ClientTest::testCreateSurveyResponseSucceedsForIntervals()
         surveyResponse->queryResponses.first()->cohortData, testCohortData);
 }
 
-void ClientTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
+void DaemonTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
 {
     auto storage = QSharedPointer<StorageStub>::create();
 
@@ -72,8 +72,8 @@ void ClientTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
     storage->addDataPoint("testKey", "1000");
     storage->addDataPoint("testKey", "10000.23");
 
-    Client client(nullptr, storage);
-    const auto surveyResponse = client.createSurveyResponse(survey);
+    Daemon daemon(nullptr, storage);
+    const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
         = { { "(-inf, 16)", 1 }, { "[16, 32)", 1 }, { "[32, inf)", 3 } };
@@ -84,7 +84,7 @@ void ClientTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
         surveyResponse->queryResponses.first()->cohortData, testCohortData);
 }
 
-void ClientTest::testCreateSurveyResponseNullForWrongCommissioner()
+void DaemonTest::testCreateSurveyResponseNullForWrongCommissioner()
 {
     QSKIP("Commissioner check logic moved out of createSurveyResponse");
 
@@ -97,12 +97,12 @@ void ClientTest::testCreateSurveyResponseNullForWrongCommissioner()
     survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
     storage->addDataPoint("testKey", "8");
 
-    Client client(nullptr, storage);
-    const auto surveyResponse = client.createSurveyResponse(survey);
+    Daemon daemon(nullptr, storage);
+    const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     qPrintable(survey.name);
 
     QVERIFY(surveyResponse.isNull());
 }
 
-QTEST_MAIN(ClientTest)
+QTEST_MAIN(DaemonTest)
