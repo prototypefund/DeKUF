@@ -8,8 +8,7 @@
 #include "daemon.hpp"
 
 namespace {
-// TODO: Bit of a workaround, there must be a more elegant approach, some
-//       equivallent to Promise.all() in JS.
+// TODO: Replace this with a polyfill for QFuture::whenAll().
 QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
     std::function<QFuture<void>(SurveySignup&)> callback)
 {
