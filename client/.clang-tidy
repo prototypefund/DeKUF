@@ -1,2 +1,2 @@
-Checks: 'cppcoreguidelines-*,modernize-*,-cppcoreguidelines-avoid-magic-numbers,-modernize-use-trailing-return-type,-modernize-pass-by-value'
+Checks: 'cppcoreguidelines-*,modernize-*,-cppcoreguidelines-avoid-magic-numbers,-modernize-use-trailing-return-type,-modernize-pass-by-value,-modernize-use-nodiscard'
 WarningsAsErrors: '*'
