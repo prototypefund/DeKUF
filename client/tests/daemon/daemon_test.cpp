@@ -2,9 +2,9 @@
 
 #include <core/survey_response.hpp>
 #include <daemon/daemon.hpp>
-#include <daemon/server_network.hpp>
 
 #include "../stubs/core/storage_stub.hpp"
+#include "../stubs/daemon/network_stub.hpp"
 
 #include "daemon_test.hpp"
 
@@ -21,7 +21,7 @@ void DaemonTest::testCreateSurveyResponseSucceedsForRightCommissioner()
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
     storage->addDataPoint("testKey", "8");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<ServerNetwork>::create());
+    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
@@ -46,7 +46,7 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
     storage->addDataPoint("testKey", "16");
     storage->addDataPoint("testKey", "31");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<ServerNetwork>::create());
+    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
@@ -73,7 +73,7 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
     storage->addDataPoint("testKey", "1000");
     storage->addDataPoint("testKey", "10000.23");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<ServerNetwork>::create());
+    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
@@ -98,7 +98,7 @@ void DaemonTest::testCreateSurveyResponseNullForWrongCommissioner()
     survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
     storage->addDataPoint("testKey", "8");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<ServerNetwork>::create());
+    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     qPrintable(survey.name);
