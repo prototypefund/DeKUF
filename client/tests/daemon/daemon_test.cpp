@@ -17,29 +17,37 @@ void DaemonTest::testProcessSurveysIgnoresErrors()
     QCOMPARE(storage->listSurveySignups().count(), 0);
 }
 
-void DaemonTest::testCreateSurveyResponseSucceedsForRightCommissioner()
+void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
 {
-    QSKIP("Commissioner check logic moved out of createSurveyResponse");
-
     auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    QList<QString> cohorts = { "8", "16", "32" };
-    survey.queries.append(
-        QSharedPointer<Query>::create("1", "testKey", cohorts, true));
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
-    storage->addDataPoint("testKey", "8");
+    network->listSurveysResponse
+        = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
-    const auto surveyResponse = daemon.createSurveyResponse(survey);
+    auto future = daemon.processSurveys();
+    future.waitForFinished();
+    auto first = storage->listSurveySignups().first();
+    QCOMPARE(first.survey->id, survey.id);
+}
 
-    QMap<QString, int> testCohortData
-        = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
+void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    Daemon daemon(nullptr, storage, network);
 
-    QVERIFY(!surveyResponse.isNull());
-    QCOMPARE(surveyResponse->queryResponses.first()->queryId, "1");
-    QCOMPARE(
-        surveyResponse->queryResponses.first()->cohortData, testCohortData);
+    Survey survey("testId", "testName");
+    survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
+    network->listSurveysResponse
+        = QByteArray("[\n" + survey.toByteArray() + "\n]");
+
+    auto future = daemon.processSurveys();
+    future.waitForFinished();
+    QCOMPARE(storage->listSurveySignups().count(), 0);
 }
 
 void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
@@ -92,27 +100,6 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
     QCOMPARE(surveyResponse->queryResponses.first()->queryId, "1");
     QCOMPARE(
         surveyResponse->queryResponses.first()->cohortData, testCohortData);
-}
-
-void DaemonTest::testCreateSurveyResponseNullForWrongCommissioner()
-{
-    QSKIP("Commissioner check logic moved out of createSurveyResponse");
-
-    auto storage = QSharedPointer<StorageStub>::create();
-
-    Survey survey("testId", "testName");
-    QList<QString> cohorts = { "8", "16", "32" };
-    survey.queries.append(
-        QSharedPointer<Query>::create("1", "testKey", cohorts, true));
-    survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
-    storage->addDataPoint("testKey", "8");
-
-    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
-    const auto surveyResponse = daemon.createSurveyResponse(survey);
-
-    qPrintable(survey.name);
-
-    QVERIFY(surveyResponse.isNull());
 }
 
 QTEST_MAIN(DaemonTest)

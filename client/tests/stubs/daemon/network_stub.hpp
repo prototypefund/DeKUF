@@ -1,10 +1,13 @@
 #include <daemon/network.hpp>
 
 class NetworkStub : public Network {
+public:
+    QByteArray listSurveysResponse;
+
     QFuture<QByteArray> listSurveys() const
     {
         QPromise<QByteArray> promise;
-        promise.addResult(QByteArray());
+        promise.addResult(listSurveysResponse);
         promise.finish();
         return promise.future();
     }

@@ -7,8 +7,8 @@ class DaemonTest : public QObject {
 
 private slots:
     void testProcessSurveysIgnoresErrors();
-    void testCreateSurveyResponseSucceedsForRightCommissioner();
+    void testProcessSurveysSignsUpForRightCommissioner();
+    void testProcessSurveyDoesNotSignUpForWrongCommissioner();
     void testCreateSurveyResponseSucceedsForIntervals();
     void testCreateSurveyResponseSucceedsForIntervalsWithInfinity();
-    void testCreateSurveyResponseNullForWrongCommissioner();
 };
