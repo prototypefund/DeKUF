@@ -25,6 +25,6 @@ private:
     QNetworkAccessManager* manager;
 
     QFuture<QNetworkReply*> getRequest(const QString& url) const;
-    void postRequest(const QString& url, const QByteArray& data,
-        std::function<void(QNetworkReply*)> callback) const;
+    QFuture<QNetworkReply*> postRequest(
+        const QString& url, const QByteArray& data) const;
 };

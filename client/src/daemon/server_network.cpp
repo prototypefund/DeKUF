@@ -23,18 +23,13 @@ QFuture<QByteArray> ServerNetwork::surveySignup(const QString& surveyId)
 {
     auto url
         = QString("http://localhost:8000/api/survey-signup/%1/").arg(surveyId);
-    QPromise<QByteArray> promise;
-    postRequest(url, "", [&](QNetworkReply* reply) {
+    return postRequest(url, "").then([](QNetworkReply* reply) {
         if (reply->error() != QNetworkReply::NoError) {
             qCritical() << "Error:" << reply->errorString();
-            promise.addResult(QByteArray());
-            promise.finish();
-            return;
+            return QByteArray();
         }
-        promise.addResult(reply->readAll());
-        promise.finish();
+        return reply->readAll();
     });
-    return promise.future();
 }
 
 QFuture<QByteArray> ServerNetwork::getSignupState(const QString& clientId) const
@@ -77,12 +72,9 @@ QFuture<void> ServerNetwork::postAggregationResult(
 {
     auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
                    .arg(delegateId);
-    QPromise<void> promise;
-    postRequest(url, data, [=, &promise](QNetworkReply* response) {
+    return postRequest(url, data).then([](QNetworkReply* response) {
         // TODO: Error handling.
-        promise.finish();
     });
-    return promise.future();
 }
 
 QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
@@ -93,18 +85,12 @@ QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
     return future.then([reply] { return reply; });
 }
 
-// TODO: Rewrite to return a future.
-void ServerNetwork::postRequest(const QString& url, const QByteArray& data,
-    std::function<void(QNetworkReply*)> callback) const
+QFuture<QNetworkReply*> ServerNetwork::postRequest(
+    const QString& url, const QByteArray& data) const
 {
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    manager->post(request, data);
-    connect(
-        manager, &QNetworkAccessManager::finished, this,
-        [&, callback](QNetworkReply* reply) {
-            callback(reply);
-            reply->deleteLater();
-        },
-        static_cast<Qt::ConnectionType>(Qt::SingleShotConnection));
+    auto reply = manager->post(request, data);
+    auto future = QtFuture::connect(reply, &QNetworkReply::finished);
+    return future.then([reply] { return reply; });
 }
