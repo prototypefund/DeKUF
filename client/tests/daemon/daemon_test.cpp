@@ -50,6 +50,9 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
     QCOMPARE(storage->listSurveySignups().count(), 0);
 }
 
+// TODO: Instead of testing createSurveyResponse directly, it'd be better to
+//       rewrite the following test postAggregationResults.
+
 void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
 {
     auto storage = QSharedPointer<StorageStub>::create();
