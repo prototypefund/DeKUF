@@ -7,9 +7,7 @@
 
 #include "core/survey.hpp"
 #include "dbus_service.hpp"
-
-class QNetworkAccessManager;
-class QNetworkReply;
+#include "network.hpp"
 
 class Daemon : public QObject {
     Q_OBJECT
@@ -17,7 +15,8 @@ class Daemon : public QObject {
     friend class DaemonTest;
 
 public:
-    Daemon(QObject* parent, QSharedPointer<Storage> storage);
+    Daemon(QObject* parent, QSharedPointer<Storage> storage,
+        QSharedPointer<Network> network);
     QFuture<void> processSurveys();
 
 public slots:
@@ -28,7 +27,7 @@ signals:
 
 private:
     QSharedPointer<Storage> storage;
-    QNetworkAccessManager* manager;
+    QSharedPointer<Network> network;
     DBusService dbusService;
 
     void handleSurveysResponse(const QByteArray& data);
@@ -43,9 +42,4 @@ private:
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
     void signUpForSurvey(const QSharedPointer<const Survey> survey);
-    void getRequest(
-        const QString& url, std::function<void(QNetworkReply*)> callback);
-    QFuture<QNetworkReply*> getRequest(const QString& url);
-    void postRequest(const QString& url, const QByteArray& data,
-        std::function<void(QNetworkReply*)> callback);
 };

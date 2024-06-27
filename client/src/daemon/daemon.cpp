@@ -1,7 +1,6 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QTextStream>
-#include <QtNetwork>
 
 #include "core/interval.hpp"
 #include "core/storage.hpp"
@@ -32,25 +31,21 @@ QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
 }
 };
 
-Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage)
+Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage,
+    QSharedPointer<Network> network)
     : QObject(parent)
     , storage(storage)
-    , manager(new QNetworkAccessManager(this))
+    , network(network)
     , dbusService(storage)
 {
+    if (auto object = dynamic_cast<QObject*>(network.get()))
+        object->setParent(this);
 }
 
 QFuture<void> Daemon::processSurveys()
 {
-    return getRequest("http://localhost:8000/api/surveys/")
-        .then([&](QNetworkReply* reply) {
-            if (reply->error() != QNetworkReply::NoError) {
-                qCritical() << "Error:" << reply->errorString();
-                return;
-            }
-            const auto responseData = reply->readAll();
-            handleSurveysResponse(responseData);
-        });
+    return network->listSurveys().then(
+        [&](QByteArray data) { handleSurveysResponse(data); });
 }
 
 void Daemon::run()
@@ -116,17 +111,9 @@ void Daemon::handleSurveysResponse(const QByteArray& data)
 
 void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
-    auto url = QString("http://localhost:8000/api/survey-signup/%1/")
-                   .arg(survey->id);
-    postRequest(url, "", [&, survey](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return;
-        }
-
-        const auto responseData = reply->readAll();
-        const auto responseObject
-            = QJsonDocument::fromJson(responseData).object();
+    // TODO: Return a future here.
+    network->surveySignup(survey->id).then([&, survey](QByteArray data) {
+        const auto responseObject = QJsonDocument::fromJson(data).object();
         const auto clientId = responseObject["client_id"].toString();
         storage->addSurveySignup(*survey, "initial", clientId, "");
     });
@@ -134,36 +121,30 @@ void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 
 QFuture<void> Daemon::processSignup(SurveySignup& signup)
 {
-    const auto url = QString("http://localhost:8000/api/signup-state/%1/")
-                         .arg(signup.clientId);
-    return getRequest(url).then([&, signup](QNetworkReply* reply) mutable {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return;
-        }
+    return network->getSignupState(signup.clientId)
+        .then([&, signup](QByteArray data) mutable {
+            const auto responseDocument = QJsonDocument::fromJson(data);
+            const auto responseObject = responseDocument.object();
+            if (!responseObject["aggregation_started"].toBool()) {
+                return;
+            }
 
-        const auto responseData = reply->readAll();
-        const auto responseDocument = QJsonDocument::fromJson(responseData);
-        const auto responseObject = responseDocument.object();
-        if (!responseObject["aggregation_started"].toBool()) {
-            return;
-        }
+            signup.delegateId = responseObject["delegate_id"].toString();
 
-        signup.delegateId = responseObject["delegate_id"].toString();
+            if (signup.clientId == signup.delegateId) {
+                signup.state = "processing";
+                signup.groupSize = responseObject["group_size"].toInt();
+                // TODO: Either send data to itself here, or implement some
+                // other
+                //       logic to deal with the delegate's own data - also for
+                //       the group_size = 1 case.
+            } else {
+                // TODO: Send data to delegate.
+                signup.state = "done";
+            }
 
-        if (signup.clientId == signup.delegateId) {
-            signup.state = "processing";
-            signup.groupSize = responseObject["group_size"].toInt();
-            // TODO: Either send data to itself here, or implement some other
-            //       logic to deal with the delegate's own data - also for the
-            //       group_size = 1 case.
-        } else {
-            // TODO: Send data to delegate.
-            signup.state = "done";
-        }
-
-        storage->saveSurveySignup(signup);
-    });
+            storage->saveSurveySignup(signup);
+        });
 }
 
 QFuture<void> Daemon::processSignups()
@@ -175,24 +156,10 @@ QFuture<void> Daemon::processSignups()
 
 QFuture<void> Daemon::processMessagesForDelegate(const SurveySignup& signup)
 {
-    const auto url
-        = QString("http://localhost:8000/api/messages-for-delegate/%1/")
-              .arg(signup.delegateId);
-    return getRequest(url).then([&](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return;
-        }
-
-        auto status
-            = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-        if (status != 200) {
-            return;
-        }
-
-        const auto responseData = reply->readAll();
-        // TODO: Store responses from other clients.
-    });
+    return network->getMessagesForDelegate(signup.delegateId)
+        .then([](QByteArray data) {
+            // TODO: Store responses from other clients.
+        });
 }
 
 QFuture<void> Daemon::processMessagesForDelegates()
@@ -214,20 +181,16 @@ QFuture<void> Daemon::postAggregationResult(SurveySignup& signup)
     // TODO: If there is more than one message, aggregate the results into a
     //       single response.
 
-    auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
-                   .arg(signup.delegateId);
     auto data = delegateResponse->toJsonByteArray();
-    QPromise<void> promise;
-    postRequest(url, data, [=, &promise](QNetworkReply* response) mutable {
-        // Note that we are saving the response of the delegate itself here,
-        // just how non-delegate clients would store their response to the
-        // delegate. We should not store the aggregated response here.
-        storage->addSurveyResponse(*delegateResponse, survey);
-        signup.state = "done";
-        storage->saveSurveySignup(signup);
-        promise.finish();
-    });
-    return promise.future();
+    return network->postAggregationResult(signup.delegateId, data)
+        .then([=]() mutable {
+            // Note that we are saving the response of the delegate itself here,
+            // just how non-delegate clients would store their response to the
+            // delegate. We should not store the aggregated response here.
+            storage->addSurveyResponse(*delegateResponse, survey);
+            signup.state = "done";
+            storage->saveSurveySignup(signup);
+        });
 }
 
 QFuture<void> Daemon::postAggregationResults()
@@ -288,28 +251,4 @@ QSharedPointer<QueryResponse> Daemon::createQueryResponse(
     }
 
     return QSharedPointer<QueryResponse>::create(query->id, cohortData);
-}
-
-QFuture<QNetworkReply*> Daemon::getRequest(const QString& url)
-{
-    QNetworkRequest request(url);
-    auto reply = manager->get(request);
-    auto future = QtFuture::connect(reply, &QNetworkReply::finished);
-    return future.then([reply] { return reply; });
-}
-
-// TODO: Rewrite to return a future.
-void Daemon::postRequest(const QString& url, const QByteArray& data,
-    std::function<void(QNetworkReply*)> callback)
-{
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    manager->post(request, data);
-    connect(
-        manager, &QNetworkAccessManager::finished, this,
-        [&, callback](QNetworkReply* reply) {
-            callback(reply);
-            reply->deleteLater();
-        },
-        static_cast<Qt::ConnectionType>(Qt::SingleShotConnection));
 }
