@@ -17,7 +17,6 @@ class Daemon : public QObject {
 public:
     Daemon(QObject* parent, QSharedPointer<Storage> storage,
         QSharedPointer<Network> network);
-    QFuture<void> processSurveys();
 
 public slots:
     void run();
@@ -31,6 +30,7 @@ private:
     DBusService dbusService;
 
     void handleSurveysResponse(const QByteArray& data);
+    QFuture<void> processSurveys();
     QFuture<void> processSignup(SurveySignup& signup);
     QFuture<void> processSignups();
     QFuture<void> processMessagesForDelegate(const SurveySignup& signup);

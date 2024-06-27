@@ -42,12 +42,6 @@ Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage,
         object->setParent(this);
 }
 
-QFuture<void> Daemon::processSurveys()
-{
-    return network->listSurveys().then(
-        [&](QByteArray data) { handleSurveysResponse(data); });
-}
-
 void Daemon::run()
 {
     qDebug() << "Processing started.";
@@ -107,6 +101,12 @@ void Daemon::handleSurveysResponse(const QByteArray& data)
         //       request.
         signUpForSurvey(survey);
     }
+}
+
+QFuture<void> Daemon::processSurveys()
+{
+    return network->listSurveys().then(
+        [&](QByteArray data) { handleSurveysResponse(data); });
 }
 
 void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
