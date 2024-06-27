@@ -77,6 +77,10 @@ void Client::run()
             processMessagesForDelegates();
         })
         .then([&] {
+            qDebug() << "Posting aggregation results ...";
+            postAggregationResults();
+        })
+        .then([&] {
             qDebug() << "Processing finished.";
             emit finished();
         });
@@ -104,6 +108,8 @@ void Client::handleSurveysResponse(const QByteArray& data)
         if (survey->commissioner->name != kdeName)
             continue;
 
+        // TODO: Only sign up for surveys if we have the data points they
+        //       request.
         signUpForSurvey(survey);
     }
 }
@@ -185,8 +191,7 @@ QFuture<void> Client::processMessagesForDelegate(const SurveySignup& signup)
         }
 
         const auto responseData = reply->readAll();
-        // TODO: Ensure that the amount of messages equals group size.
-        // TODO: Aggregate responses and send them to the server.
+        // TODO: Store responses from other clients.
     });
 }
 
@@ -196,6 +201,40 @@ QFuture<void> Client::processMessagesForDelegates()
     return forEachSignup(signups, [&](const SurveySignup& signup) {
         return processMessagesForDelegate(signup);
     });
+}
+
+QFuture<void> Client::postAggregationResult(SurveySignup& signup)
+{
+    // TODO: Once messages are actually stored, ensure that the amount equals
+    //       group size - 1.
+    assert(signup.groupSize == 1);
+
+    const auto& survey = *signup.survey;
+    auto delegateResponse = createSurveyResponse(survey);
+    // TODO: If there is more than one message, aggregate the results into a
+    //       single response.
+
+    auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
+                   .arg(signup.delegateId);
+    auto data = delegateResponse->toJsonByteArray();
+    QPromise<void> promise;
+    postRequest(url, data, [=, &promise](QNetworkReply* response) mutable {
+        // Note that we are saving the response of the delegate itself here,
+        // just how non-delegate clients would store their response to the
+        // delegate. We should not store the aggregated response here.
+        storage->addSurveyResponse(*delegateResponse, survey);
+        signup.state = "done";
+        storage->saveSurveySignup(signup);
+        promise.finish();
+    });
+    return promise.future();
+}
+
+QFuture<void> Client::postAggregationResults()
+{
+    auto signups = storage->listActiveDelegateSurveySignups();
+    return forEachSignup(signups,
+        [&](SurveySignup& signup) { return postAggregationResult(signup); });
 }
 
 QSharedPointer<SurveyResponse> Client::createSurveyResponse(

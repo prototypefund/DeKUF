@@ -36,6 +36,8 @@ private:
     QFuture<void> processSignups();
     QFuture<void> processMessagesForDelegate(const SurveySignup& signup);
     QFuture<void> processMessagesForDelegates();
+    QFuture<void> postAggregationResult(SurveySignup& signup);
+    QFuture<void> postAggregationResults();
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(
