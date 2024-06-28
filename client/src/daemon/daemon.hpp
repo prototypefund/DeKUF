@@ -29,7 +29,7 @@ private:
     QSharedPointer<Network> network;
     DBusService dbusService;
 
-    void handleSurveysResponse(const QByteArray& data);
+    QFuture<void> handleSurveysResponse(const QByteArray& data);
     QFuture<void> processSurveys();
     QFuture<void> processSignup(SurveySignup& signup);
     QFuture<void> processSignups();
@@ -41,5 +41,5 @@ private:
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    void signUpForSurvey(const QSharedPointer<const Survey> survey);
+    QFuture<void> signUpForSurvey(const QSharedPointer<const Survey> survey);
 };

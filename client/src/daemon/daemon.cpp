@@ -8,26 +8,59 @@
 #include "daemon.hpp"
 
 namespace {
-// TODO: Replace this with a polyfill for QFuture::whenAll().
-QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
-    std::function<QFuture<void>(SurveySignup&)> callback)
+/**
+ * Returns a future that resolves once all provided futures resolved.
+ *
+ * Replace with QtPromise::whenAll once we upgrade to Qt >= 6.3.
+ */
+QFuture<void> whenAll(const QList<QFuture<void>>& futures)
 {
     auto promise = QSharedPointer<QPromise<void>>::create();
-    auto pendingSignups = QSharedPointer<int>::create(signups.size());
-    if (*pendingSignups == 0) {
+    auto pendingFutures = QSharedPointer<int>::create(0);
+    for (auto future : futures)
+        if (!future.isFinished())
+            *pendingFutures = *pendingFutures + 1;
+    if (*pendingFutures == 0) {
         promise->finish();
         return promise->future();
     }
 
-    for (auto signup : signups) {
-        callback(signup).then([=]() {
-            *pendingSignups = *pendingSignups - 1;
-            if (*pendingSignups == 0) {
-                promise->finish();
-            }
-        });
-    }
+    for (auto future : futures)
+        if (!future.isFinished()) {
+            future.then([=] {
+                *pendingFutures = *pendingFutures - 1;
+                if (*pendingFutures == 0)
+                    promise->finish();
+            });
+        }
     return promise->future();
+}
+
+/**
+ * Chains a callback that returns a subsequent future once the provided future
+ * resolves, for consecutive execution.
+ *
+ * This is seemingly not the behaviour of QFuture::next() - though one might
+ * argue it should be, or that there should be a more elegant way to do this
+ * kind of thing.
+ */
+template <typename T>
+QFuture<void> chain(QFuture<T> future, std::function<QFuture<void>(T)> next)
+{
+    auto promise = QSharedPointer<QPromise<void>>::create();
+    future.then(
+        [=](T value) { next(value).then([promise] { promise->finish(); }); });
+    return promise->future();
+}
+
+// TODO: Consider just inlining this.
+QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
+    std::function<QFuture<void>(SurveySignup&)> callback)
+{
+    QList<QFuture<void>> futures;
+    for (auto signup : signups)
+        futures.append(callback(signup));
+    return whenAll(futures);
 }
 };
 
@@ -55,9 +88,11 @@ void Daemon::run()
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
                  << "state:" << signup.state;
 
-    // TODO: Ensure these calls really run one after another. Since none of them
-    //       are synchronous, unless there's some magic in then(), they should
-    //       run in parallel.
+    // TODO: While these calls seem to run one after another, it seems, the way
+    //       then() works, there's no actual guarantee they do. We could use
+    //       chain(), but the code wouldn't look particularly pretty. We should
+    //       properly test this and find a better way to ensure they run in a
+    //       series.
     qDebug() << "Processing surveys ...";
     processSurveys()
         .then([&] {
@@ -78,7 +113,7 @@ void Daemon::run()
         });
 }
 
-void Daemon::handleSurveysResponse(const QByteArray& data)
+QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
 {
     using Qt::endl;
 
@@ -91,6 +126,7 @@ void Daemon::handleSurveysResponse(const QByteArray& data)
     for (const auto& signup : storage->listSurveySignups())
         signedUpSurveys.insert(signup.survey->id);
 
+    QList<QFuture<void>> futures;
     for (const auto& survey : surveys) {
         if (signedUpSurveys.contains(survey->id))
             continue;
@@ -102,20 +138,20 @@ void Daemon::handleSurveysResponse(const QByteArray& data)
 
         // TODO: Only sign up for surveys if we have the data points they
         //       request.
-        signUpForSurvey(survey);
+        futures.append(signUpForSurvey(survey));
     }
+    return whenAll(futures);
 }
 
 QFuture<void> Daemon::processSurveys()
 {
-    return network->listSurveys().then(
-        [&](QByteArray data) { handleSurveysResponse(data); });
+    return chain<QByteArray>(network->listSurveys(),
+        [this](QByteArray data) { return handleSurveysResponse(data); });
 }
 
-void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
+QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
-    // TODO: Return a future here.
-    network->surveySignup(survey->id).then([&, survey](QByteArray data) {
+    return network->surveySignup(survey->id).then([&, survey](QByteArray data) {
         const auto responseObject = QJsonDocument::fromJson(data).object();
         const auto clientId = responseObject["client_id"].toString();
         storage->addSurveySignup(*survey, "initial", clientId, "");

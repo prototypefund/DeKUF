@@ -30,8 +30,6 @@ void DaemonTest::testProcessSurveysIgnoresErrors()
 
 void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
 {
-    QSKIP("Not testable unless we rewrite processSurvey to await all nested "
-          "futures.");
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
     Daemon daemon(nullptr, storage, network);
