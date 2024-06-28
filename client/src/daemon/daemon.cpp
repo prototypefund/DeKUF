@@ -55,6 +55,9 @@ void Daemon::run()
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
                  << "state:" << signup.state;
 
+    // TODO: Ensure these calls really run one after another. Since none of them
+    //       are synchronous, unless there's some magic in then(), they should
+    //       run in parallel.
     qDebug() << "Processing surveys ...";
     processSurveys()
         .then([&] {
