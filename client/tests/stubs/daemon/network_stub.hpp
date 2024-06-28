@@ -3,6 +3,7 @@
 class NetworkStub : public Network {
 public:
     QByteArray listSurveysResponse;
+    QByteArray getSignupStateResponse;
 
     QFuture<QByteArray> listSurveys() const
     {
@@ -16,7 +17,7 @@ public:
 
     QFuture<QByteArray> getSignupState(const QString& clientId) const
     {
-        return dummyFuture(QByteArray());
+        return dummyFuture(getSignupStateResponse);
     }
 
     QFuture<QByteArray> getMessagesForDelegate(const QString& delegateId) const

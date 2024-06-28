@@ -68,11 +68,12 @@ public:
 
     void saveSurveySignup(const SurveySignup& signup)
     {
-        // TODO: The only thing that can currently be changed is the state.
-        for (auto signup : surveySignups) {
-            if (signup.clientId != signup.clientId)
+        for (auto& existingSignup : surveySignups) {
+            if (existingSignup.clientId != signup.clientId)
                 continue;
-            signup.state = signup.state;
+            existingSignup.state = signup.state;
+            existingSignup.delegateId = signup.delegateId;
+            existingSignup.groupSize = signup.groupSize;
             break;
         }
     }

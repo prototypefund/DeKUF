@@ -74,6 +74,72 @@ void DaemonTest::testProcessSignupsIgnoresErrors()
     QCOMPARE(storage->listSurveySignups().first().state, "initial");
 }
 
+void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    Daemon daemon(nullptr, storage, network);
+
+    Survey survey("testId", "testName");
+    storage->addSurveySignup(survey, "initial", "1337", "");
+
+    network->getSignupStateResponse = QByteArray(R"({
+        "aggregation_started": false,
+        "delegate_id": "1337",
+        "group_size": 1
+    })");
+
+    await(daemon.processSignups());
+    QCOMPARE(storage->listSurveySignups().first().state, "initial");
+}
+
+void DaemonTest::testProcessSignupsHandlesDelegateCase()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    Daemon daemon(nullptr, storage, network);
+
+    Survey survey("testId", "testName");
+    storage->addSurveySignup(survey, "initial", "1337", "");
+
+    network->getSignupStateResponse = QByteArray(R"({
+        "aggregation_started": true,
+        "delegate_id": "1337",
+        "group_size": 1
+    })");
+
+    await(daemon.processSignups());
+    auto signups = storage->listSurveySignups();
+    QCOMPARE(signups.count(), 1);
+    auto first = signups.first();
+    QCOMPARE(first.delegateId, "1337");
+    QCOMPARE(first.state, "processing");
+    QCOMPARE(first.groupSize, 1);
+}
+
+void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    Daemon daemon(nullptr, storage, network);
+
+    Survey survey("testId", "testName");
+    storage->addSurveySignup(survey, "initial", "1337", "");
+
+    network->getSignupStateResponse = QByteArray(R"({
+        "aggregation_started": true,
+        "delegate_id": "2448",
+        "group_size": 1
+    })");
+
+    await(daemon.processSignups());
+    auto signups = storage->listSurveySignups();
+    QCOMPARE(signups.count(), 1);
+    auto first = signups.first();
+    QCOMPARE(first.delegateId, "2448");
+    QCOMPARE(first.state, "done");
+}
+
 void DaemonTest::testProcessMessagesForDelegatesIgnoresErrors()
 {
     auto storage = QSharedPointer<StorageStub>::create();
