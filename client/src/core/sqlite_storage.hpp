@@ -20,6 +20,9 @@ public:
     void addSurveySignup(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId);
     void saveSurveySignup(const SurveySignup& signup);
+    void addSurvey(const Survey& survey);
+    std::optional<QSharedPointer<Survey>> findSurveyById(
+        const QString& surveyId) const;
 
 private:
     QSqlDatabase db;

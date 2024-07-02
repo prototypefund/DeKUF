@@ -46,4 +46,7 @@ public:
         const QString& clientId, const QString& delegateId)
         = 0;
     virtual void saveSurveySignup(const SurveySignup& signup) = 0;
+    virtual void addSurvey(const Survey& survey) = 0;
+    virtual std::optional<QSharedPointer<Survey>> findSurveyById(
+        const QString& survey_id) const = 0;
 };

@@ -117,4 +117,37 @@ void SqliteStorageTest::testSaveSurveySignup()
     QCOMPARE(retrievedSignup.groupSize, signup.groupSize);
 }
 
+void SqliteStorageTest::testSaveSurveyWorksWithValuesPresent()
+{
+    Survey testSurvey("123", "test");
+    testSurvey.queries.append(QSharedPointer<Query>::create(
+        "12345", "testDataKey", QList<QString> { "1", "2", "3" }, true));
+
+    storage->addSurvey(testSurvey);
+    auto retrievedSurvey = storage->findSurveyById(testSurvey.id);
+
+    QVERIFY(retrievedSurvey.has_value());
+    if (!retrievedSurvey.has_value()) {
+        return;
+    }
+
+    auto retrievedSurveyValue = retrievedSurvey.value();
+
+    QCOMPARE(retrievedSurveyValue->id, testSurvey.id);
+    QCOMPARE(retrievedSurveyValue->name, testSurvey.name);
+    QCOMPARE(retrievedSurveyValue->queries.first()->id,
+        testSurvey.queries.first()->id);
+    QCOMPARE(retrievedSurveyValue->queries.first()->dataKey,
+        testSurvey.queries.first()->dataKey);
+    QCOMPARE(retrievedSurveyValue->queries.first()->cohorts,
+        testSurvey.queries.first()->cohorts);
+    QCOMPARE(retrievedSurveyValue->queries.first()->discrete,
+        testSurvey.queries.first()->discrete);
+}
+
+void SqliteStorageTest::testSaveSurveyWorksWithReturningNullWhenNotFound()
+{
+    QVERIFY(!storage->findSurveyById("123").has_value());
+}
+
 QTEST_MAIN(SqliteStorageTest)

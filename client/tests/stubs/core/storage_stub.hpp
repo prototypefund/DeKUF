@@ -8,6 +8,7 @@ private:
     QList<QPair<QString, QString>> dataPoints;
     QList<SurveyResponseRecord> surveyResponses;
     QList<SurveySignup> surveySignups;
+    QList<QSharedPointer<Survey>> surveys;
 
 public:
     QList<DataPoint> listDataPoints(const QString& key) const
@@ -76,5 +77,20 @@ public:
             existingSignup.groupSize = signup.groupSize;
             break;
         }
+    }
+
+    void addSurvey(const Survey& survey)
+    {
+        surveys.push_back(QSharedPointer<Survey>::create(survey));
+    }
+
+    std::optional<QSharedPointer<Survey>> findSurveyById(
+        const QString& survey_id) const
+    {
+        for (auto survey : surveys) {
+            if (survey->id == survey_id)
+                return survey;
+        }
+        return std::nullopt;
     }
 };

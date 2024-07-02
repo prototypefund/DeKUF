@@ -22,4 +22,6 @@ private slots:
     void testListSurveySignupForState();
     void testListActiveDelegateSurveySignups();
     void testSaveSurveySignup();
+    void testSaveSurveyWorksWithValuesPresent();
+    void testSaveSurveyWorksWithReturningNullWhenNotFound();
 };
