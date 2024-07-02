@@ -38,25 +38,6 @@ public:
 
     QList<SurveySignup> listSurveySignups() const { return surveySignups; }
 
-    QList<SurveySignup> listSurveySignupsForState(const QString& state) const
-    {
-        QList<SurveySignup> signups;
-        for (auto signup : listSurveySignups())
-            if (signup.state == state)
-                signups.append(signup);
-        return signups;
-    }
-
-    QList<SurveySignup> listActiveDelegateSurveySignups() const
-    {
-        QList<SurveySignup> signups;
-        for (auto signup : listSurveySignups())
-            if (signup.state == "processing"
-                && signup.clientId == signup.delegateId)
-                signups.append(signup);
-        return signups;
-    }
-
     void addSurveySignup(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId)
     {

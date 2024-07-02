@@ -61,7 +61,7 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
     QCOMPARE(storage->listSurveySignups().count(), 0);
 }
 
-void DaemonTest::testProcessSignupsIgnoresErrors()
+void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
@@ -140,7 +140,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     QCOMPARE(first.state, "done");
 }
 
-void DaemonTest::testProcessMessagesForDelegatesIgnoresErrors()
+void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
@@ -148,11 +148,11 @@ void DaemonTest::testProcessMessagesForDelegatesIgnoresErrors()
 
     Survey survey("testId", "testName");
     storage->addSurveySignup(survey, "processing", "1337", "1337");
-    await(daemon.processMessagesForDelegates());
+    await(daemon.processSignups());
 }
 
 // TODO: Instead of testing createSurveyResponse directly, it'd be better to
-//       rewrite the following test postAggregationResults.
+//       rewrite the following test processSignups.
 
 void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
 {

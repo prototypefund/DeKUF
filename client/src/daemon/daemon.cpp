@@ -52,16 +52,6 @@ QFuture<void> chain(QFuture<T> future, std::function<QFuture<void>(T)> next)
         [=](T value) { next(value).then([promise] { promise->finish(); }); });
     return promise->future();
 }
-
-// TODO: Consider just inlining this.
-QFuture<void> forEachSignup(const QList<SurveySignup>& signups,
-    std::function<QFuture<void>(SurveySignup&)> callback)
-{
-    QList<QFuture<void>> futures;
-    for (auto signup : signups)
-        futures.append(callback(signup));
-    return whenAll(futures);
-}
 };
 
 Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage,
@@ -88,29 +78,15 @@ void Daemon::run()
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
                  << "state:" << signup.state;
 
-    // TODO: While these calls seem to run one after another, it seems, the way
-    //       then() works, there's no actual guarantee they do. We could use
-    //       chain(), but the code wouldn't look particularly pretty. We should
-    //       properly test this and find a better way to ensure they run in a
-    //       series.
+    // TODO: Consider rewriting this to use signals/slots.
     qDebug() << "Processing surveys ...";
-    processSurveys()
-        .then([&] {
-            qDebug() << "Processing signups ...";
-            processSignups();
-        })
-        .then([&] {
-            qDebug() << "Processing messages for delegate ...";
-            processMessagesForDelegates();
-        })
-        .then([&] {
-            qDebug() << "Posting aggregation results ...";
-            postAggregationResults();
-        })
-        .then([&] {
+    processSurveys().then([&] {
+        qDebug() << "Processing signups ...";
+        processSignups().then([&] {
             qDebug() << "Processing finished.";
             emit finished();
         });
+    });
 }
 
 QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
@@ -158,7 +134,7 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
     });
 }
 
-QFuture<void> Daemon::processSignup(SurveySignup& signup)
+QFuture<void> Daemon::processInitialSignup(SurveySignup& signup)
 {
     return network->getSignupState(signup.clientId)
         .then([&, signup](QByteArray data) mutable {
@@ -188,33 +164,40 @@ QFuture<void> Daemon::processSignup(SurveySignup& signup)
 
 QFuture<void> Daemon::processSignups()
 {
-    auto signups = storage->listSurveySignupsForState("initial");
-    return forEachSignup(
-        signups, [&](SurveySignup& signup) { return processSignup(signup); });
+    auto signups = storage->listSurveySignups();
+    QList<QFuture<void>> futures;
+    for (auto signup : signups) {
+        if (signup.state == "initial") {
+            futures.append(processInitialSignup(signup));
+            continue;
+        }
+
+        if (signup.state != "processing"
+            || signup.clientId != signup.delegateId)
+            continue;
+        qDebug() << signup.state << signup.clientId << signup.delegateId;
+        futures.append(processMessagesForDelegate(signup));
+    }
+    return whenAll(futures);
 }
 
-QFuture<void> Daemon::processMessagesForDelegate(const SurveySignup& signup)
+QFuture<void> Daemon::processMessagesForDelegate(SurveySignup& signup)
 {
-    return network->getMessagesForDelegate(signup.delegateId)
-        .then([](QByteArray) {
-            // TODO: Store responses from other clients.
+    return chain<QByteArray>(network->getMessagesForDelegate(signup.delegateId),
+        [=](QByteArray) mutable {
+            // TODO: Read messages from other clients from response.
+
+            // TODO: Once messages are actually read, only proceed if there are
+            //       group size - 1 messages.
+            if (signup.groupSize > 1)
+                qWarning() << "Aggregation isn't implemented yet";
+
+            return postAggregationResult(signup);
         });
-}
-
-QFuture<void> Daemon::processMessagesForDelegates()
-{
-    auto signups = storage->listActiveDelegateSurveySignups();
-    return forEachSignup(signups, [&](const SurveySignup& signup) {
-        return processMessagesForDelegate(signup);
-    });
 }
 
 QFuture<void> Daemon::postAggregationResult(SurveySignup& signup)
 {
-    // TODO: Once messages are actually stored, ensure that the amount equals
-    //       group size - 1.
-    assert(signup.groupSize == 1);
-
     const auto& survey = *signup.survey;
     auto delegateResponse = createSurveyResponse(survey);
     // TODO: If there is more than one message, aggregate the results into a
@@ -230,13 +213,6 @@ QFuture<void> Daemon::postAggregationResult(SurveySignup& signup)
             signup.state = "done";
             storage->saveSurveySignup(signup);
         });
-}
-
-QFuture<void> Daemon::postAggregationResults()
-{
-    auto signups = storage->listActiveDelegateSurveySignups();
-    return forEachSignup(signups,
-        [&](SurveySignup& signup) { return postAggregationResult(signup); });
 }
 
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(

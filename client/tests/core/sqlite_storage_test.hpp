@@ -19,8 +19,6 @@ private slots:
     void testAddAndListSurveyResponses();
     void testAddAndListSurveyResponseWithSurvey();
     void testAddAndListSurveySignups();
-    void testListSurveySignupForState();
-    void testListActiveDelegateSurveySignups();
     void testSaveSurveySignup();
     void testSaveSurveyWorksWithValuesPresent();
     void testSaveSurveyWorksWithReturningNullWhenNotFound();

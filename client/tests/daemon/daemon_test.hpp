@@ -9,11 +9,11 @@ private slots:
     void testProcessSurveysIgnoresErrors();
     void testProcessSurveysSignsUpForRightCommissioner();
     void testProcessSurveyDoesNotSignUpForWrongCommissioner();
-    void testProcessSignupsIgnoresErrors();
+    void testProcessSignupsIgnoresEmptySignupState();
     void testProcessSignupsIgnoresNonStartedAggregations();
     void testProcessSignupsHandlesDelegateCase();
     void testProcessSignupsHandlesNonDelegateCase();
-    void testProcessMessagesForDelegatesIgnoresErrors();
+    void testProcessSignupsIgnoresEmptyMessagesForDelegate();
     void testCreateSurveyResponseSucceedsForIntervals();
     void testCreateSurveyResponseSucceedsForIntervalsWithInfinity();
 };
