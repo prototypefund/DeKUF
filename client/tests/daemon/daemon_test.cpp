@@ -25,7 +25,7 @@ void DaemonTest::testProcessSurveysIgnoresErrors()
     auto storage = QSharedPointer<StorageStub>::create();
     Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     await(daemon.processSurveys());
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
 void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
@@ -40,7 +40,7 @@ void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
     await(daemon.processSurveys());
-    auto signups = storage->listSurveySignups();
+    auto signups = storage->listSurveyRecords();
     QCOMPARE(signups.count(), 1);
     auto first = signups.first();
     QCOMPARE(first.survey->id, survey.id);
@@ -58,7 +58,7 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
     await(daemon.processSurveys());
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
 void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
@@ -68,10 +68,10 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "initial", "1337", "");
 
     await(daemon.processSignups());
-    QCOMPARE(storage->listSurveySignups().first().state, "initial");
+    QCOMPARE(storage->listSurveyRecords().first().state, "initial");
 }
 
 void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
@@ -81,7 +81,7 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "initial", "1337", "");
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
@@ -90,7 +90,7 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     })");
 
     await(daemon.processSignups());
-    QCOMPARE(storage->listSurveySignups().first().state, "initial");
+    QCOMPARE(storage->listSurveyRecords().first().state, "initial");
 }
 
 void DaemonTest::testProcessSignupsHandlesDelegateCase()
@@ -100,7 +100,7 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "initial", "1337", "");
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -109,7 +109,7 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveySignups();
+    auto signups = storage->listSurveyRecords();
     QCOMPARE(signups.count(), 1);
     auto first = signups.first();
     QCOMPARE(first.delegateId, "1337");
@@ -124,7 +124,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "initial", "1337", "");
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -133,7 +133,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveySignups();
+    auto signups = storage->listSurveyRecords();
     QCOMPARE(signups.count(), 1);
     auto first = signups.first();
     QCOMPARE(first.delegateId, "2448");
@@ -147,7 +147,7 @@ void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "processing", "1337", "1337");
+    storage->addSurveyRecord(survey, "processing", "1337", "1337");
     await(daemon.processSignups());
 }
 

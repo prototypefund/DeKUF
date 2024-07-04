@@ -11,22 +11,46 @@ struct DataPoint {
     QDateTime createdAt;
 };
 
-struct SurveyResponseRecord {
-    QSharedPointer<SurveyResponse> response;
-    QSharedPointer<Survey> survey;
-    QDateTime createdAt;
-};
+enum SurveyState { Initial, Processing, Done };
 
-struct SurveySignup {
+// TODO: Move this to it's own file
+class SurveyRecord {
     QSharedPointer<Survey> survey;
-
-    // TODO: This probably deserves an enum and better named/documented states.
-    /// Possible states: initial, processing, done
-    QString state;
+    // TODO: add response reference or method to get it
 
     QString clientId;
     QString delegateId;
-    int groupSize;
+    std::optional<int> groupSize;
+
+public:
+    explicit SurveyRecord(const QSharedPointer<Survey>& survey)
+        : survey(survey)
+    {
+    }
+
+    SurveyRecord(const QSharedPointer<Survey>& survey, const QString& clientId,
+        const QString& delegateId, int groupSize)
+        : survey(survey)
+        , clientId(clientId)
+        , delegateId(delegateId)
+        , groupSize(groupSize)
+    {
+    }
+
+    SurveyState getState()
+    {
+        if (clientId.isEmpty())
+            return Initial;
+        // TODO: Add response case since we need to check if there or not to
+        // determine status
+        return Done;
+    }
+};
+
+struct SurveyResponseRecord {
+    QSharedPointer<SurveyResponse> response;
+    QSharedPointer<SurveyRecord> surveyRecord;
+    QDateTime createdAt;
 };
 
 class Storage {
@@ -38,12 +62,12 @@ public:
     virtual void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey)
         = 0;
-    virtual QList<SurveySignup> listSurveySignups() const = 0;
-    virtual void addSurveySignup(const Survey& survey, const QString& state,
-        const QString& clientId, const QString& delegateId)
+    virtual QList<SurveyRecord> listSurveyRecords() const = 0;
+    virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
+        const QString& delegateId, const int& groupSize)
         = 0;
-    virtual void saveSurveySignup(const SurveySignup& signup) = 0;
-    virtual void addSurvey(const Survey& survey) = 0;
-    virtual std::optional<QSharedPointer<Survey>> findSurveyById(
-        const QString& survey_id) const = 0;
+    virtual void saveSurveySignup(const SurveyRecord& record) = 0;
+    virtual QSharedPointer<SurveyRecord> findSurveyRecordById(
+        const QString& survey_id) const
+        = 0;
 };

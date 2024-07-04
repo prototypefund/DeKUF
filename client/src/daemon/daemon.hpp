@@ -31,10 +31,10 @@ private:
 
     QFuture<void> handleSurveysResponse(const QByteArray& data);
     QFuture<void> processSurveys();
-    QFuture<void> processInitialSignup(SurveySignup& signup);
+    QFuture<void> processInitialSignup(SurveyRecord& signup);
     QFuture<void> processSignups();
-    QFuture<void> processMessagesForDelegate(SurveySignup& signup);
-    QFuture<void> postAggregationResult(SurveySignup& signup);
+    QFuture<void> processMessagesForDelegate(SurveyRecord& signup);
+    QFuture<void> postAggregationResult(SurveyRecord& signup);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const Survey& survey) const;
     QSharedPointer<QueryResponse> createQueryResponse(

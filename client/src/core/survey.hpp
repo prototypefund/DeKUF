@@ -1,5 +1,7 @@
 #pragma once
 
+#include "survey_response.hpp"
+
 #include <QtCore>
 
 #include <core/commissioner.hpp>
@@ -17,17 +19,17 @@ public:
 
 class Survey {
 public:
-    static QList<QSharedPointer<Survey>> listFromByteArray(
-        const QByteArray& data);
-
-    static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
-
-    QByteArray toByteArray() const;
-
     const QString id;
     const QString name;
     QSharedPointer<Commissioner> commissioner;
     QList<QSharedPointer<Query>> queries;
 
     Survey(const QString& id, const QString& name);
+
+    static QList<QSharedPointer<Survey>> listFromByteArray(
+        const QByteArray& data);
+
+    static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
+
+    QByteArray toByteArray() const;
 };

@@ -36,9 +36,9 @@ public:
                 .createdAt = QDateTime::currentDateTime() });
     }
 
-    QList<SurveySignup> listSurveySignups() const { return surveySignups; }
+    QList<SurveySignup> listSurveyRecords() const { return surveySignups; }
 
-    void addSurveySignup(const Survey& survey, const QString& state,
+    void addSurveyRecord(const Survey& survey, const QString& state,
         const QString& clientId, const QString& delegateId)
     {
         surveySignups.push_back(

@@ -14,12 +14,11 @@ public:
     QList<SurveyResponseRecord> listSurveyResponses() const;
     void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey);
-    QList<SurveySignup> listSurveySignups() const;
-    void addSurveySignup(const Survey& survey, const QString& state,
-        const QString& clientId, const QString& delegateId);
-    void saveSurveySignup(const SurveySignup& signup);
-    void addSurvey(const Survey& survey);
-    std::optional<QSharedPointer<Survey>> findSurveyById(
+    QList<SurveyRecord> listSurveyRecords() const;
+    void addSurveyRecord(const Survey& survey, const QString& clientId,
+        const QString& delegateId, const int& groupSize);
+    void saveSurveySignup(const SurveyRecord& record);
+    QSharedPointer<SurveyRecord> findSurveyRecordById(
         const QString& surveyId) const;
 
 private:

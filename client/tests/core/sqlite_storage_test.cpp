@@ -77,26 +77,26 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
 
 void SqliteStorageTest::testAddAndListSurveySignups()
 {
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 
     Survey survey("1", "testName");
     QString state("foo");
     QString clientId("bar");
     QString delegateId("");
-    storage->addSurveySignup(survey, state, clientId, delegateId);
+    storage->addSurveyRecord(survey, state, clientId, delegateId);
 
-    QCOMPARE(storage->listSurveySignups().count(), 1);
+    QCOMPARE(storage->listSurveyRecords().count(), 1);
 }
 
 void SqliteStorageTest::testSaveSurveySignup()
 {
-    storage->addSurveySignup(Survey("1", "1"), "foo", "1", "");
-    auto signup = storage->listSurveySignups().first();
+    storage->addSurveyRecord(Survey("1", "1"), "foo", "1", "");
+    auto signup = storage->listSurveyRecords().first();
     signup.state = "bar";
     signup.delegateId = "2";
     signup.groupSize = 1337;
     storage->saveSurveySignup(signup);
-    auto retrievedSignup = storage->listSurveySignups().first();
+    auto retrievedSignup = storage->listSurveyRecords().first();
     QCOMPARE(retrievedSignup.state, signup.state);
     QCOMPARE(retrievedSignup.delegateId, signup.delegateId);
     QCOMPARE(retrievedSignup.groupSize, signup.groupSize);
