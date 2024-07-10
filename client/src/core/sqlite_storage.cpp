@@ -156,17 +156,29 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
         const auto clientId = query.value(1).toString();
         const auto delegateId = query.value(2).toString();
         const auto groupSize = query.value(3).toInt();
+// TODO
+#if 0
         survey_records.push_back({ .survey = survey,
-            .clientId = clientId,
-            .delegateId = delegateId,
-            .groupSize = groupSize });
+                .clientId = clientId,
+                .delegateId = delegateId,
+                .groupSize = groupSize,
+            });
+#else
+        SurveyRecord foo;
+        foo.survey = survey;
+        foo.clientId = clientId;
+        foo.delegateId = delegateId;
+        foo.groupSize = groupSize;
+        survey_records.push_back(foo);
+#endif
     }
 
     return survey_records;
 }
 
 void SqliteStorage::addSurveyRecord(const Survey& survey,
-    const QString& clientId, const QString& delegateId, const int& groupSize)
+    const QString& clientId, const QString& delegateId,
+    const std::optional<int>& groupSize)
 {
     QSqlQuery query;
     query.prepare("INSERT INTO survey_record (survey_id, client_id, "
@@ -175,8 +187,14 @@ void SqliteStorage::addSurveyRecord(const Survey& survey,
     query.bindValue(":survey_id", survey.id);
     query.bindValue(":client_id", clientId);
     query.bindValue(":delegate_id", delegateId);
-    query.bindValue(":group_size", groupSize);
+    query.bindValue(
+        ":group_size", groupSize.has_value() ? groupSize.value() : QVariant());
     execQuery(query);
+}
+
+void SqliteStorage::saveSurveySignup(const SurveyRecord& record)
+{
+    // TODO
 }
 
 QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(

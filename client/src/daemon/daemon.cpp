@@ -76,7 +76,7 @@ void Daemon::run()
     qDebug() << "Survey signups:";
     for (const auto& signup : storage->listSurveyRecords())
         qDebug() << "-" << signup.survey->id << "as" << signup.clientId
-                 << "state:" << signup.state;
+                 << "state:" << signup.getState();
 
     // TODO: Consider rewriting this to use signals/slots.
     qDebug() << "Processing surveys ...";
@@ -130,7 +130,7 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
     return network->surveySignup(survey->id).then([&, survey](QByteArray data) {
         const auto responseObject = QJsonDocument::fromJson(data).object();
         const auto clientId = responseObject["client_id"].toString();
-        storage->addSurveyRecord(*survey, "initial", clientId, "");
+        storage->addSurveyRecord(*survey, "initial", clientId, std::nullopt);
     });
 }
 

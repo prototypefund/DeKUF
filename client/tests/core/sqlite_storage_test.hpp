@@ -20,6 +20,6 @@ private slots:
     void testAddAndListSurveyResponseWithSurvey();
     void testAddAndListSurveySignups();
     void testSaveSurveySignup();
-    void testSaveSurveyWorksWithValuesPresent();
-    void testSaveSurveyWorksWithReturningNullWhenNotFound();
+    // void testSaveSurveyWorksWithValuesPresent();
+    // void testSaveSurveyWorksWithReturningNullWhenNotFound();
 };

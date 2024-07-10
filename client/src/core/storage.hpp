@@ -14,7 +14,7 @@ struct DataPoint {
 enum SurveyState { Initial, Processing, Done };
 
 // TODO: Move this to it's own file
-class SurveyRecord {
+struct SurveyRecord {
     QSharedPointer<Survey> survey;
     // TODO: add response reference or method to get it
 
@@ -22,14 +22,17 @@ class SurveyRecord {
     QString delegateId;
     std::optional<int> groupSize;
 
-public:
+    // TODO: Double check that we need all these constructors
+
+    SurveyRecord() = default;
+
     explicit SurveyRecord(const QSharedPointer<Survey>& survey)
         : survey(survey)
     {
     }
 
     SurveyRecord(const QSharedPointer<Survey>& survey, const QString& clientId,
-        const QString& delegateId, int groupSize)
+        const QString& delegateId, const std::optional<int>& groupSize)
         : survey(survey)
         , clientId(clientId)
         , delegateId(delegateId)
@@ -37,7 +40,7 @@ public:
     {
     }
 
-    SurveyState getState()
+    SurveyState getState() const
     {
         if (clientId.isEmpty())
             return Initial;
@@ -64,7 +67,7 @@ public:
         = 0;
     virtual QList<SurveyRecord> listSurveyRecords() const = 0;
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
-        const QString& delegateId, const int& groupSize)
+        const QString& delegateId, const std::optional<int>& groupSize)
         = 0;
     virtual void saveSurveySignup(const SurveyRecord& record) = 0;
     virtual QSharedPointer<SurveyRecord> findSurveyRecordById(

@@ -7,7 +7,7 @@ class StorageStub : public Storage {
 private:
     QList<QPair<QString, QString>> dataPoints;
     QList<SurveyResponseRecord> surveyResponses;
-    QList<SurveySignup> surveySignups;
+    QList<SurveyRecord> surveyRecords;
     QList<QSharedPointer<Survey>> surveys;
 
 public:
@@ -36,26 +36,33 @@ public:
                 .createdAt = QDateTime::currentDateTime() });
     }
 
-    QList<SurveySignup> listSurveyRecords() const { return surveySignups; }
+    QList<SurveyRecord> listSurveyRecords() const { return surveyRecords; }
 
-    void addSurveyRecord(const Survey& survey, const QString& state,
-        const QString& clientId, const QString& delegateId)
+    void addSurveyRecord(const Survey& survey, const QString& clientId,
+        const QString& delegateId, const std::optional<int>& groupSize)
     {
-        surveySignups.push_back(
+// TODO
+#if 0
+        surveyRecords.push_back(
             { .survey = QSharedPointer<Survey>::create(survey),
-                .state = state,
                 .clientId = clientId,
-                .delegateId = delegateId });
+                .delegateId = delegateId,
+                .groupSize = groupSize });
+#else
+        surveyRecords.push_back(
+            SurveyRecord(QSharedPointer<Survey>::create(survey), clientId,
+                delegateId, groupSize));
+#endif
     }
 
-    void saveSurveySignup(const SurveySignup& signup)
+    // TODO: Rename
+    void saveSurveySignup(const SurveyRecord& surveyRecord)
     {
-        for (auto& existingSignup : surveySignups) {
-            if (existingSignup.clientId != signup.clientId)
+        for (auto& existingSurvey : surveyRecords) {
+            if (existingSurvey.clientId != surveyRecord.clientId)
                 continue;
-            existingSignup.state = signup.state;
-            existingSignup.delegateId = signup.delegateId;
-            existingSignup.groupSize = signup.groupSize;
+            existingSurvey.delegateId = surveyRecord.delegateId;
+            existingSurvey.groupSize = surveyRecord.groupSize;
             break;
         }
     }
@@ -73,5 +80,11 @@ public:
                 return survey;
         }
         return std::nullopt;
+    }
+
+    QSharedPointer<SurveyRecord> findSurveyRecordById(
+        const QString& survey_id) const
+    {
+        return nullptr;
     }
 };
