@@ -68,6 +68,5 @@ public:
         = 0;
     virtual void saveSurveySignup(const SurveyRecord& record) = 0;
     virtual QSharedPointer<SurveyRecord> findSurveyRecordById(
-        const QString& survey_id) const
-        = 0;
+        const QString& survey_id) const = 0;
 };
