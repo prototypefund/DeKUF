@@ -69,7 +69,7 @@ public:
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& delegateId, const std::optional<int>& groupSize)
         = 0;
-    virtual void saveSurveySignup(const SurveyRecord& record) = 0;
+    virtual void saveSurveyRecord(const SurveyRecord& record) = 0;
     virtual QSharedPointer<SurveyRecord> findSurveyRecordById(
         const QString& survey_id) const = 0;
 };

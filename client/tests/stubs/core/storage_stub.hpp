@@ -55,14 +55,13 @@ public:
 #endif
     }
 
-    // TODO: Rename
-    void saveSurveySignup(const SurveyRecord& surveyRecord)
+    void saveSurveyRecord(const SurveyRecord& record)
     {
         for (auto& existingSurvey : surveyRecords) {
-            if (existingSurvey.clientId != surveyRecord.clientId)
+            if (existingSurvey.clientId != record.clientId)
                 continue;
-            existingSurvey.delegateId = surveyRecord.delegateId;
-            existingSurvey.groupSize = surveyRecord.groupSize;
+            existingSurvey.delegateId = record.delegateId;
+            existingSurvey.groupSize = record.groupSize;
             break;
         }
     }

@@ -157,7 +157,7 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& signup)
                 // state)
             }
 
-            storage->saveSurveySignup(signup);
+            storage->saveSurveyRecord(signup);
         });
 }
 
@@ -210,7 +210,7 @@ QFuture<void> Daemon::postAggregationResult(SurveyRecord& signup)
             // just how non-delegate clients would store their response to the
             // delegate. We should not store the aggregated response here.
             storage->addSurveyResponse(*delegateResponse, survey);
-            storage->saveSurveySignup(signup);
+            storage->saveSurveyRecord(signup);
         });
 }
 

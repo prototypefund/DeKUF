@@ -77,7 +77,7 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
     QCOMPARE(storedSurvey->name, "testName");
 }
 
-void SqliteStorageTest::testAddAndListSurveySignups()
+void SqliteStorageTest::testAddAndListSurveyRecords()
 {
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 
@@ -90,37 +90,30 @@ void SqliteStorageTest::testAddAndListSurveySignups()
     QCOMPARE(storage->listSurveyRecords().count(), 1);
 }
 
-void SqliteStorageTest::testSaveSurveySignup()
+void SqliteStorageTest::testSaveSurveyRecord()
 {
     storage->addSurveyRecord(Survey("1", "1"), "1", "", std::nullopt);
-    auto signup = storage->listSurveyRecords().first();
-    signup.delegateId = "2";
-    signup.groupSize = 1337;
-    storage->saveSurveySignup(signup);
-    auto retrievedSignup = storage->listSurveyRecords().first();
-    QCOMPARE(retrievedSignup.getState(), signup.getState());
-    QCOMPARE(retrievedSignup.delegateId, signup.delegateId);
-    QCOMPARE(retrievedSignup.groupSize, signup.groupSize);
+    auto modifiedRecord = storage->listSurveyRecords().first();
+    modifiedRecord.delegateId = "2";
+    modifiedRecord.groupSize = 1337;
+    storage->saveSurveyRecord(modifiedRecord);
+    const auto retrievedRecord = storage->listSurveyRecords().first();
+    QCOMPARE(retrievedRecord.getState(), modifiedRecord.getState());
+    QCOMPARE(retrievedRecord.delegateId, modifiedRecord.delegateId);
+    QCOMPARE(retrievedRecord.groupSize, modifiedRecord.groupSize);
 }
 
-// TODO:
-/*
-void SqliteStorageTest::testSaveSurveyWorksWithValuesPresent()
+void SqliteStorageTest::testAddSurveyWorksWithValuesPresent()
 {
     Survey testSurvey("123", "test");
     testSurvey.queries.append(QSharedPointer<Query>::create(
         "12345", "testDataKey", QList<QString> { "1", "2", "3" }, true));
+    storage->addSurveyRecord(testSurvey, "", "", std::nullopt);
 
-    storage->addSurveyRecord(testSurvey);
-    auto retrievedSurvey = storage->findSurveyById(testSurvey.id);
+    auto retrievedSurvey = storage->findSurveyRecordById(testSurvey.id);
+    QVERIFY(!retrievedSurvey.isNull());
 
-    QVERIFY(retrievedSurvey.has_value());
-    if (!retrievedSurvey.has_value()) {
-        return;
-    }
-
-    auto retrievedSurveyValue = retrievedSurvey.value();
-
+    auto retrievedSurveyValue = retrievedSurvey->survey;
     QCOMPARE(retrievedSurveyValue->id, testSurvey.id);
     QCOMPARE(retrievedSurveyValue->name, testSurvey.name);
     QCOMPARE(retrievedSurveyValue->queries.first()->id,
@@ -133,10 +126,9 @@ void SqliteStorageTest::testSaveSurveyWorksWithValuesPresent()
         testSurvey.queries.first()->discrete);
 }
 
-void SqliteStorageTest::testSaveSurveyWorksWithReturningNullWhenNotFound()
+void SqliteStorageTest::testAddSurveyWorksWithReturningNullWhenNotFound()
 {
-    QVERIFY(!storage->findSurveyById("123").has_value());
+    QVERIFY(storage->findSurveyRecordById("123").isNull());
 }
-*/
 
 QTEST_MAIN(SqliteStorageTest)
