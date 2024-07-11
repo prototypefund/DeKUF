@@ -166,21 +166,8 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
         const auto clientId = query.value(1).toString();
         const auto delegateId = query.value(2).toString();
         const auto groupSize = query.value(3).toInt();
-// TODO
-#if 0
-        survey_records.push_back({ .survey = survey,
-                .clientId = clientId,
-                .delegateId = delegateId,
-                .groupSize = groupSize,
-            });
-#else
-        SurveyRecord foo;
-        foo.survey = survey;
-        foo.clientId = clientId;
-        foo.delegateId = delegateId;
-        foo.groupSize = groupSize;
-        survey_records.push_back(foo);
-#endif
+        survey_records.push_back(
+            SurveyRecord(survey, clientId, delegateId, groupSize));
     }
 
     return survey_records;

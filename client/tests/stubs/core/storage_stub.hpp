@@ -41,18 +41,9 @@ public:
     void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& delegateId, const std::optional<int>& groupSize)
     {
-// TODO
-#if 0
-        surveyRecords.push_back(
-            { .survey = QSharedPointer<Survey>::create(survey),
-                .clientId = clientId,
-                .delegateId = delegateId,
-                .groupSize = groupSize });
-#else
         surveyRecords.push_back(
             SurveyRecord(QSharedPointer<Survey>::create(survey), clientId,
                 delegateId, groupSize));
-#endif
     }
 
     void saveSurveyRecord(const SurveyRecord& record)
