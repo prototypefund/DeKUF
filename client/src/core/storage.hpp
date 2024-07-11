@@ -28,6 +28,8 @@ public:
     virtual void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey)
         = 0;
+    virtual std::optional<SurveyResponseRecord> findSurveyResponseFor(
+        const QString& surveyId) const = 0;
     virtual QList<SurveyRecord> listSurveyRecords() const = 0;
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& delegateId, const std::optional<int>& groupSize)

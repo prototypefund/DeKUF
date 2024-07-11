@@ -124,17 +124,10 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 
     while (query.next()) {
         const auto data = query.value(0).toByteArray();
-        QSharedPointer<SurveyResponse> response(
-            SurveyResponse::fromJsonByteArray(data));
-
         const auto surveyId = query.value(1).toString();
-        const auto surveyRecord = findSurveyRecordById(surveyId);
-
         const auto createdAt = query.value(2).toDateTime();
-
-        responses.push_back({ .response = response,
-            .surveyRecord = surveyRecord,
-            .createdAt = createdAt });
+        responses.push_back(
+            createSurveyResponseRecord(data, surveyId, createdAt));
     }
 
     return responses;
@@ -152,6 +145,24 @@ void SqliteStorage::addSurveyResponse(
     execQuery(query);
 }
 
+std::optional<SurveyResponseRecord> SqliteStorage::findSurveyResponseFor(
+    const QString& surveyId) const
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        SELECT data, created_at
+        FROM survey_response_record
+        WHERE survey_id = :survey_id
+    )");
+    query.bindValue(":survey_id", surveyId);
+    if (!execQuery(query) || !query.next())
+        return std::nullopt;
+
+    const auto data = query.value(0).toByteArray();
+    const auto createdAt = query.value(1).toDateTime();
+    return createSurveyResponseRecord(data, surveyId, createdAt);
+}
+
 QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
 {
     QList<SurveyRecord> survey_records;
@@ -166,8 +177,9 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
         const auto clientId = query.value(1).toString();
         const auto delegateId = query.value(2).toString();
         const auto groupSize = query.value(3).toInt();
+        const auto hasResponse = !findSurveyResponseFor(survey->id).has_value();
         survey_records.push_back(
-            SurveyRecord(survey, clientId, delegateId, groupSize));
+            SurveyRecord(survey, clientId, delegateId, groupSize, hasResponse));
     }
 
     return survey_records;
@@ -232,4 +244,16 @@ QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(
     const auto groupSize = query.value(3).toInt();
     return QSharedPointer<SurveyRecord>::create(
         survey, clientId, delegateId, groupSize);
+}
+
+SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(
+    const QByteArray& data, const QString& surveyId,
+    const QDateTime& createdAt) const
+{
+    QSharedPointer<SurveyResponse> response(
+        SurveyResponse::fromJsonByteArray(data));
+    const auto surveyRecord = findSurveyRecordById(surveyId);
+    return { .response = response,
+        .surveyRecord = surveyRecord,
+        .createdAt = createdAt };
 }

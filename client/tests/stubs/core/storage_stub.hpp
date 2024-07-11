@@ -36,6 +36,15 @@ public:
                 .createdAt = QDateTime::currentDateTime() });
     }
 
+    std::optional<SurveyResponseRecord> findSurveyResponseFor(
+        const QString& surveyId) const
+    {
+        for (const auto& response : surveyResponses)
+            if (response.surveyRecord->survey->id == surveyId)
+                return response;
+        return std::nullopt;
+    }
+
     QList<SurveyRecord> listSurveyRecords() const { return surveyRecords; }
 
     void addSurveyRecord(const Survey& survey, const QString& clientId,

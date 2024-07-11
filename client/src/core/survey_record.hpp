@@ -2,29 +2,36 @@
 
 enum SurveyState { Initial, Processing, Done };
 
-struct SurveyRecord {
+class SurveyRecord {
+public:
     QSharedPointer<Survey> survey;
-    // TODO: add response reference or method to get it
 
     QString clientId;
     QString delegateId;
     std::optional<int> groupSize;
 
     SurveyRecord(const QSharedPointer<Survey>& survey, const QString& clientId,
-        const QString& delegateId, const std::optional<int>& groupSize)
+        const QString& delegateId, const std::optional<int>& groupSize,
+        const bool hasResponse = false)
         : survey(survey)
         , clientId(clientId)
         , delegateId(delegateId)
         , groupSize(groupSize)
+        , hasResponse(hasResponse)
     {
     }
 
     SurveyState getState() const
     {
-        if (delegateId.isEmpty())
-            return Initial;
-        // TODO: Add response case since we need to check if there or not to
-        // determine status
-        return Done;
+        if (hasResponse)
+            return Done;
+
+        if (!delegateId.isEmpty() && clientId == delegateId)
+            return Processing;
+
+        return Initial;
     }
+
+private:
+    bool hasResponse;
 };
