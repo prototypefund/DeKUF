@@ -42,7 +42,7 @@ struct SurveyRecord {
 
     SurveyState getState() const
     {
-        if (clientId.isEmpty())
+        if (delegateId.isEmpty())
             return Initial;
         // TODO: Add response case since we need to check if there or not to
         // determine status

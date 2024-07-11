@@ -71,8 +71,8 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
     storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     await(daemon.processSignups());
-    // TODO
-    // QCOMPARE(storage->listSurveyRecords().first().getState(), "initial");
+    QCOMPARE(
+        storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
@@ -82,7 +82,7 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "initial", "1337", std::nullopt);
+    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
@@ -91,8 +91,8 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     })");
 
     await(daemon.processSignups());
-    // TODO
-    // QCOMPARE(storage->listSurveyRecords().first().getState(), "initial");
+    QCOMPARE(
+        storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsHandlesDelegateCase()
@@ -116,14 +116,12 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     QCOMPARE(signups.count(), 1);
     auto first = signups.first();
     QCOMPARE(first.delegateId, "1337");
-    // TODO
-    // QCOMPARE(first.getState(), "processing");
+    QCOMPARE(first.getState(), SurveyState::Processing);
     QCOMPARE(first.groupSize, 1);
 }
 
 void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
 {
-    QSKIP("Doesn't work yet");
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
     Daemon daemon(nullptr, storage, network);
@@ -142,8 +140,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     QCOMPARE(signups.count(), 1);
     auto first = signups.first();
     QCOMPARE(first.delegateId, "2448");
-    // TODO
-    // QCOMPARE(first.getState(), "done");
+    QCOMPARE(first.getState(), SurveyState::Done);
 }
 
 void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
