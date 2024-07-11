@@ -74,9 +74,9 @@ void Daemon::run()
         qDebug() << "-" << dataPoint.value;
 
     qDebug() << "Survey signups:";
-    for (const auto& signup : storage->listSurveyRecords())
-        qDebug() << "-" << signup.survey->id << "as" << signup.clientId
-                 << "state:" << signup.getState();
+    for (const auto& record : storage->listSurveyRecords())
+        qDebug() << "-" << record.survey->id << "as" << record.clientId
+                 << "state:" << record.getState();
 
     // TODO: Consider rewriting this to use signals/slots.
     qDebug() << "Processing surveys ...";
@@ -99,8 +99,8 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
     qDebug() << "Fetched surveys:" << surveys.count();
 
     QSet<QString> signedUpSurveys;
-    for (const auto& signup : storage->listSurveyRecords())
-        signedUpSurveys.insert(signup.survey->id);
+    for (const auto& record : storage->listSurveyRecords())
+        signedUpSurveys.insert(record.survey->id);
 
     QList<QFuture<void>> futures;
     for (const auto& survey : surveys) {
@@ -134,20 +134,20 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
     });
 }
 
-QFuture<void> Daemon::processInitialSignup(SurveyRecord& signup)
+QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
 {
-    return network->getSignupState(signup.clientId)
-        .then([&, signup](QByteArray data) mutable {
+    return network->getSignupState(record.clientId)
+        .then([&, record](QByteArray data) mutable {
             const auto responseDocument = QJsonDocument::fromJson(data);
             const auto responseObject = responseDocument.object();
             if (!responseObject["aggregation_started"].toBool()) {
                 return;
             }
 
-            signup.delegateId = responseObject["delegate_id"].toString();
+            record.delegateId = responseObject["delegate_id"].toString();
 
-            if (signup.clientId == signup.delegateId) {
-                signup.groupSize = responseObject["group_size"].toInt();
+            if (record.clientId == record.delegateId) {
+                record.groupSize = responseObject["group_size"].toInt();
                 // TODO: Either send data to itself here, or implement some
                 // other
                 //       logic to deal with the delegate's own data - also for
@@ -157,7 +157,7 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& signup)
                 // state)
             }
 
-            storage->saveSurveyRecord(signup);
+            storage->saveSurveyRecord(record);
         });
 }
 
@@ -196,21 +196,21 @@ QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
         });
 }
 
-QFuture<void> Daemon::postAggregationResult(SurveyRecord& signup)
+QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
 {
-    const auto& survey = *signup.survey;
+    const auto& survey = *record.survey;
     auto delegateResponse = createSurveyResponse(survey);
     // TODO: If there is more than one message, aggregate the results into a
     //       single response.
 
     auto data = delegateResponse->toJsonByteArray();
-    return network->postAggregationResult(signup.delegateId, data)
+    return network->postAggregationResult(record.delegateId, data)
         .then([=]() mutable {
             // Note that we are saving the response of the delegate itself here,
             // just how non-delegate clients would store their response to the
             // delegate. We should not store the aggregated response here.
             storage->addSurveyResponse(*delegateResponse, survey);
-            storage->saveSurveyRecord(signup);
+            storage->saveSurveyRecord(record);
         });
 }
 

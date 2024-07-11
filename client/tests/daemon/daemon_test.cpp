@@ -40,9 +40,9 @@ void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
     await(daemon.processSurveys());
-    auto signups = storage->listSurveyRecords();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.survey->id, survey.id);
 }
 
@@ -111,9 +111,9 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveyRecords();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.delegateId, "1337");
     QCOMPARE(first.getState(), SurveyState::Processing);
     QCOMPARE(first.groupSize, 1);
@@ -135,9 +135,9 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveyRecords();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.delegateId, "2448");
 
     // TODO: The state should actually be Done here, but since we don't actually
