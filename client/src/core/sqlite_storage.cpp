@@ -124,13 +124,16 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 
     while (query.next()) {
         const auto data = query.value(0).toByteArray();
-        const auto survey = findSurveyRecordById(query.value(1).toByteArray());
-
         QSharedPointer<SurveyResponse> response(
             SurveyResponse::fromJsonByteArray(data));
+
+        const auto surveyId = query.value(1).toString();
+        const auto surveyRecord = findSurveyRecordById(surveyId);
+
         const auto createdAt = query.value(2).toDateTime();
+
         responses.push_back({ .response = response,
-            .surveyRecord = survey,
+            .surveyRecord = surveyRecord,
             .createdAt = createdAt });
     }
 

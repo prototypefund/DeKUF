@@ -57,13 +57,14 @@ void SqliteStorageTest::testAddAndListSurveyResponses()
 
 void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
 {
-    QSKIP("Doesn't work yet");
     QCOMPARE(storage->listSurveyResponses().count(), 0);
 
     auto commissioner
         = QSharedPointer<Commissioner>::create("testCommissioner");
     Survey survey("1", "testName");
     survey.commissioner = commissioner;
+    storage->addSurveyRecord(survey, "", "", std::nullopt);
+
     SurveyResponse response("1");
     storage->addSurveyResponse(response, survey);
 
@@ -72,7 +73,10 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
     auto surveyResponse = storage->listSurveyResponses().first();
     QCOMPARE(surveyResponse.response->surveyId, "1");
 
-    auto storedSurvey = surveyResponse.surveyRecord->survey;
+    auto surveyRecord = surveyResponse.surveyRecord;
+    QVERIFY(!surveyRecord.isNull());
+
+    auto storedSurvey = surveyRecord->survey;
     QCOMPARE(storedSurvey->id, "1");
     QCOMPARE(storedSurvey->commissioner->name, "testCommissioner");
     QCOMPARE(storedSurvey->name, "testName");
