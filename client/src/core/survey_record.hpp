@@ -10,15 +10,6 @@ struct SurveyRecord {
     QString delegateId;
     std::optional<int> groupSize;
 
-    // TODO: Double check that we need all these constructors
-
-    SurveyRecord() = default;
-
-    explicit SurveyRecord(const QSharedPointer<Survey>& survey)
-        : survey(survey)
-    {
-    }
-
     SurveyRecord(const QSharedPointer<Survey>& survey, const QString& clientId,
         const QString& delegateId, const std::optional<int>& groupSize)
         : survey(survey)
