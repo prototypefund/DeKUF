@@ -23,8 +23,9 @@ For the moment, you'll need to manually install a few dependencies:
 2. [CMake](https://cmake.org/)
 3. The [Qt framework](https://www.qt.io/product/qt6), version 6.2.4 (or later,
    presumably)
-4. [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html)
-5. [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and
+4. [GPGME](https://gnupg.org/software/gpgme/index.html)
+5. [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html)
+6. [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and
    [clang-tidy](https://clang.llvm.org/extra/clang-tidy/), version 14 (later
    versions format code differently, unfortunately)
 

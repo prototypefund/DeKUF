@@ -6,6 +6,7 @@ target_link_libraries(dekuf-client-daemon-lib PUBLIC
     Qt6::Core
     Qt6::Network
     Qt6::DBus
+    ${Gpgme_LIBRARY}
     dekuf-client-core
 )
 
