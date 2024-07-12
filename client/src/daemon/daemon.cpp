@@ -74,9 +74,9 @@ void Daemon::run()
         qDebug() << "-" << dataPoint.value;
 
     qDebug() << "Survey signups:";
-    for (const auto& signup : storage->listSurveySignups())
-        qDebug() << "-" << signup.survey->id << "as" << signup.clientId
-                 << "state:" << signup.state;
+    for (const auto& record : storage->listSurveyRecords())
+        qDebug() << "-" << record.survey->id << "as" << record.clientId
+                 << "state:" << record.getState();
 
     // TODO: Consider rewriting this to use signals/slots.
     qDebug() << "Processing surveys ...";
@@ -99,8 +99,8 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
     qDebug() << "Fetched surveys:" << surveys.count();
 
     QSet<QString> signedUpSurveys;
-    for (const auto& signup : storage->listSurveySignups())
-        signedUpSurveys.insert(signup.survey->id);
+    for (const auto& record : storage->listSurveyRecords())
+        signedUpSurveys.insert(record.survey->id);
 
     QList<QFuture<void>> futures;
     for (const auto& survey : surveys) {
@@ -130,88 +130,87 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
     return network->surveySignup(survey->id).then([&, survey](QByteArray data) {
         const auto responseObject = QJsonDocument::fromJson(data).object();
         const auto clientId = responseObject["client_id"].toString();
-        storage->addSurveySignup(*survey, "initial", clientId, "");
+        storage->addSurveyRecord(*survey, "initial", clientId, std::nullopt);
     });
 }
 
-QFuture<void> Daemon::processInitialSignup(SurveySignup& signup)
+QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
 {
-    return network->getSignupState(signup.clientId)
-        .then([&, signup](QByteArray data) mutable {
+    return network->getSignupState(record.clientId)
+        .then([&, record](QByteArray data) mutable {
             const auto responseDocument = QJsonDocument::fromJson(data);
             const auto responseObject = responseDocument.object();
             if (!responseObject["aggregation_started"].toBool()) {
                 return;
             }
 
-            signup.delegateId = responseObject["delegate_id"].toString();
+            record.delegateId = responseObject["delegate_id"].toString();
 
-            if (signup.clientId == signup.delegateId) {
-                signup.state = "processing";
-                signup.groupSize = responseObject["group_size"].toInt();
+            if (record.clientId == record.delegateId) {
+                record.groupSize = responseObject["group_size"].toInt();
                 // TODO: Either send data to itself here, or implement some
                 // other
                 //       logic to deal with the delegate's own data - also for
                 //       the group_size = 1 case.
             } else {
-                // TODO: Send data to delegate.
-                signup.state = "done";
+                // TODO: Send data to delegate and save response (will change
+                // state)
             }
 
-            storage->saveSurveySignup(signup);
+            storage->saveSurveyRecord(record);
         });
 }
 
 QFuture<void> Daemon::processSignups()
 {
-    auto signups = storage->listSurveySignups();
+    auto surveyRecords = storage->listSurveyRecords();
     QList<QFuture<void>> futures;
-    for (auto signup : signups) {
-        if (signup.state == "initial") {
-            futures.append(processInitialSignup(signup));
+    for (auto surveyRecord : surveyRecords) {
+        if (surveyRecord.getState() == Initial) {
+            futures.append(processInitialSignup(surveyRecord));
             continue;
         }
 
-        if (signup.state != "processing"
-            || signup.clientId != signup.delegateId)
+        if (surveyRecord.getState() != Processing
+            || surveyRecord.clientId != surveyRecord.delegateId)
             continue;
-        qDebug() << signup.state << signup.clientId << signup.delegateId;
-        futures.append(processMessagesForDelegate(signup));
+        qDebug() << surveyRecord.getState() << surveyRecord.clientId
+                 << surveyRecord.delegateId;
+        futures.append(processMessagesForDelegate(surveyRecord));
     }
     return whenAll(futures);
 }
 
-QFuture<void> Daemon::processMessagesForDelegate(SurveySignup& signup)
+QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
-    return chain<QByteArray>(network->getMessagesForDelegate(signup.delegateId),
+    return chain<QByteArray>(network->getMessagesForDelegate(record.delegateId),
         [=](QByteArray) mutable {
             // TODO: Read messages from other clients from response.
 
             // TODO: Once messages are actually read, only proceed if there are
             //       group size - 1 messages.
-            if (signup.groupSize > 1)
+            if (record.groupSize > 1)
                 qWarning() << "Aggregation isn't implemented yet";
 
-            return postAggregationResult(signup);
+            return postAggregationResult(record);
         });
 }
 
-QFuture<void> Daemon::postAggregationResult(SurveySignup& signup)
+QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
 {
-    const auto& survey = *signup.survey;
+    const auto& survey = *record.survey;
     auto delegateResponse = createSurveyResponse(survey);
     // TODO: If there is more than one message, aggregate the results into a
     //       single response.
 
     auto data = delegateResponse->toJsonByteArray();
-    return network->postAggregationResult(signup.delegateId, data)
+    return network->postAggregationResult(record.delegateId, data)
         .then([=]() mutable {
             // Note that we are saving the response of the delegate itself here,
             // just how non-delegate clients would store their response to the
             // delegate. We should not store the aggregated response here.
             storage->addSurveyResponse(*delegateResponse, survey);
-            signup.state = "done";
-            storage->saveSurveySignup(signup);
+            storage->saveSurveyRecord(record);
         });
 }
 

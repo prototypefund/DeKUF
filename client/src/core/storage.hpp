@@ -3,6 +3,8 @@
 #include <QtCore>
 #include <core/survey.hpp>
 
+#include "survey_record.hpp"
+
 class SurveyResponse;
 
 struct DataPoint {
@@ -13,20 +15,8 @@ struct DataPoint {
 
 struct SurveyResponseRecord {
     QSharedPointer<SurveyResponse> response;
-    QSharedPointer<Survey> survey;
+    QSharedPointer<SurveyRecord> surveyRecord;
     QDateTime createdAt;
-};
-
-struct SurveySignup {
-    QSharedPointer<Survey> survey;
-
-    // TODO: This probably deserves an enum and better named/documented states.
-    /// Possible states: initial, processing, done
-    QString state;
-
-    QString clientId;
-    QString delegateId;
-    int groupSize;
 };
 
 class Storage {
@@ -38,12 +28,13 @@ public:
     virtual void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey)
         = 0;
-    virtual QList<SurveySignup> listSurveySignups() const = 0;
-    virtual void addSurveySignup(const Survey& survey, const QString& state,
-        const QString& clientId, const QString& delegateId)
+    virtual std::optional<SurveyResponseRecord> findSurveyResponseFor(
+        const QString& surveyId) const = 0;
+    virtual QList<SurveyRecord> listSurveyRecords() const = 0;
+    virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
+        const QString& delegateId, const std::optional<int>& groupSize)
         = 0;
-    virtual void saveSurveySignup(const SurveySignup& signup) = 0;
-    virtual void addSurvey(const Survey& survey) = 0;
-    virtual std::optional<QSharedPointer<Survey>> findSurveyById(
+    virtual void saveSurveyRecord(const SurveyRecord& record) = 0;
+    virtual QSharedPointer<SurveyRecord> findSurveyRecordById(
         const QString& survey_id) const = 0;
 };

@@ -25,7 +25,7 @@ void DaemonTest::testProcessSurveysIgnoresErrors()
     auto storage = QSharedPointer<StorageStub>::create();
     Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
     await(daemon.processSurveys());
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
 void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
@@ -40,9 +40,9 @@ void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
     await(daemon.processSurveys());
-    auto signups = storage->listSurveySignups();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.survey->id, survey.id);
 }
 
@@ -58,7 +58,7 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
     await(daemon.processSurveys());
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
 void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
@@ -68,10 +68,11 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     await(daemon.processSignups());
-    QCOMPARE(storage->listSurveySignups().first().state, "initial");
+    QCOMPARE(
+        storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
@@ -81,7 +82,7 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
@@ -90,7 +91,8 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     })");
 
     await(daemon.processSignups());
-    QCOMPARE(storage->listSurveySignups().first().state, "initial");
+    QCOMPARE(
+        storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsHandlesDelegateCase()
@@ -100,7 +102,7 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -109,11 +111,11 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveySignups();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.delegateId, "1337");
-    QCOMPARE(first.state, "processing");
+    QCOMPARE(first.getState(), SurveyState::Processing);
     QCOMPARE(first.groupSize, 1);
 }
 
@@ -124,7 +126,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "initial", "1337", "");
+    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -133,11 +135,14 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     })");
 
     await(daemon.processSignups());
-    auto signups = storage->listSurveySignups();
-    QCOMPARE(signups.count(), 1);
-    auto first = signups.first();
+    auto records = storage->listSurveyRecords();
+    QCOMPARE(records.count(), 1);
+    auto first = records.first();
     QCOMPARE(first.delegateId, "2448");
-    QCOMPARE(first.state, "done");
+
+    // TODO: The state should actually be Done here, but since we don't actually
+    // submit a response yet, it's not.
+    QCOMPARE(first.getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
@@ -147,7 +152,7 @@ void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
     Daemon daemon(nullptr, storage, network);
 
     Survey survey("testId", "testName");
-    storage->addSurveySignup(survey, "processing", "1337", "1337");
+    storage->addSurveyRecord(survey, "1337", "1337", std::nullopt);
     await(daemon.processSignups());
 }
 

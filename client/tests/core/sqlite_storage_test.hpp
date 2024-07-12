@@ -18,8 +18,8 @@ private slots:
     void testListDataPointsByName();
     void testAddAndListSurveyResponses();
     void testAddAndListSurveyResponseWithSurvey();
-    void testAddAndListSurveySignups();
-    void testSaveSurveySignup();
-    void testSaveSurveyWorksWithValuesPresent();
-    void testSaveSurveyWorksWithReturningNullWhenNotFound();
+    void testAddAndListSurveyRecords();
+    void testSaveSurveyRecord();
+    void testAddSurveyWorksWithValuesPresent();
+    void testAddSurveyWorksWithReturningNullWhenNotFound();
 };

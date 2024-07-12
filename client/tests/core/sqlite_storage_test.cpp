@@ -63,6 +63,8 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
         = QSharedPointer<Commissioner>::create("testCommissioner");
     Survey survey("1", "testName");
     survey.commissioner = commissioner;
+    storage->addSurveyRecord(survey, "", "", std::nullopt);
+
     SurveyResponse response("1");
     storage->addSurveyResponse(response, survey);
 
@@ -70,54 +72,53 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
 
     auto surveyResponse = storage->listSurveyResponses().first();
     QCOMPARE(surveyResponse.response->surveyId, "1");
-    QCOMPARE(surveyResponse.survey->id, "1");
-    QCOMPARE(surveyResponse.survey->commissioner->name, "testCommissioner");
-    QCOMPARE(surveyResponse.survey->name, "testName");
+
+    auto surveyRecord = surveyResponse.surveyRecord;
+    QVERIFY(!surveyRecord.isNull());
+
+    auto storedSurvey = surveyRecord->survey;
+    QCOMPARE(storedSurvey->id, "1");
+    QCOMPARE(storedSurvey->commissioner->name, "testCommissioner");
+    QCOMPARE(storedSurvey->name, "testName");
 }
 
-void SqliteStorageTest::testAddAndListSurveySignups()
+void SqliteStorageTest::testAddAndListSurveyRecords()
 {
-    QCOMPARE(storage->listSurveySignups().count(), 0);
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
 
     Survey survey("1", "testName");
     QString state("foo");
     QString clientId("bar");
     QString delegateId("");
-    storage->addSurveySignup(survey, state, clientId, delegateId);
+    storage->addSurveyRecord(survey, clientId, delegateId, std::nullopt);
 
-    QCOMPARE(storage->listSurveySignups().count(), 1);
+    QCOMPARE(storage->listSurveyRecords().count(), 1);
 }
 
-void SqliteStorageTest::testSaveSurveySignup()
+void SqliteStorageTest::testSaveSurveyRecord()
 {
-    storage->addSurveySignup(Survey("1", "1"), "foo", "1", "");
-    auto signup = storage->listSurveySignups().first();
-    signup.state = "bar";
-    signup.delegateId = "2";
-    signup.groupSize = 1337;
-    storage->saveSurveySignup(signup);
-    auto retrievedSignup = storage->listSurveySignups().first();
-    QCOMPARE(retrievedSignup.state, signup.state);
-    QCOMPARE(retrievedSignup.delegateId, signup.delegateId);
-    QCOMPARE(retrievedSignup.groupSize, signup.groupSize);
+    storage->addSurveyRecord(Survey("1", "1"), "1", "", std::nullopt);
+    auto modifiedRecord = storage->listSurveyRecords().first();
+    modifiedRecord.delegateId = "2";
+    modifiedRecord.groupSize = 1337;
+    storage->saveSurveyRecord(modifiedRecord);
+    const auto retrievedRecord = storage->listSurveyRecords().first();
+    QCOMPARE(retrievedRecord.getState(), modifiedRecord.getState());
+    QCOMPARE(retrievedRecord.delegateId, modifiedRecord.delegateId);
+    QCOMPARE(retrievedRecord.groupSize, modifiedRecord.groupSize);
 }
 
-void SqliteStorageTest::testSaveSurveyWorksWithValuesPresent()
+void SqliteStorageTest::testAddSurveyWorksWithValuesPresent()
 {
     Survey testSurvey("123", "test");
     testSurvey.queries.append(QSharedPointer<Query>::create(
         "12345", "testDataKey", QList<QString> { "1", "2", "3" }, true));
+    storage->addSurveyRecord(testSurvey, "", "", std::nullopt);
 
-    storage->addSurvey(testSurvey);
-    auto retrievedSurvey = storage->findSurveyById(testSurvey.id);
+    auto retrievedSurvey = storage->findSurveyRecordById(testSurvey.id);
+    QVERIFY(!retrievedSurvey.isNull());
 
-    QVERIFY(retrievedSurvey.has_value());
-    if (!retrievedSurvey.has_value()) {
-        return;
-    }
-
-    auto retrievedSurveyValue = retrievedSurvey.value();
-
+    auto retrievedSurveyValue = retrievedSurvey->survey;
     QCOMPARE(retrievedSurveyValue->id, testSurvey.id);
     QCOMPARE(retrievedSurveyValue->name, testSurvey.name);
     QCOMPARE(retrievedSurveyValue->queries.first()->id,
@@ -130,9 +131,9 @@ void SqliteStorageTest::testSaveSurveyWorksWithValuesPresent()
         testSurvey.queries.first()->discrete);
 }
 
-void SqliteStorageTest::testSaveSurveyWorksWithReturningNullWhenNotFound()
+void SqliteStorageTest::testAddSurveyWorksWithReturningNullWhenNotFound()
 {
-    QVERIFY(!storage->findSurveyById("123").has_value());
+    QVERIFY(storage->findSurveyRecordById("123").isNull());
 }
 
 QTEST_MAIN(SqliteStorageTest)

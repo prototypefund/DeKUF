@@ -24,7 +24,8 @@ void setupTableWidget(QTableWidget& tableWidget)
         auto& response = responseEntry.response;
 
         auto commissionerItem = new QTableWidgetItem; // NOLINT
-        commissionerItem->setText(responseEntry.survey->commissioner->name);
+        commissionerItem->setText(
+            responseEntry.surveyRecord->survey->commissioner->name);
         tableWidget.setItem(row, 1, commissionerItem);
 
         auto dataTable = new QTableWidget(&tableWidget); // NOLINT

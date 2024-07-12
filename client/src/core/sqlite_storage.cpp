@@ -41,7 +41,7 @@ void migrate()
                   ")");
     execQuery(query);
 
-    query.prepare("CREATE TABLE IF NOT EXISTS survey_response("
+    query.prepare("CREATE TABLE IF NOT EXISTS survey_response_record("
                   "    id INTEGER PRIMARY KEY,"
                   "    data TEXT,"
                   "    survey_id VARCHAR(255),"
@@ -49,21 +49,21 @@ void migrate()
                   ")");
     execQuery(query);
 
-    query.prepare("CREATE TABLE IF NOT EXISTS survey("
+    query.prepare("CREATE TABLE IF NOT EXISTS survey_record("
                   "    id VARCHAR(255) PRIMARY KEY,"
-                  "    value TEXT"
-                  ")");
-    execQuery(query);
-
-    query.prepare("CREATE TABLE IF NOT EXISTS survey_signup("
-                  "    id INTEGER PRIMARY KEY,"
-                  "    state VARCHAR(255),"
                   "    survey_id VARCHAR(255),"
+                  "    survey_data TEXT,"
                   "    client_id VARCHAR(255),"
                   "    delegate_id VARCHAR(255),"
                   "    group_size INT"
                   ")");
     execQuery(query);
+}
+
+template <typename T>
+QVariant optionalToQVariant(const std::optional<T>& optional)
+{
+    return optional.has_value() ? optional.value() : QVariant();
 }
 }
 
@@ -117,24 +117,17 @@ QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const
 {
     QList<SurveyResponseRecord> responses;
     QSqlQuery query;
-    query.prepare("SELECT data, survey_id, created_at FROM survey_response");
+    query.prepare(
+        "SELECT data, survey_id, created_at FROM survey_response_record");
     if (!execQuery(query))
         return responses;
 
     while (query.next()) {
         const auto data = query.value(0).toByteArray();
-        const auto survey = findSurveyById(query.value(1).toByteArray());
-        if (!survey.has_value()) {
-            qWarning() << "Could not find survey with id:"
-                       << query.value(1).toByteArray();
-            continue;
-        }
-        QSharedPointer<SurveyResponse> response(
-            SurveyResponse::fromJsonByteArray(data));
+        const auto surveyId = query.value(1).toString();
         const auto createdAt = query.value(2).toDateTime();
-        responses.push_back({ .response = response,
-            .survey = survey.value(),
-            .createdAt = createdAt });
+        responses.push_back(
+            createSurveyResponseRecord(data, surveyId, createdAt));
     }
 
     return responses;
@@ -144,113 +137,123 @@ void SqliteStorage::addSurveyResponse(
     const SurveyResponse& response, const Survey& survey)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO survey_response (data, survey_id, created_at)"
-                  "values (:data, :survey_id, CURRENT_TIMESTAMP)");
+    query.prepare(
+        "INSERT INTO survey_response_record (data, survey_id, created_at)"
+        "values (:data, :survey_id, CURRENT_TIMESTAMP)");
     query.bindValue(":data", response.toJsonByteArray());
     query.bindValue(":survey_id", survey.id);
     execQuery(query);
-
-    if (findSurveyById(survey.id).has_value()) {
-        qWarning() << "Survey already exists in the database with id:"
-                   << survey.id;
-    }
-
-    addSurvey(survey);
 }
 
-QList<SurveySignup> SqliteStorage::listSurveySignups() const
-{
-    QList<SurveySignup> signups;
-    QSqlQuery query;
-    query.prepare("SELECT state, survey_id, client_id, delegate_id, group_size "
-                  "FROM survey_signup");
-    if (!execQuery(query))
-        return signups;
-
-    while (query.next()) {
-        const auto state = query.value(0).toString();
-        const auto survey = findSurveyById(query.value(1).toByteArray());
-        if (!survey.has_value()) {
-            qWarning() << "Could not find survey with id:"
-                       << query.value(1).toByteArray();
-            continue;
-        }
-        const auto clientId = query.value(2).toString();
-        const auto delegateId = query.value(3).toString();
-        const auto groupSize = query.value(4).toInt();
-        signups.push_back({ .survey = survey.value(),
-            .state = state,
-            .clientId = clientId,
-            .delegateId = delegateId,
-            .groupSize = groupSize });
-    }
-
-    return signups;
-}
-
-void SqliteStorage::addSurveySignup(const Survey& survey, const QString& state,
-    const QString& clientId, const QString& delegateId)
-{
-    QSqlQuery query;
-    query.prepare(
-        "INSERT INTO survey_signup (state, survey_id, client_id, delegate_id)"
-        "values (:state, :survey_id, :client_id, :delegate_id)");
-    query.bindValue(":state", state);
-    query.bindValue(":survey_id", survey.id);
-    query.bindValue(":client_id", clientId);
-    query.bindValue(":delegate_id", delegateId);
-    execQuery(query);
-
-    if (findSurveyById(survey.id).has_value()) {
-        qWarning() << "Survey already exists in the database with id:"
-                   << survey.id;
-    }
-
-    addSurvey(survey);
-}
-
-void SqliteStorage::saveSurveySignup(const SurveySignup& signup)
-{
-    // TODO: The only things that can currently be changed are state,delegate ID
-    //       and group size.
-    QSqlQuery query;
-    query.prepare(
-        R"(UPDATE survey_signup
-           SET state = :state,
-               delegate_id = :delegate_id,
-               group_size = :group_size
-           WHERE client_id = :client_id)");
-    query.bindValue(":state", signup.state);
-    query.bindValue(":delegate_id", signup.delegateId);
-    query.bindValue(":client_id", signup.clientId);
-    query.bindValue(":group_size", signup.groupSize);
-    execQuery(query);
-}
-
-void SqliteStorage::addSurvey(const Survey& survey)
-{
-    QSqlQuery query;
-    query.prepare("INSERT INTO survey (id, value)"
-                  "values (:id, :value)");
-    query.bindValue(":id", survey.id);
-    query.bindValue(":value", survey.toByteArray());
-    execQuery(query);
-}
-
-std::optional<QSharedPointer<Survey>> SqliteStorage::findSurveyById(
+std::optional<SurveyResponseRecord> SqliteStorage::findSurveyResponseFor(
     const QString& surveyId) const
 {
     QSqlQuery query;
-    query.prepare(R"(SELECT id, value
-                        FROM survey
-                        WHERE id = :survey_id)");
+    query.prepare(R"(
+        SELECT data, created_at
+        FROM survey_response_record
+        WHERE survey_id = :survey_id
+    )");
     query.bindValue(":survey_id", surveyId);
-    if (!execQuery(query)) {
+    if (!execQuery(query) || !query.next())
         return std::nullopt;
+
+    const auto data = query.value(0).toByteArray();
+    const auto createdAt = query.value(1).toDateTime();
+    return createSurveyResponseRecord(data, surveyId, createdAt);
+}
+
+QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
+{
+    QList<SurveyRecord> survey_records;
+    QSqlQuery query;
+    query.prepare("SELECT survey_data, client_id, delegate_id, group_size "
+                  "FROM survey_record");
+    if (!execQuery(query))
+        return survey_records;
+
+    while (query.next()) {
+        const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
+        const auto clientId = query.value(1).toString();
+        const auto delegateId = query.value(2).toString();
+        const auto groupSize = query.value(3).toInt();
+        const auto hasResponse = !findSurveyResponseFor(survey->id).has_value();
+        survey_records.push_back(
+            SurveyRecord(survey, clientId, delegateId, groupSize, hasResponse));
     }
 
-    if (query.next())
-        return Survey::fromByteArray(query.value(1).toByteArray());
+    return survey_records;
+}
 
-    return std::nullopt;
+void SqliteStorage::addSurveyRecord(const Survey& survey,
+    const QString& clientId, const QString& delegateId,
+    const std::optional<int>& groupSize)
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        INSERT INTO survey_record (
+            survey_id, survey_data, client_id, delegate_id, group_size
+        )
+        VALUES (
+            :survey_id, :survey_data, :client_id, :delegate_id, :group_size
+        )
+    )");
+    query.bindValue(":survey_id", survey.id);
+    query.bindValue(":survey_data", survey.toByteArray());
+    query.bindValue(":client_id", clientId);
+    query.bindValue(":delegate_id", delegateId);
+    query.bindValue(":group_size", optionalToQVariant(groupSize));
+    execQuery(query);
+}
+
+void SqliteStorage::saveSurveyRecord(const SurveyRecord& record)
+{
+    QSqlQuery query;
+    query.prepare(R"(
+        UPDATE survey_record
+        SET client_id = :client_id,
+            delegate_id = :delegate_id,
+            group_size = :group_size
+        WHERE survey_id = :survey_id
+    )");
+    query.bindValue(":survey_id", record.survey->id);
+    query.bindValue(":client_id", record.clientId);
+    query.bindValue(":delegate_id", record.delegateId);
+    query.bindValue(":group_size", optionalToQVariant(record.groupSize));
+    execQuery(query);
+}
+
+QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(
+    const QString& surveyId) const
+{
+    QSqlQuery query;
+    query.prepare(R"(SELECT survey_data, client_id, delegate_id, group_size
+                     FROM survey_record
+                     WHERE survey_id = :survey_id)");
+    query.bindValue(":survey_id", surveyId);
+    if (!execQuery(query)) {
+        return nullptr;
+    }
+
+    if (!query.next())
+        return nullptr;
+
+    const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
+    const auto clientId = query.value(1).toString();
+    const auto delegateId = query.value(2).toString();
+    const auto groupSize = query.value(3).toInt();
+    return QSharedPointer<SurveyRecord>::create(
+        survey, clientId, delegateId, groupSize);
+}
+
+SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(
+    const QByteArray& data, const QString& surveyId,
+    const QDateTime& createdAt) const
+{
+    QSharedPointer<SurveyResponse> response(
+        SurveyResponse::fromJsonByteArray(data));
+    const auto surveyRecord = findSurveyRecordById(surveyId);
+    return { .response = response,
+        .surveyRecord = surveyRecord,
+        .createdAt = createdAt };
 }
