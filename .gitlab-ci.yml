@@ -4,7 +4,7 @@ test-client:
     before_script:
         - >
             apt-get update -yqq &&
-            apt-get install -yqq gpgme
+            apt-get install -yqq libgpgme-dev
             cmake clang qt6-base-dev clang-tidy clang-format
         - update-alternatives --set c++ /usr/bin/clang++
         - cd client
