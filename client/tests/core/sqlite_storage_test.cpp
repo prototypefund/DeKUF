@@ -63,7 +63,7 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
         = QSharedPointer<Commissioner>::create("testCommissioner");
     Survey survey("1", "testName");
     survey.commissioner = commissioner;
-    storage->addSurveyRecord(survey, "", "", std::nullopt);
+    storage->addSurveyRecord(survey, "", "", "", std::nullopt);
 
     SurveyResponse response("1");
     storage->addSurveyResponse(response, survey);
@@ -89,22 +89,25 @@ void SqliteStorageTest::testAddAndListSurveyRecords()
     Survey survey("1", "testName");
     QString state("foo");
     QString clientId("bar");
-    QString delegateId("");
-    storage->addSurveyRecord(survey, clientId, delegateId, std::nullopt);
+    QString publicKey("");
+    QString delegatePublicKey("");
+    storage->addSurveyRecord(
+        survey, clientId, publicKey, delegatePublicKey, std::nullopt);
 
     QCOMPARE(storage->listSurveyRecords().count(), 1);
 }
 
 void SqliteStorageTest::testSaveSurveyRecord()
 {
-    storage->addSurveyRecord(Survey("1", "1"), "1", "", std::nullopt);
+    storage->addSurveyRecord(Survey("1", "1"), "1", "", "", std::nullopt);
     auto modifiedRecord = storage->listSurveyRecords().first();
-    modifiedRecord.delegateId = "2";
+    modifiedRecord.delegatePublicKey = "2";
     modifiedRecord.groupSize = 1337;
     storage->saveSurveyRecord(modifiedRecord);
     const auto retrievedRecord = storage->listSurveyRecords().first();
     QCOMPARE(retrievedRecord.getState(), modifiedRecord.getState());
-    QCOMPARE(retrievedRecord.delegateId, modifiedRecord.delegateId);
+    QCOMPARE(
+        retrievedRecord.delegatePublicKey, modifiedRecord.delegatePublicKey);
     QCOMPARE(retrievedRecord.groupSize, modifiedRecord.groupSize);
 }
 
@@ -113,7 +116,7 @@ void SqliteStorageTest::testAddSurveyWorksWithValuesPresent()
     Survey testSurvey("123", "test");
     testSurvey.queries.append(QSharedPointer<Query>::create(
         "12345", "testDataKey", QList<QString> { "1", "2", "3" }, true));
-    storage->addSurveyRecord(testSurvey, "", "", std::nullopt);
+    storage->addSurveyRecord(testSurvey, "", "", "", std::nullopt);
 
     auto retrievedSurvey = storage->findSurveyRecordById(testSurvey.id);
     QVERIFY(!retrievedSurvey.isNull());

@@ -7,6 +7,7 @@ from django.db import models
 
 class SurveySignup(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    public_key = models.TextField(editable=False)
     survey = models.ForeignKey(
         Survey, on_delete=models.DO_NOTHING, editable=False
     )

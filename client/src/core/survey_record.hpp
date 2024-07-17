@@ -7,15 +7,17 @@ public:
     QSharedPointer<Survey> survey;
 
     QString clientId;
-    QString delegateId;
+    QString publicKey;
+    QString delegatePublicKey;
     std::optional<int> groupSize;
 
     SurveyRecord(const QSharedPointer<Survey>& survey, const QString& clientId,
-        const QString& delegateId, const std::optional<int>& groupSize,
-        const bool hasResponse = false)
+        const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<int>& groupSize, const bool hasResponse = false)
         : survey(survey)
         , clientId(clientId)
-        , delegateId(delegateId)
+        , publicKey(publicKey)
+        , delegatePublicKey(delegatePublicKey)
         , groupSize(groupSize)
         , hasResponse(hasResponse)
     {
@@ -26,7 +28,7 @@ public:
         if (hasResponse)
             return Done;
 
-        if (!delegateId.isEmpty() && clientId == delegateId)
+        if (!delegatePublicKey.isEmpty() && publicKey == delegatePublicKey)
             return Processing;
 
         return Initial;

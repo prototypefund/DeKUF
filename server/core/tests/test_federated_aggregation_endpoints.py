@@ -20,12 +20,14 @@ class SurveySignupTest(TestCase):
         )
 
     def test_post_endpoint_201_with_correct_survey(self):
-        url = reverse("survey-signup", args=[self.survey.id])
+        url = reverse("survey-signup")
 
         self.assertEqual(len(SurveySignup.objects.all()), 0)
 
+        data = {"survey_id": str(self.survey.id), "public_key": "123"}
+
         response = self.client.post(
-            url, content_type="application/x-www-form-urlencoded"
+            url, content_type="application/json", data=json.dumps(data)
         )
 
         self.assertEqual(len(SurveySignup.objects.all()), 1)
@@ -33,10 +35,12 @@ class SurveySignupTest(TestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_post_endpoint_404_with_nonexistent_survey(self):
-        url = reverse("survey-signup", args=[uuid.uuid4()])
+        url = reverse("survey-signup")
+
+        data = {"survey_id": str(uuid.uuid4()), "public_key": "123"}
 
         response = self.client.post(
-            url, content_type="application/x-www-form-urlencoded"
+            url, content_type="application/json", data=json.dumps(data)
         )
 
         self.assertEqual(response.status_code, 404)
@@ -49,8 +53,12 @@ class GetSignupStateTest(TestCase):
         self.survey = Survey.objects.create(
             name="TestSurvey", commissioner=commissioner, group_size=1
         )
-        self.signup = SurveySignup.objects.create(survey=self.survey)
-        self.signup2 = SurveySignup.objects.create(survey=self.survey)
+        self.signup = SurveySignup.objects.create(
+            survey=self.survey, public_key="123"
+        )
+        self.signup2 = SurveySignup.objects.create(
+            survey=self.survey, public_key="123"
+        )
 
     def test_201_with_correct_client_id_no_started_aggregation(self):
         url = reverse("get-signup-state", args=[self.signup.id])
@@ -61,7 +69,7 @@ class GetSignupStateTest(TestCase):
 
         self.assertJSONEqual(
             response.content.decode("utf-8"),
-            {"delegate_id": "", "aggregation_started": False},
+            {"delegate_public_key": "", "aggregation_started": False},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -82,7 +90,7 @@ class GetSignupStateTest(TestCase):
         self.assertJSONEqual(
             response.content.decode("utf-8"),
             {
-                "delegate_id": str(self.signup.id),
+                "delegate_public_key": str(self.signup.public_key),
                 "aggregation_started": True,
                 "group_size": 1,
             },

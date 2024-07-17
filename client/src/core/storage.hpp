@@ -32,7 +32,8 @@ public:
         const QString& surveyId) const = 0;
     virtual QList<SurveyRecord> listSurveyRecords() const = 0;
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
-        const QString& delegateId, const std::optional<int>& groupSize)
+        const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<int>& groupSize)
         = 0;
     virtual void saveSurveyRecord(const SurveyRecord& record) = 0;
     virtual QSharedPointer<SurveyRecord> findSurveyRecordById(

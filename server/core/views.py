@@ -42,10 +42,16 @@ def get_surveys(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def signup_to_survey(request, survey_id):
+def signup_to_survey(request):
     try:
-        survey = get_object_or_404(Survey, id=survey_id)
-        survey_signup = SurveySignup.objects.create(survey=survey)
+        data = json.loads(request.body)
+        survey = get_object_or_404(Survey, id=data["survey_id"])
+
+        # TODO: Do we need to check whether it's a correct public key?
+        public_key = data["public_key"]
+        survey_signup = SurveySignup.objects.create(
+            survey=survey, public_key=public_key
+        )
 
         response_data = {
             "client_id": str(survey_signup.id),
@@ -73,13 +79,16 @@ def get_signup_state(request, client_id):
         aggregation_group = survey_signup.group
 
         if not aggregation_group or not aggregation_group.delegate:
-            response_data = {"delegate_id": "", "aggregation_started": False}
+            response_data = {
+                "delegate_public_key": "",
+                "aggregation_started": False,
+            }
             return JsonResponse(response_data, status=200)
 
         delegate: SurveySignup = aggregation_group.delegate
 
         response_data = {
-            "delegate_id": str(delegate.id),
+            "delegate_public_key": str(delegate.public_key),
             "aggregation_started": True,
             "group_size": survey_signup.survey.group_size,
         }

@@ -39,7 +39,7 @@ class SurveyResponseAdmin(admin.ModelAdmin):
 
 @admin.register(SurveySignup)
 class SurveySignupAdmin(admin.ModelAdmin):
-    list_display = ("id", "survey", "time")
+    list_display = ("id", "public_key", "survey", "time")
     list_display_links = ("id", "survey")
     list_filter = ("survey", "time")
     search_fields = ("id", "survey__name")

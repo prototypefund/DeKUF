@@ -10,7 +10,8 @@ public:
         return dummyFuture(listSurveysResponse);
     }
 
-    QFuture<QByteArray> surveySignup(const QString& surveyId)
+    QFuture<QByteArray> surveySignup(
+        const QString& surveyId, const QString& publicKey)
     {
         return dummyFuture(QByteArray());
     }
@@ -20,7 +21,8 @@ public:
         return dummyFuture(getSignupStateResponse);
     }
 
-    QFuture<QByteArray> getMessagesForDelegate(const QString& delegateId) const
+    QFuture<QByteArray> getMessagesForDelegate(
+        const QString& delegatePublicKey) const
     {
         return dummyFuture(QByteArray()).then([](QByteArray data) {
             return data;
@@ -28,7 +30,7 @@ public:
     }
 
     QFuture<void> postAggregationResult(
-        const QString& delegateId, const QByteArray& data)
+        const QString& delegatePublicKey, const QByteArray& data)
     {
         return dummyFuture();
     }

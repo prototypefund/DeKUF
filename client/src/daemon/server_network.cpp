@@ -19,17 +19,22 @@ QFuture<QByteArray> ServerNetwork::listSurveys() const
         });
 }
 
-QFuture<QByteArray> ServerNetwork::surveySignup(const QString& surveyId)
+QFuture<QByteArray> ServerNetwork::surveySignup(
+    const QString& surveyId, const QString& publicKey)
 {
-    auto url
-        = QString("http://localhost:8000/api/survey-signup/%1/").arg(surveyId);
-    return postRequest(url, "").then([](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return QByteArray();
-        }
-        return reply->readAll();
-    });
+    auto url = QString("http://localhost:8000/api/survey-signup/");
+    QJsonObject jsonObjData;
+    jsonObjData["surveyId"] = surveyId;
+    jsonObjData["publicKey"] = publicKey;
+    const QJsonDocument jsonDocData(jsonObjData);
+    return postRequest(url, jsonDocData.toJson())
+        .then([](QNetworkReply* reply) {
+            if (reply->error() != QNetworkReply::NoError) {
+                qCritical() << "Error:" << reply->errorString();
+                return QByteArray();
+            }
+            return reply->readAll();
+        });
 }
 
 QFuture<QByteArray> ServerNetwork::getSignupState(const QString& clientId) const

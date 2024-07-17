@@ -15,7 +15,8 @@ public:
     // virtual ~Network() = default;
 
     QFuture<QByteArray> listSurveys() const;
-    QFuture<QByteArray> surveySignup(const QString& surveyId);
+    QFuture<QByteArray> surveySignup(
+        const QString& surveyId, const QString& publicKey);
     QFuture<QByteArray> getSignupState(const QString& clientId) const;
     QFuture<QByteArray> getMessagesForDelegate(const QString& delegateId) const;
     QFuture<void> postAggregationResult(

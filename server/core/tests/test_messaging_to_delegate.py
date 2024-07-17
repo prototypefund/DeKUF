@@ -66,7 +66,7 @@ class MessagingToDelegateTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_retrieving_for_messageless_delegate_fails(self):
+    def test_retrieving_for_messageless_delegate_gives_204(self):
         if not self.aggregation_group.delegate:
             raise AttributeError("Delegate can't be null")
 
@@ -79,7 +79,7 @@ class MessagingToDelegateTest(TestCase):
             url, content_type="application/x-www-form-urlencoded"
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 204)
 
     def test_messages_to_delegate_can_be_retrieved_correctly(self):
         if not self.aggregation_group.delegate:

@@ -7,6 +7,7 @@
 
 #include "core/survey.hpp"
 #include "dbus_service.hpp"
+#include "encryption.hpp"
 #include "network.hpp"
 
 class Daemon : public QObject {
@@ -16,7 +17,7 @@ class Daemon : public QObject {
 
 public:
     Daemon(QObject* parent, QSharedPointer<Storage> storage,
-        QSharedPointer<Network> network);
+        QSharedPointer<Network> network, QSharedPointer<Encryption> encryption);
 
 public slots:
     void run();
@@ -27,6 +28,7 @@ signals:
 private:
     QSharedPointer<Storage> storage;
     QSharedPointer<Network> network;
+    QSharedPointer<Encryption> encryption;
     DBusService dbusService;
 
     QFuture<void> handleSurveysResponse(const QByteArray& data);

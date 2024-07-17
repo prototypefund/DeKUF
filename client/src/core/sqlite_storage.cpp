@@ -54,7 +54,8 @@ void migrate()
                   "    survey_id VARCHAR(255),"
                   "    survey_data TEXT,"
                   "    client_id VARCHAR(255),"
-                  "    delegate_id VARCHAR(255),"
+                  "    public_key TEXT,"
+                  "    delegate_public_key VARCHAR(255),"
                   "    group_size INT"
                   ")");
     execQuery(query);
@@ -167,7 +168,8 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
 {
     QList<SurveyRecord> survey_records;
     QSqlQuery query;
-    query.prepare("SELECT survey_data, client_id, delegate_id, group_size "
+    query.prepare("SELECT survey_data, client_id, public_key, "
+                  "delegate_public_key, group_size "
                   "FROM survey_record");
     if (!execQuery(query))
         return survey_records;
@@ -175,33 +177,45 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
     while (query.next()) {
         const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
         const auto clientId = query.value(1).toString();
-        const auto delegateId = query.value(2).toString();
-        const auto groupSize = query.value(3).toInt();
+        const auto publicKey = query.value(2).toString();
+        const auto delegatePublicKey = query.value(3).toString();
+        const auto groupSize = query.value(4).toInt();
         const auto hasResponse = !findSurveyResponseFor(survey->id).has_value();
-        survey_records.push_back(
-            SurveyRecord(survey, clientId, delegateId, groupSize, hasResponse));
+        survey_records.push_back(SurveyRecord(survey, clientId, publicKey,
+            delegatePublicKey, groupSize, hasResponse));
     }
 
     return survey_records;
 }
 
 void SqliteStorage::addSurveyRecord(const Survey& survey,
-    const QString& clientId, const QString& delegateId,
-    const std::optional<int>& groupSize)
+    const QString& clientId, const QString& publicKey,
+    const QString& delegatePublicKey, const std::optional<int>& groupSize)
 {
     QSqlQuery query;
     query.prepare(R"(
         INSERT INTO survey_record (
-            survey_id, survey_data, client_id, delegate_id, group_size
+            survey_id,
+            survey_data,
+            client_id,
+            public_key,
+            delegate_public_key,
+            group_size
         )
         VALUES (
-            :survey_id, :survey_data, :client_id, :delegate_id, :group_size
+            :survey_id,
+            :survey_data,
+            :client_id,
+            :public_key,
+            :delegate_public_key,
+            :group_size
         )
     )");
     query.bindValue(":survey_id", survey.id);
     query.bindValue(":survey_data", survey.toByteArray());
     query.bindValue(":client_id", clientId);
-    query.bindValue(":delegate_id", delegateId);
+    query.bindValue(":public_key", publicKey);
+    query.bindValue(":delegate_public_key", delegatePublicKey);
     query.bindValue(":group_size", optionalToQVariant(groupSize));
     execQuery(query);
 }
@@ -212,13 +226,13 @@ void SqliteStorage::saveSurveyRecord(const SurveyRecord& record)
     query.prepare(R"(
         UPDATE survey_record
         SET client_id = :client_id,
-            delegate_id = :delegate_id,
+            delegate_public_key = :delegate_public_key,
             group_size = :group_size
         WHERE survey_id = :survey_id
     )");
     query.bindValue(":survey_id", record.survey->id);
     query.bindValue(":client_id", record.clientId);
-    query.bindValue(":delegate_id", record.delegateId);
+    query.bindValue(":delegate_public_key", record.delegatePublicKey);
     query.bindValue(":group_size", optionalToQVariant(record.groupSize));
     execQuery(query);
 }
@@ -227,7 +241,12 @@ QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(
     const QString& surveyId) const
 {
     QSqlQuery query;
-    query.prepare(R"(SELECT survey_data, client_id, delegate_id, group_size
+    query.prepare(
+        R"(SELECT survey_data,
+                        client_id,
+                        public_key,
+                        delegate_public_key,
+                        group_size
                      FROM survey_record
                      WHERE survey_id = :survey_id)");
     query.bindValue(":survey_id", surveyId);
@@ -240,10 +259,11 @@ QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(
 
     const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
     const auto clientId = query.value(1).toString();
-    const auto delegateId = query.value(2).toString();
-    const auto groupSize = query.value(3).toInt();
+    const auto publicKey = query.value(2).toString();
+    const auto delegatePublicKey = query.value(3).toString();
+    const auto groupSize = query.value(4).toInt();
     return QSharedPointer<SurveyRecord>::create(
-        survey, clientId, delegateId, groupSize);
+        survey, clientId, publicKey, delegatePublicKey, groupSize);
 }
 
 SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(

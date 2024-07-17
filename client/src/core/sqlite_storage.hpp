@@ -18,7 +18,8 @@ public:
         const QString& surveyId) const;
     QList<SurveyRecord> listSurveyRecords() const;
     void addSurveyRecord(const Survey& survey, const QString& clientId,
-        const QString& delegateId, const std::optional<int>& groupSize);
+        const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<int>& groupSize);
     void saveSurveyRecord(const SurveyRecord& record);
     QSharedPointer<SurveyRecord> findSurveyRecordById(
         const QString& surveyId) const;

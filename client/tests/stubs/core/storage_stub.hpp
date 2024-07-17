@@ -48,11 +48,12 @@ public:
     QList<SurveyRecord> listSurveyRecords() const { return surveyRecords; }
 
     void addSurveyRecord(const Survey& survey, const QString& clientId,
-        const QString& delegateId, const std::optional<int>& groupSize)
+        const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<int>& groupSize)
     {
         surveyRecords.push_back(
             SurveyRecord(QSharedPointer<Survey>::create(survey), clientId,
-                delegateId, groupSize));
+                publicKey, delegatePublicKey, groupSize));
     }
 
     void saveSurveyRecord(const SurveyRecord& record)
@@ -60,7 +61,7 @@ public:
         for (auto& existingSurvey : surveyRecords) {
             if (existingSurvey.clientId != record.clientId)
                 continue;
-            existingSurvey.delegateId = record.delegateId;
+            existingSurvey.delegatePublicKey = record.delegatePublicKey;
             existingSurvey.groupSize = record.groupSize;
             break;
         }

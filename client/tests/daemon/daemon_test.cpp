@@ -9,6 +9,8 @@
 
 #include "daemon_test.hpp"
 
+#include "daemon/identity_encryption.hpp"
+
 namespace {
 template <typename T>
 void await(const QFuture<T>& future, const int timeout = 250)
@@ -23,7 +25,9 @@ void await(const QFuture<T>& future, const int timeout = 250)
 void DaemonTest::testProcessSurveysIgnoresErrors()
 {
     auto storage = QSharedPointer<StorageStub>::create();
-    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
+    auto network = QSharedPointer<NetworkStub>::create();
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
     await(daemon.processSurveys());
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
@@ -32,7 +36,8 @@ void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
@@ -50,7 +55,8 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
     survey.commissioner = QSharedPointer<Commissioner>::create("Wrong");
@@ -65,10 +71,11 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
+    storage->addSurveyRecord(survey, "1337", "", "", std::nullopt);
 
     await(daemon.processSignups());
     QCOMPARE(
@@ -79,14 +86,15 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
+    storage->addSurveyRecord(survey, "1337", "", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
-        "delegate_id": "1337",
+        "delegate_public_key": "1337",
         "group_size": 1
     })");
 
@@ -99,14 +107,15 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
+    storage->addSurveyRecord(survey, "1", "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
-        "delegate_id": "1337",
+        "delegate_public_key": "1337",
         "group_size": 1
     })");
 
@@ -114,7 +123,7 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     auto records = storage->listSurveyRecords();
     QCOMPARE(records.count(), 1);
     auto first = records.first();
-    QCOMPARE(first.delegateId, "1337");
+    QCOMPARE(first.delegatePublicKey, "1337");
     QCOMPARE(first.getState(), SurveyState::Processing);
     QCOMPARE(first.groupSize, 1);
 }
@@ -123,14 +132,15 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", std::nullopt);
+    storage->addSurveyRecord(survey, "1", "1337", "", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
-        "delegate_id": "2448",
+        "delegate_public_key": "2448",
         "group_size": 1
     })");
 
@@ -138,7 +148,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     auto records = storage->listSurveyRecords();
     QCOMPARE(records.count(), 1);
     auto first = records.first();
-    QCOMPARE(first.delegateId, "2448");
+    QCOMPARE(first.delegatePublicKey, "2448");
 
     // TODO: The state should actually be Done here, but since we don't actually
     // submit a response yet, it's not.
@@ -149,10 +159,11 @@ void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
-    Daemon daemon(nullptr, storage, network);
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "1337", std::nullopt);
+    storage->addSurveyRecord(survey, "1337", "1337", "1337", std::nullopt);
     await(daemon.processSignups());
 }
 
@@ -172,7 +183,9 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
     storage->addDataPoint("testKey", "16");
     storage->addDataPoint("testKey", "31");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
+    auto network = QSharedPointer<NetworkStub>::create();
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData
@@ -199,7 +212,9 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
     storage->addDataPoint("testKey", "1000");
     storage->addDataPoint("testKey", "10000.23");
 
-    Daemon daemon(nullptr, storage, QSharedPointer<NetworkStub>::create());
+    auto network = QSharedPointer<NetworkStub>::create();
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
     const auto surveyResponse = daemon.createSurveyResponse(survey);
 
     QMap<QString, int> testCohortData

@@ -7,6 +7,8 @@
 #include "core/survey_response.hpp"
 #include "daemon.hpp"
 
+#include "encryption.hpp"
+
 namespace {
 /**
  * Returns a future that resolves once all provided futures resolved.
@@ -55,10 +57,11 @@ QFuture<void> chain(QFuture<T> future, std::function<QFuture<void>(T)> next)
 };
 
 Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage,
-    QSharedPointer<Network> network)
+    QSharedPointer<Network> network, QSharedPointer<Encryption> encryption)
     : QObject(parent)
     , storage(storage)
     , network(network)
+    , encryption(encryption)
     , dbusService(storage)
 {
     if (auto object = dynamic_cast<QObject*>(network.get()))
@@ -127,11 +130,14 @@ QFuture<void> Daemon::processSurveys()
 
 QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
-    return network->surveySignup(survey->id).then([&, survey](QByteArray data) {
-        const auto responseObject = QJsonDocument::fromJson(data).object();
-        const auto clientId = responseObject["client_id"].toString();
-        storage->addSurveyRecord(*survey, "initial", clientId, std::nullopt);
-    });
+    auto publicKey = encryption->generateKeyPair();
+    return network->surveySignup(survey->id, publicKey)
+        .then([&, survey, publicKey](QByteArray data) {
+            const auto responseObject = QJsonDocument::fromJson(data).object();
+            const auto clientId = responseObject["client_id"].toString();
+            storage->addSurveyRecord(
+                *survey, "initial", publicKey, publicKey, std::nullopt);
+        });
 }
 
 QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
@@ -144,9 +150,10 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
                 return;
             }
 
-            record.delegateId = responseObject["delegate_id"].toString();
+            record.delegatePublicKey
+                = responseObject["delegate_public_key"].toString();
 
-            if (record.clientId == record.delegateId) {
+            if (record.publicKey == record.delegatePublicKey) {
                 record.groupSize = responseObject["group_size"].toInt();
                 // TODO: Either send data to itself here, or implement some
                 // other
@@ -172,10 +179,10 @@ QFuture<void> Daemon::processSignups()
         }
 
         if (surveyRecord.getState() != Processing
-            || surveyRecord.clientId != surveyRecord.delegateId)
+            || surveyRecord.clientId != surveyRecord.delegatePublicKey)
             continue;
         qDebug() << surveyRecord.getState() << surveyRecord.clientId
-                 << surveyRecord.delegateId;
+                 << surveyRecord.delegatePublicKey;
         futures.append(processMessagesForDelegate(surveyRecord));
     }
     return whenAll(futures);
@@ -183,7 +190,8 @@ QFuture<void> Daemon::processSignups()
 
 QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
-    return chain<QByteArray>(network->getMessagesForDelegate(record.delegateId),
+    return chain<QByteArray>(
+        network->getMessagesForDelegate(record.delegatePublicKey),
         [=](QByteArray) mutable {
             // TODO: Read messages from other clients from response.
 
@@ -204,7 +212,7 @@ QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
     //       single response.
 
     auto data = delegateResponse->toJsonByteArray();
-    return network->postAggregationResult(record.delegateId, data)
+    return network->postAggregationResult(record.delegatePublicKey, data)
         .then([=]() mutable {
             // Note that we are saving the response of the delegate itself here,
             // just how non-delegate clients would store their response to the
