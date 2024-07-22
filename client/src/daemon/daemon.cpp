@@ -146,7 +146,6 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
         .then([&, record](QByteArray data) mutable {
             const auto responseDocument = QJsonDocument::fromJson(data);
             const auto responseObject = responseDocument.object();
-            qDebug() << responseObject["aggregation_started"];
             if (!responseObject["aggregation_started"].toBool()) {
                 return;
             }
@@ -198,7 +197,6 @@ QFuture<void> Daemon::postMessageToDelegate(
     // toJsonString method
     auto responseString
         = QString::fromLatin1(response.toJsonByteArray().toBase64());
-    qDebug() << responseString;
     auto encryptedResponseString
         = encryption->encrypt(responseString, record.delegatePublicKey);
     return network
