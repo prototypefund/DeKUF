@@ -25,6 +25,7 @@ public:
 
     SurveyState getState() const
     {
+        qDebug() << hasResponse;
         if (hasResponse)
             return Done;
 

@@ -67,6 +67,9 @@ def signup_to_survey(request):
         )
 
         return JsonResponse(response_data, status=201)
+    # TODO: Improve error description
+    except KeyError:
+        return HttpResponseBadRequest("Invalid JSON", status=400)
     except json.JSONDecodeError:
         return HttpResponse("Invalid JSON", status=400)
 
@@ -100,23 +103,23 @@ def get_signup_state(request, client_id):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def message_to_delegate(request, delegate_id):
-    aggregation_group = get_object_or_404(
-        AggregationGroup, delegate=delegate_id
-    )
-    if request.body is None:
-        return HttpResponse("Message content required", status=400)
-
+def message_to_delegate(request):
     try:
-        body_data = json.loads(request.body.decode("utf-8"))
+        data = json.loads(request.body)
+        delegate = SurveySignup.objects.get(public_key=data["public_key"])
+        message = data["message"]
+
+        aggregation_group = get_object_or_404(
+            AggregationGroup, delegate=delegate
+        )
+    # TODO: Improve error description
+    except KeyError:
+        return HttpResponseBadRequest("Invalid JSON", status=400)
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
-    if not isinstance(body_data, dict):
-        return HttpResponseBadRequest("Invalid data format")
-
     ClientToDelegateMessage.objects.create(
-        delegate=delegate_id, group=aggregation_group, content=body_data
+        delegate_id=delegate.id, group=aggregation_group, content=message
     )
 
     return HttpResponse(status=201)
@@ -125,7 +128,7 @@ def message_to_delegate(request, delegate_id):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_messages_for_delegate(request, delegate_id):
-    messages = ClientToDelegateMessage.objects.filter(delegate=delegate_id)
+    messages = ClientToDelegateMessage.objects.filter(delegate_id=delegate_id)
 
     if len(messages) == 0:
         return JsonResponse({"messages": []}, status=204)

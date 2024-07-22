@@ -186,7 +186,8 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervals()
     auto network = QSharedPointer<NetworkStub>::create();
     auto encryption = QSharedPointer<IdentityEncryption>::create();
     Daemon daemon(nullptr, storage, network, encryption);
-    const auto surveyResponse = daemon.createSurveyResponse(survey);
+    const auto surveyResponse
+        = daemon.createSurveyResponse(QSharedPointer<Survey>::create(survey));
 
     QMap<QString, int> testCohortData
         = { { "[8, 16)", 1 }, { "[16, 32)", 2 }, { "[32, 64)", 0 } };
@@ -215,7 +216,8 @@ void DaemonTest::testCreateSurveyResponseSucceedsForIntervalsWithInfinity()
     auto network = QSharedPointer<NetworkStub>::create();
     auto encryption = QSharedPointer<IdentityEncryption>::create();
     Daemon daemon(nullptr, storage, network, encryption);
-    const auto surveyResponse = daemon.createSurveyResponse(survey);
+    const auto surveyResponse
+        = daemon.createSurveyResponse(QSharedPointer<Survey>::create(survey));
 
     QMap<QString, int> testCohortData
         = { { "(-inf, 16)", 1 }, { "[16, 32)", 1 }, { "[32, inf)", 3 } };

@@ -24,8 +24,8 @@ QFuture<QByteArray> ServerNetwork::surveySignup(
 {
     auto url = QString("http://localhost:8000/api/survey-signup/");
     QJsonObject jsonObjData;
-    jsonObjData["surveyId"] = surveyId;
-    jsonObjData["publicKey"] = publicKey;
+    jsonObjData["survey_id"] = surveyId;
+    jsonObjData["public_key"] = publicKey;
     const QJsonDocument jsonDocData(jsonObjData);
     return postRequest(url, jsonDocData.toJson())
         .then([](QNetworkReply* reply) {
@@ -48,6 +48,24 @@ QFuture<QByteArray> ServerNetwork::getSignupState(const QString& clientId) const
         }
         return reply->readAll();
     });
+}
+
+QFuture<bool> ServerNetwork::postMessageToDelegate(
+    const QString& delegatePublicKey, const QString& message) const
+{
+    QJsonObject jsonObjData;
+    jsonObjData["message"] = message;
+    jsonObjData["public_key"] = delegatePublicKey;
+    const QJsonDocument jsonDocData(jsonObjData);
+    auto url = QString("http://localhost:8000/api/message-to-delegate/");
+    return postRequest(url, jsonDocData.toJson())
+        .then([](QNetworkReply* reply) {
+            if (reply->error() != QNetworkReply::NoError) {
+                qCritical() << "Error:" << reply->errorString();
+                return false;
+            }
+            return true;
+        });
 }
 
 QFuture<QByteArray> ServerNetwork::getMessagesForDelegate(

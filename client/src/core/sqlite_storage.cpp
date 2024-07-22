@@ -180,7 +180,7 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
         const auto publicKey = query.value(2).toString();
         const auto delegatePublicKey = query.value(3).toString();
         const auto groupSize = query.value(4).toInt();
-        const auto hasResponse = !findSurveyResponseFor(survey->id).has_value();
+        const auto hasResponse = findSurveyResponseFor(survey->id).has_value();
         survey_records.push_back(SurveyRecord(survey, clientId, publicKey,
             delegatePublicKey, groupSize, hasResponse));
     }

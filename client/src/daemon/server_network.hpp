@@ -18,6 +18,8 @@ public:
     QFuture<QByteArray> surveySignup(
         const QString& surveyId, const QString& publicKey);
     QFuture<QByteArray> getSignupState(const QString& clientId) const;
+    QFuture<bool> postMessageToDelegate(
+        const QString& delegatePublicKey, const QString& message) const;
     QFuture<QByteArray> getMessagesForDelegate(const QString& delegateId) const;
     QFuture<void> postAggregationResult(
         const QString& delegateId, const QByteArray& data);

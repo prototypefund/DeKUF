@@ -136,7 +136,7 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
             const auto responseObject = QJsonDocument::fromJson(data).object();
             const auto clientId = responseObject["client_id"].toString();
             storage->addSurveyRecord(
-                *survey, "initial", publicKey, publicKey, std::nullopt);
+                *survey, clientId, publicKey, "", std::nullopt);
         });
 }
 
@@ -146,6 +146,7 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
         .then([&, record](QByteArray data) mutable {
             const auto responseDocument = QJsonDocument::fromJson(data);
             const auto responseObject = responseDocument.object();
+            qDebug() << responseObject["aggregation_started"];
             if (!responseObject["aggregation_started"].toBool()) {
                 return;
             }
@@ -153,15 +154,17 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
             record.delegatePublicKey
                 = responseObject["delegate_public_key"].toString();
 
+            const auto response = createSurveyResponse(record.survey);
+
             if (record.publicKey == record.delegatePublicKey) {
                 record.groupSize = responseObject["group_size"].toInt();
+                qDebug() << "Client acts as delegate";
                 // TODO: Either send data to itself here, or implement some
                 // other
                 //       logic to deal with the delegate's own data - also for
                 //       the group_size = 1 case.
             } else {
-                // TODO: Send data to delegate and save response (will change
-                // state)
+                postMessageToDelegate(*response, record);
             }
 
             storage->saveSurveyRecord(record);
@@ -188,6 +191,29 @@ QFuture<void> Daemon::processSignups()
     return whenAll(futures);
 }
 
+QFuture<void> Daemon::postMessageToDelegate(
+    SurveyResponse& response, SurveyRecord& record)
+{
+    // TODO: unnecessary back and forth conversion maybe just implement
+    // toJsonString method
+    auto responseString
+        = QString::fromLatin1(response.toJsonByteArray().toBase64());
+    qDebug() << responseString;
+    auto encryptedResponseString
+        = encryption->encrypt(responseString, record.delegatePublicKey);
+    return network
+        ->postMessageToDelegate(
+            record.delegatePublicKey, encryptedResponseString)
+        // TODO do we need to copy everything?
+        .then([=](bool success) {
+            if (!success)
+                return;
+
+            // implicitely this will set the state to __Done__
+            storage->addSurveyResponse(response, *record.survey);
+        });
+}
+
 QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
     return chain<QByteArray>(
@@ -206,8 +232,7 @@ QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 
 QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
 {
-    const auto& survey = *record.survey;
-    auto delegateResponse = createSurveyResponse(survey);
+    auto delegateResponse = createSurveyResponse(record.survey);
     // TODO: If there is more than one message, aggregate the results into a
     //       single response.
 
@@ -217,17 +242,18 @@ QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
             // Note that we are saving the response of the delegate itself here,
             // just how non-delegate clients would store their response to the
             // delegate. We should not store the aggregated response here.
+            const auto& survey = *record.survey;
             storage->addSurveyResponse(*delegateResponse, survey);
             storage->saveSurveyRecord(record);
         });
 }
 
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(
-    const Survey& survey) const
+    const QSharedPointer<Survey>& survey) const
 {
-    auto surveyResponse = QSharedPointer<SurveyResponse>::create(survey.id);
+    auto surveyResponse = QSharedPointer<SurveyResponse>::create(survey->id);
 
-    for (const auto& query : survey.queries) {
+    for (const auto& query : survey->queries) {
         auto queryResponse = createQueryResponse(query);
         if (queryResponse == nullptr)
             continue;

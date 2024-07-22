@@ -45,7 +45,19 @@ public:
         return std::nullopt;
     }
 
-    QList<SurveyRecord> listSurveyRecords() const { return surveyRecords; }
+    // TODO: Having to create a new array here just because hasResponse is
+    // private. Since this is just a test thing it's fine for now
+    QList<SurveyRecord> listSurveyRecords() const
+    {
+        QList<SurveyRecord> records;
+        for (auto surveyRecord : surveyRecords) {
+            records.append(SurveyRecord(surveyRecord.survey,
+                surveyRecord.clientId, surveyRecord.publicKey,
+                surveyRecord.delegatePublicKey, surveyRecord.groupSize,
+                findSurveyResponseFor(surveyRecord.survey->id).has_value()));
+        }
+        return records;
+    }
 
     void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& publicKey, const QString& delegatePublicKey,

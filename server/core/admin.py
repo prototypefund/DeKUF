@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models.aggregation_group import AggregationGroup
+from .models.client_to_delegate_message import ClientToDelegateMessage
 from .models.commissioner import Commissioner
 from .models.response import QueryResponse, SurveyResponse
 from .models.survey import Query, Survey
@@ -23,6 +24,7 @@ class QueryInline(admin.TabularInline):
 class SurveyAdmin(admin.ModelAdmin):
     list_display = ("name", "commissioner")
     inlines = [QueryInline]
+    readonly_fields = ["id"]
 
 
 class QueryResponseInline(admin.TabularInline):
@@ -43,9 +45,19 @@ class SurveySignupAdmin(admin.ModelAdmin):
     list_display_links = ("id", "survey")
     list_filter = ("survey", "time")
     search_fields = ("id", "survey__name")
+    readonly_fields = ("id", "public_key", "survey", "time", "group")
 
 
 @admin.register(AggregationGroup)
 class AggregationGroupAdmin(admin.ModelAdmin):
     list_display = ("id", "survey", "delegate")
     search_fields = ("survey__name", "delegate__name")
+    readonly_fields = ("id", "delegate")
+
+
+@admin.register(ClientToDelegateMessage)
+class ClientToDelegateMessageAdmin(admin.ModelAdmin):
+    list_display = ("id", "delegate_id", "group", "content")
+    list_display_links = ["id"]
+    list_filter = ("group", "content")
+    search_fields = ("id", "delegate_id", "group", "content")

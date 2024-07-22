@@ -29,6 +29,12 @@ public:
         });
     }
 
+    QFuture<bool> postMessageToDelegate(
+        const QString& delegatePublicKey, const QString& message) const
+    {
+        return dummyFuture(true);
+    }
+
     QFuture<void> postAggregationResult(
         const QString& delegatePublicKey, const QByteArray& data)
     {

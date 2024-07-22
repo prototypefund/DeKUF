@@ -15,7 +15,10 @@ class MessagingToDelegateTest(TestCase):
         self.survey = Survey.objects.create(
             name="TestSurvey", commissioner=commissioner
         )
-        self.signup = SurveySignup.objects.create(survey=self.survey)
+        self.fakePublicKey = "thisCouldBeAKeyForWhatIKnow"
+        self.signup = SurveySignup.objects.create(
+            survey=self.survey, public_key=self.fakePublicKey
+        )
         self.signup2 = SurveySignup.objects.create(survey=self.survey)
         self.aggregation_group = AggregationGroup.objects.create(
             survey=self.survey, delegate=self.signup
@@ -29,39 +32,42 @@ class MessagingToDelegateTest(TestCase):
         if not self.aggregation_group.delegate:
             raise AttributeError("Delegate can't be null")
 
-        url = reverse(
-            "message-to-delegate", args=[self.aggregation_group.delegate.id]
-        )
+        url = reverse("message-to-delegate")
 
         response = self.client.post(
             url,
-            json.dumps({"testKey": "testValue"}),
-            content_type="application/x-www-form-urlencoded",
+            json.dumps(
+                {
+                    "public_key": self.fakePublicKey,
+                    "message": "secureencryptedmessagetrustme",
+                }
+            ),
+            content_type="application/json",
         )
 
         self.assertEqual(len(ClientToDelegateMessage.objects.all()), 1)
         self.assertEqual(response.status_code, 201)
 
-    def test_messages_to_delegate_fails_with_incorrect_message_types(
+    def test_messages_to_delegate_fails_with_missing_required_fields(
         self,
     ) -> None:
         if not self.aggregation_group.delegate:
             raise AttributeError("Delegate can't be null")
 
-        url = reverse(
-            "message-to-delegate", args=[self.aggregation_group.delegate.id]
-        )
+        url = reverse("message-to-delegate")
 
         response = self.client.post(
-            url, 1, content_type="application/x-www-form-urlencoded"
+            url,
+            json.dumps({"message": "secureencryptedmessagetrustme"}),
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
 
         response = self.client.post(
             url,
-            json.dumps([{"testKey": "testValue"}]),
-            content_type="application/x-www-form-urlencoded",
+            json.dumps({"public_key": self.fakePublicKey}),
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -85,56 +91,47 @@ class MessagingToDelegateTest(TestCase):
         if not self.aggregation_group.delegate:
             raise AttributeError("Delegate can't be null")
 
-        post_url = reverse(
-            "message-to-delegate", args=[self.aggregation_group.delegate.id]
+        post_url = reverse("message-to-delegate")
+
+        post_response = self.client.post(
+            post_url,
+            json.dumps(
+                {
+                    "public_key": self.fakePublicKey,
+                    "message": "secureencryptedmessagetrustme",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(post_response.status_code, 201)
+        self.assertEqual(ClientToDelegateMessage.objects.count(), 1)
+
+        get_url = reverse("get-messages-for-delegate", args=[self.signup.id])
+        get_response = self.client.get(get_url, content_type="application/json")
+        self.assertEqual(get_response.status_code, 200)
+
+        response_content = get_response.content.decode("utf-8")
+        self.assertJSONEqual(
+            response_content, '{"messages": ["secureencryptedmessagetrustme"]}'
         )
 
         post_response = self.client.post(
             post_url,
-            json.dumps({"testKey": "testValue"}),
-            content_type="application/x-www-form-urlencoded",
+            json.dumps(
+                {
+                    "public_key": self.fakePublicKey,
+                    "message": "secureencryptedmessagetrustmeagain",
+                }
+            ),
+            content_type="application/json",
         )
-
-        self.assertEqual(len(ClientToDelegateMessage.objects.all()), 1)
         self.assertEqual(post_response.status_code, 201)
+        self.assertEqual(ClientToDelegateMessage.objects.count(), 2)
 
-        get_url = reverse(
-            "get-messages-for-delegate",
-            args=[self.aggregation_group.delegate.id],
-        )
-
-        get_response = self.client.get(
-            get_url, content_type="application/x-www-form-urlencoded"
-        )
+        get_response = self.client.get(get_url, content_type="application/json")
+        self.assertEqual(get_response.status_code, 200)
 
         response_content = get_response.content.decode("utf-8")
-
-        self.assertJSONEqual(
-            response_content, '{"messages": [{"testKey": "testValue"}]}'
-        )
-
-        post_response = self.client.post(
-            post_url,
-            json.dumps({"testKey2": "testValue2"}),
-            content_type="application/x-www-form-urlencoded",
-        )
-
-        self.assertEqual(len(ClientToDelegateMessage.objects.all()), 2)
-        self.assertEqual(post_response.status_code, 201)
-
-        get_url = reverse(
-            "get-messages-for-delegate",
-            args=[self.aggregation_group.delegate.id],
-        )
-
-        get_response = self.client.get(
-            get_url, content_type="application/x-www-form-urlencoded"
-        )
-
-        response_content = get_response.content.decode("utf-8")
-
-        self.assertJSONEqual(
-            response_content,
-            '{"messages": '
-            '[{"testKey": "testValue"}, {"testKey2": "testValue2"}]}',
-        )
+        expected_response = '{"messages": ["secureencryptedmessagetrustme"'
+        ',"secureencryptedmessagetrustmeagain"]}'
+        self.assertJSONEqual(response_content, expected_response)

@@ -12,6 +12,8 @@ public:
         = 0;
     virtual QFuture<QByteArray> getSignupState(
         const QString& clientId) const = 0;
+    virtual QFuture<bool> postMessageToDelegate(
+        const QString& delegatePublicKey, const QString& message) const = 0;
     virtual QFuture<QByteArray> getMessagesForDelegate(
         const QString& delegateId) const = 0;
     virtual QFuture<void> postAggregationResult(

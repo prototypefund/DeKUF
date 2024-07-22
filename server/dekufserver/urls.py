@@ -38,7 +38,7 @@ urlpatterns = [
         name="get-signup-state",
     ),
     path(
-        "api/message-to-delegate/<uuid:delegate_id>/",
+        "api/message-to-delegate/",
         message_to_delegate,
         name="message-to-delegate",
     ),
