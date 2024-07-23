@@ -9,4 +9,7 @@ private slots:
     void testToByteArrayForEmptyResponse();
     void testToByteArrayForResponse();
     void testToAndFromByteArray();
+    void testAggregationWithOneQuery();
+    void testAggregationWithMultipleQueries();
+    void testAggregationThrowsRuntimeExceptionWhenSurveyIdDiffers();
 };

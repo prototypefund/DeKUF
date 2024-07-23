@@ -62,4 +62,101 @@ void SurveyResponseTest::testToAndFromByteArray()
         *deserialized->queryResponses.first());
 }
 
+void SurveyResponseTest::testAggregationWithOneQuery()
+{
+    auto response = QSharedPointer<SurveyResponse>::create("1");
+
+    QMap<QString, int> cohortTestData
+        = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
+
+    response->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData));
+
+    auto response2 = QSharedPointer<SurveyResponse>::create("1");
+
+    QMap<QString, int> cohortTestData2
+        = { { "8", 0 }, { "16", 1 }, { "32", 0 } };
+
+    response2->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData2));
+
+    const QList<QSharedPointer<SurveyResponse>> responses { response,
+        response2 };
+
+    auto aggregatedResponse
+        = SurveyResponse::aggregateSurveyResponses(responses);
+
+    QMap<QString, int> aggregatedCohortData
+        = { { "8", 1 }, { "16", 1 }, { "32", 0 } };
+
+    QCOMPARE(aggregatedResponse->queryResponses.first()->cohortData,
+        aggregatedCohortData);
+}
+
+void SurveyResponseTest::testAggregationWithMultipleQueries()
+{
+    auto response = QSharedPointer<SurveyResponse>::create("1");
+
+    QMap<QString, int> cohortTestData
+        = { { "8", 1 }, { "16", 1 }, { "32", 0 } };
+
+    response->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData));
+
+    response->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test2", cohortTestData));
+
+    auto response2 = QSharedPointer<SurveyResponse>::create("1");
+
+    QMap<QString, int> cohortTestData2
+        = { { "8", 0 }, { "16", 1 }, { "32", 0 } };
+
+    response2->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData2));
+
+    response->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test2", cohortTestData2));
+
+    const QList<QSharedPointer<SurveyResponse>> responses { response,
+        response2 };
+
+    auto aggregatedResponse
+        = SurveyResponse::aggregateSurveyResponses(responses);
+
+    QMap<QString, int> aggregatedCohortData
+        = { { "8", 1 }, { "16", 2 }, { "32", 0 } };
+
+    QCOMPARE(aggregatedResponse->queryResponses.first()->cohortData,
+        aggregatedCohortData);
+
+    QCOMPARE(aggregatedResponse->queryResponses.last()->cohortData,
+        aggregatedCohortData);
+}
+
+void SurveyResponseTest::
+    testAggregationThrowsRuntimeExceptionWhenSurveyIdDiffers()
+{
+    auto response = QSharedPointer<SurveyResponse>::create("1");
+
+    QMap<QString, int> cohortTestData
+        = { { "8", 1 }, { "16", 0 }, { "32", 0 } };
+
+    response->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData));
+
+    auto response2 = QSharedPointer<SurveyResponse>::create("not1");
+
+    QMap<QString, int> cohortTestData2
+        = { { "8", 0 }, { "16", 1 }, { "32", 0 } };
+
+    response2->queryResponses.append(
+        QSharedPointer<QueryResponse>::create("test", cohortTestData2));
+
+    const QList<QSharedPointer<SurveyResponse>> responses { response,
+        response2 };
+
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,
+        SurveyResponse::aggregateSurveyResponses(responses));
+}
+
 QTEST_MAIN(SurveyResponseTest)

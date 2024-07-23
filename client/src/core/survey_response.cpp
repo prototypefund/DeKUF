@@ -12,6 +12,13 @@ SurveyResponse::SurveyResponse(const QString& surveyId)
 {
 }
 
+SurveyResponse::SurveyResponse(const QString& surveyId,
+    QList<QSharedPointer<QueryResponse>> queryResponses)
+    : surveyId(surveyId)
+    , queryResponses(queryResponses)
+{
+}
+
 QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
     const QByteArray& responseData)
 {
@@ -42,6 +49,40 @@ QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
     }
 
     return response;
+}
+
+QSharedPointer<SurveyResponse> SurveyResponse::aggregateSurveyResponses(
+    const QList<QSharedPointer<SurveyResponse>> surveyResponses)
+{
+    Q_ASSERT(!surveyResponses.isEmpty());
+    auto surveyId = surveyResponses.first()->surveyId;
+    QMap<QString, QMap<QString, int>> aggregatedResults;
+
+    for (const auto& surveyResponse : surveyResponses) {
+        if (surveyResponse->surveyId != surveyId)
+            throw std::runtime_error(
+                "SurveyResponses need to reference same survey by surveyId");
+        for (const auto& queryResponse : surveyResponse->queryResponses) {
+            const auto& queryId = queryResponse->queryId;
+            const auto& cohortData = queryResponse->cohortData;
+
+            auto& queryResult = aggregatedResults[queryId];
+            for (auto it = cohortData.constBegin(); it != cohortData.constEnd();
+                 ++it) {
+                queryResult[it.key()] += it.value();
+            }
+        }
+    }
+
+    QList<QSharedPointer<QueryResponse>> queryResponses;
+
+    for (auto it = aggregatedResults.constBegin();
+         it != aggregatedResults.constEnd(); ++it) {
+        queryResponses.append(
+            QSharedPointer<QueryResponse>::create(it.key(), it.value()));
+    }
+
+    return QSharedPointer<SurveyResponse>::create(surveyId, queryResponses);
 }
 
 QByteArray SurveyResponse::toJsonByteArray() const
