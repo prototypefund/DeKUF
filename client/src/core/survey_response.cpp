@@ -22,15 +22,16 @@ SurveyResponse::SurveyResponse(const QString& surveyId,
 QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
     const QByteArray& responseData)
 {
+    return fromJsonObject(QJsonDocument::fromJson(responseData).object());
+}
 
-    const auto surveyResponseObject
-        = QJsonDocument::fromJson(responseData).object();
-
-    const auto surveyId = surveyResponseObject["survey_id"].toString();
+QSharedPointer<SurveyResponse> SurveyResponse::fromJsonObject(
+    const QJsonObject& responseObject)
+{
+    const auto surveyId = responseObject["survey_id"].toString();
     auto response = QSharedPointer<SurveyResponse>::create(surveyId);
 
-    const auto queryResponseArray
-        = surveyResponseObject["query_responses"].toArray();
+    const auto queryResponseArray = responseObject["query_responses"].toArray();
 
     for (const auto& queryResponseItem : queryResponseArray) {
         const auto queryResponseObject = queryResponseItem.toObject();

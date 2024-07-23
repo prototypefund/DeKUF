@@ -35,12 +35,12 @@ private:
     QFuture<void> processSurveys();
     QFuture<void> processInitialSignup(SurveyRecord& record);
     QFuture<void> processSignups();
-    QFuture<void> postMessageToDelegate(
-        SurveyResponse& response, SurveyRecord& record);
+    QFuture<void> postMessageToDelegate(SurveyRecord& record) const;
     QFuture<void> processMessagesForDelegate(SurveyRecord& record);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const QSharedPointer<Survey>&) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
+    QVariant parseResponseMessages(QByteArray& data, int groupSize);
     QFuture<void> signUpForSurvey(const QSharedPointer<const Survey> survey);
 };
