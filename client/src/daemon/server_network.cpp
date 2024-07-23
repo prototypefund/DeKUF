@@ -90,13 +90,19 @@ QFuture<QByteArray> ServerNetwork::getMessagesForDelegate(
     });
 }
 
-QFuture<void> ServerNetwork::postAggregationResult(
+// TODO: May be better to return a proper result type with success and result
+// instead of a bool
+QFuture<bool> ServerNetwork::postAggregationResult(
     const QString& delegateId, const QByteArray& data)
 {
     auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
                    .arg(delegateId);
-    return postRequest(url, data).then([](QNetworkReply* response) {
-        // TODO: Error handling.
+    return postRequest(url, data).then([](QNetworkReply* reply) {
+        if (reply->error() != QNetworkReply::NoError) {
+            qCritical() << "Error:" << reply->errorString();
+            return false;
+        }
+        return true;
     });
 }
 

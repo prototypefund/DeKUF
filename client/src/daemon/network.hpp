@@ -16,7 +16,7 @@ public:
         const QString& delegatePublicKey, const QString& message) const = 0;
     virtual QFuture<QByteArray> getMessagesForDelegate(
         const QString& delegateId) const = 0;
-    virtual QFuture<void> postAggregationResult(
+    virtual QFuture<bool> postAggregationResult(
         const QString& delegateId, const QByteArray& data)
         = 0;
 };

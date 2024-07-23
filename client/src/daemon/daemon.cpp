@@ -158,10 +158,26 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
             if (record.publicKey == record.delegatePublicKey) {
                 record.groupSize = responseObject["group_size"].toInt();
                 qDebug() << "Client acts as delegate";
-                // TODO: Either send data to itself here, or implement some
-                // other
-                //       logic to deal with the delegate's own data - also for
-                //       the group_size = 1 case.
+
+                // test edge case
+                if (record.groupSize == 1) {
+                    qDebug() << "Directly posting data to server as groupSize "
+                                "is 1";
+                    auto surveyResponse = createSurveyResponse(record.survey);
+                    network
+                        ->postAggregationResult(
+                            record.clientId, surveyResponse->toJsonByteArray())
+                        .then([&, record, response](bool success) {
+                            if (!success)
+                                return;
+                            storage->addSurveyResponse(
+                                *response, *record.survey);
+                            storage->saveSurveyRecord(record);
+                        });
+                    return;
+                }
+
+                processMessagesForDelegate(record);
             } else {
                 postMessageToDelegate(*response, record);
             }
@@ -214,35 +230,12 @@ QFuture<void> Daemon::postMessageToDelegate(
 
 QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
-    return chain<QByteArray>(
-        network->getMessagesForDelegate(record.delegatePublicKey),
-        [=](QByteArray) mutable {
+    return network->getMessagesForDelegate(record.delegatePublicKey)
+        .then([=](QByteArray) mutable {
             // TODO: Read messages from other clients from response.
 
             // TODO: Once messages are actually read, only proceed if there are
             //       group size - 1 messages.
-            if (record.groupSize > 1)
-                qWarning() << "Aggregation isn't implemented yet";
-
-            return postAggregationResult(record);
-        });
-}
-
-QFuture<void> Daemon::postAggregationResult(SurveyRecord& record)
-{
-    auto delegateResponse = createSurveyResponse(record.survey);
-    // TODO: If there is more than one message, aggregate the results into a
-    //       single response.
-
-    auto data = delegateResponse->toJsonByteArray();
-    return network->postAggregationResult(record.delegatePublicKey, data)
-        .then([=]() mutable {
-            // Note that we are saving the response of the delegate itself here,
-            // just how non-delegate clients would store their response to the
-            // delegate. We should not store the aggregated response here.
-            const auto& survey = *record.survey;
-            storage->addSurveyResponse(*delegateResponse, survey);
-            storage->saveSurveyRecord(record);
         });
 }
 

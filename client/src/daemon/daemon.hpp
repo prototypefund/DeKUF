@@ -38,7 +38,6 @@ private:
     QFuture<void> postMessageToDelegate(
         SurveyResponse& response, SurveyRecord& record);
     QFuture<void> processMessagesForDelegate(SurveyRecord& record);
-    QFuture<void> postAggregationResult(SurveyRecord& record);
     QSharedPointer<SurveyResponse> createSurveyResponse(
         const QSharedPointer<Survey>&) const;
     QSharedPointer<QueryResponse> createQueryResponse(

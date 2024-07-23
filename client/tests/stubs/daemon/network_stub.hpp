@@ -35,10 +35,10 @@ public:
         return dummyFuture(true);
     }
 
-    QFuture<void> postAggregationResult(
+    QFuture<bool> postAggregationResult(
         const QString& delegatePublicKey, const QByteArray& data)
     {
-        return dummyFuture();
+        return dummyFuture(true);
     }
 
 private:
