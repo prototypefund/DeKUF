@@ -155,6 +155,7 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
 {
     return network->getSignupState(record.clientId)
         .then([&, record](QByteArray data) mutable {
+            qDebug() << "we got here i can tell you";
             const auto responseDocument = QJsonDocument::fromJson(data);
             const auto responseObject = responseDocument.object();
             if (!responseObject["aggregation_started"].toBool()) {
@@ -163,8 +164,6 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
 
             record.delegatePublicKey
                 = responseObject["delegate_public_key"].toString();
-
-            const auto response = createSurveyResponse(record.survey);
 
             if (record.publicKey == record.delegatePublicKey) {
                 record.groupSize = responseObject["group_size"].toInt();
@@ -178,11 +177,11 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
                     network
                         ->postAggregationResult(
                             record.clientId, surveyResponse->toJsonByteArray())
-                        .then([&, record, response](bool success) {
+                        .then([&, record, surveyResponse](bool success) {
                             if (!success)
                                 return;
                             storage->addSurveyResponse(
-                                *response, *record.survey);
+                                *surveyResponse, *record.survey);
                             storage->saveSurveyRecord(record);
                         });
                     return;
@@ -190,7 +189,7 @@ QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
 
                 processMessagesForDelegate(record);
             } else {
-                postMessageToDelegate(*response, record);
+                postMessageToDelegate(record);
             }
 
             storage->saveSurveyRecord(record);
@@ -206,9 +205,8 @@ QFuture<void> Daemon::processSignups()
             futures.append(processInitialSignup(surveyRecord));
             continue;
         }
-
         if (surveyRecord.getState() != Processing
-            || surveyRecord.clientId != surveyRecord.delegatePublicKey)
+            || surveyRecord.publicKey != surveyRecord.delegatePublicKey)
             continue;
         qDebug() << surveyRecord.getState() << surveyRecord.clientId
                  << surveyRecord.delegatePublicKey;
@@ -217,13 +215,13 @@ QFuture<void> Daemon::processSignups()
     return whenAll(futures);
 }
 
-QFuture<void> Daemon::postMessageToDelegate(
-    SurveyResponse& response, SurveyRecord& record)
+QFuture<void> Daemon::postMessageToDelegate(SurveyRecord& record) const
 {
+    const auto response = createSurveyResponse(record.survey);
     // TODO: unnecessary back and forth conversion maybe just implement
     // toJsonString method
     auto responseString
-        = QString::fromLatin1(response.toJsonByteArray().toBase64());
+        = QString::fromLatin1(response->toJsonByteArray().toBase64());
     auto encryptedResponseString
         = encryption->encrypt(responseString, record.delegatePublicKey);
     return network
@@ -235,19 +233,74 @@ QFuture<void> Daemon::postMessageToDelegate(
                 return;
 
             // implicitely this will set the state to __Done__
-            storage->addSurveyResponse(response, *record.survey);
+            storage->addSurveyResponse(*response, *record.survey);
         });
 }
 
 QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
-    return network->getMessagesForDelegate(record.delegatePublicKey)
-        .then([=](QByteArray) mutable {
-            // TODO: Read messages from other clients from response.
+    return network->getMessagesForDelegate(record.clientId)
+        .then([&, record](QByteArray data) mutable {
+            try {
+                if (!record.groupSize.has_value()) {
+                    return;
+                }
+                auto responsesVariant
+                    = parseResponseMessages(data, record.groupSize.value());
 
-            // TODO: Once messages are actually read, only proceed if there are
-            //       group size - 1 messages.
+                if (!responsesVariant
+                         .canConvert<QList<QSharedPointer<SurveyResponse>>>()) {
+                    qDebug() << "Insufficient messages available";
+                    return;
+                }
+
+                auto responses
+                    = responsesVariant
+                          .value<QList<QSharedPointer<SurveyResponse>>>();
+                auto personalResponse = createSurveyResponse(record.survey);
+                responses.append(personalResponse);
+                qDebug() << responses.first()->toJsonByteArray();
+                auto aggregatedResponse
+                    = SurveyResponse::aggregateSurveyResponses(responses);
+                network
+                    ->postAggregationResult(
+                        record.clientId, aggregatedResponse->toJsonByteArray())
+                    .then([=](bool success) {
+                        if (!success)
+                            return;
+                        storage->addSurveyResponse(
+                            *personalResponse, *record.survey);
+                        storage->saveSurveyRecord(record);
+                    });
+                // TODO: Can we introduce some kind of return type those errors
+                // are annoying to deal with
+            } catch (QJsonParseError error) {
+                qDebug() << "we're in the error handling json";
+                qWarning() << "Invalid JSON: Messages could not be parsed";
+            }
         });
+}
+
+QVariant Daemon::parseResponseMessages(QByteArray& data, int groupSize)
+{
+    QList<QSharedPointer<SurveyResponse>> responses {};
+    auto jsonDoc = QJsonDocument::fromJson(data);
+
+    auto jsonObj = jsonDoc.object();
+    auto jsonArray = jsonObj["messages"].toArray();
+    if (jsonArray.count() < groupSize - 1)
+        return {};
+
+    for (const QJsonValue& value : jsonArray) {
+        auto encryptedString = value.toString();
+        // TODO: We need the proper private key here
+        QString decryptedResponseString
+            = encryption->decrypt(encryptedString, "");
+        QByteArray jsonByteArray
+            = QByteArray::fromBase64(decryptedResponseString.toLatin1());
+        responses.append(SurveyResponse::fromJsonByteArray(jsonByteArray));
+    }
+    return QVariant::fromValue(responses);
 }
 
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(

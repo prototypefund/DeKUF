@@ -34,4 +34,8 @@ public:
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     QByteArray toJsonByteArray() const;
+
+private:
+    static QSharedPointer<SurveyResponse> fromJsonObject(
+        const QJsonObject& responseObject);
 };
