@@ -31,6 +31,8 @@ private:
     QSharedPointer<Encryption> encryption;
     DBusService dbusService;
 
+    bool checkIfAllDataKeysArePresent(
+        const QSharedPointer<Survey>& survey) const;
     QFuture<void> handleSurveysResponse(const QByteArray& data);
     QFuture<void> processSurveys();
     QFuture<void> processInitialSignup(SurveyRecord& record);

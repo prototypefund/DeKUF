@@ -9,6 +9,7 @@ private slots:
     void testProcessSurveysIgnoresErrors();
     void testProcessSurveysSignsUpForRightCommissioner();
     void testProcessSurveyDoesNotSignUpForWrongCommissioner();
+    void testProcessSurveyDoesNotSignUpForWhenDataKeyNotPresent();
     void testProcessSignupsIgnoresEmptySignupState();
     void testProcessSignupsIgnoresNonStartedAggregations();
     void testProcessSignupsHandlesDelegateCase();

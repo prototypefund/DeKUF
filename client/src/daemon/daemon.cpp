@@ -92,6 +92,16 @@ void Daemon::run()
     });
 }
 
+bool Daemon::checkIfAllDataKeysArePresent(
+    const QSharedPointer<Survey>& survey) const
+{
+    for (auto query : survey->queries) {
+        if (!storage->checkIfDataPointPresent(query->dataKey))
+            return false;
+    }
+    return true;
+}
+
 QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
 {
     using Qt::endl;
@@ -115,8 +125,9 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
         if (survey->commissioner->name != kdeName)
             continue;
 
-        // TODO: Only sign up for surveys if we have the data points they
-        //       request.
+        if (!checkIfAllDataKeysArePresent(survey))
+            continue;
+
         futures.append(signUpForSurvey(survey));
     }
     return whenAll(futures);

@@ -11,6 +11,7 @@ public:
 
     QList<DataPoint> listDataPoints(const QString& key) const;
     void addDataPoint(const QString& key, const QString& value);
+    bool checkIfDataPointPresent(const QString& key) const;
     QList<SurveyResponseRecord> listSurveyResponses() const;
     void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey);

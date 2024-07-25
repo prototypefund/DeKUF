@@ -29,6 +29,16 @@ public:
         return surveyResponses;
     }
 
+    bool checkIfDataPointPresent(const QString& key) const
+    {
+        for (const auto& dataPoint : dataPoints) {
+            if (dataPoint.first == key) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void addSurveyResponse(const SurveyResponse& response, const Survey& survey)
     {
         surveyResponses.push_back(
