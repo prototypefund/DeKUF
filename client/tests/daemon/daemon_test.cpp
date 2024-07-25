@@ -67,6 +67,22 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
+void DaemonTest::testProcessSurveyDoesNotSignUpForWhenDataKeyNotPresent()
+{
+    auto storage = QSharedPointer<StorageStub>::create();
+    auto network = QSharedPointer<NetworkStub>::create();
+    auto encryption = QSharedPointer<IdentityEncryption>::create();
+    Daemon daemon(nullptr, storage, network, encryption);
+
+    Survey survey("testId", "testName");
+    survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
+    network->listSurveysResponse
+        = QByteArray("[\n" + survey.toByteArray() + "\n]");
+
+    await(daemon.processSurveys());
+    QCOMPARE(storage->listSurveyRecords().count(), 0);
+}
+
 void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
 {
     auto storage = QSharedPointer<StorageStub>::create();

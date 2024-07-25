@@ -79,7 +79,7 @@ SqliteStorage::SqliteStorage(const QString& databasePath)
 
 SqliteStorage::SqliteStorage()
     : SqliteStorage(QDir::homePath() + QDir::separator() + userDir
-        + QDir::separator() + dbFileName)
+          + QDir::separator() + dbFileName)
 {
 }
 
@@ -112,6 +112,19 @@ void SqliteStorage::addDataPoint(const QString& key, const QString& value)
     query.bindValue(":key", key);
     query.bindValue(":value", value);
     execQuery(query);
+}
+
+bool SqliteStorage::checkIfDataPointPresent(const QString& key) const
+{
+    QSqlQuery query;
+    query.prepare("SELECT EXISTS(SELECT 1 FROM data_point WHERE key LIKE "
+                  ":key)");
+    query.bindValue(":key", key);
+    if (query.exec() && query.next()) {
+        return query.value(0).toBool();
+    }
+
+    return false;
 }
 
 QList<SurveyResponseRecord> SqliteStorage::listSurveyResponses() const

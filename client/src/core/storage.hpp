@@ -24,12 +24,14 @@ public:
     virtual ~Storage() {};
     virtual QList<DataPoint> listDataPoints(const QString& key = "") const = 0;
     virtual void addDataPoint(const QString& key, const QString& value) = 0;
+    virtual bool checkIfDataPointPresent(const QString& key) const = 0;
     virtual QList<SurveyResponseRecord> listSurveyResponses() const = 0;
     virtual void addSurveyResponse(
         const SurveyResponse& response, const Survey& survey)
         = 0;
     virtual std::optional<SurveyResponseRecord> findSurveyResponseFor(
-        const QString& surveyId) const = 0;
+        const QString& surveyId) const
+        = 0;
     virtual QList<SurveyRecord> listSurveyRecords() const = 0;
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& publicKey, const QString& delegatePublicKey,
@@ -37,5 +39,6 @@ public:
         = 0;
     virtual void saveSurveyRecord(const SurveyRecord& record) = 0;
     virtual QSharedPointer<SurveyRecord> findSurveyRecordById(
-        const QString& survey_id) const = 0;
+        const QString& survey_id) const
+        = 0;
 };
