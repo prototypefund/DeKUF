@@ -75,6 +75,8 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWhenDataKeyNotPresent()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
+    survey.queries.push_back(QSharedPointer<Query>::create(
+        "1", "unknownKey", QList<QString> { "1" }, true));
     survey.commissioner = QSharedPointer<Commissioner>::create("KDE");
     network->listSurveysResponse
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
