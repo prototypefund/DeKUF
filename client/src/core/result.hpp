@@ -3,18 +3,25 @@
 #include <QString>
 #include <type_traits>
 
-template <typename T>
-class Result {
+template <typename T> class Result {
 public:
     bool success;
     QString errorMessage;
     std::optional<T> value;
 
-    Result() : success(true) {}
+    Result()
+        : success(true)
+    {
+    }
 
-    explicit Result(const T& v) : success(true), value(v) {}
+    explicit Result(const T& v)
+        : success(true)
+        , value(v)
+    {
+    }
 
-    static Result<T> Failure(const QString& error) {
+    static Result<T> Failure(const QString& error)
+    {
         Result<T> result;
         result.success = false;
         result.errorMessage = error;
@@ -29,15 +36,18 @@ public:
     bool hasValue() const { return value.has_value(); }
 };
 
-template<>
-class Result<void> {
+template <> class Result<void> {
 public:
     bool success;
     QString errorMessage;
 
-    Result() : success(true) {}
+    Result()
+        : success(true)
+    {
+    }
 
-    static Result<void> Failure(const QString& error) {
+    static Result<void> Failure(const QString& error)
+    {
         Result<void> result;
         result.success = false;
         result.errorMessage = error;

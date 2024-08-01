@@ -79,7 +79,7 @@ SqliteStorage::SqliteStorage(const QString& databasePath)
 
 SqliteStorage::SqliteStorage()
     : SqliteStorage(QDir::homePath() + QDir::separator() + userDir
-          + QDir::separator() + dbFileName)
+        + QDir::separator() + dbFileName)
 {
 }
 

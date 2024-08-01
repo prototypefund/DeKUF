@@ -11,5 +11,5 @@ private slots:
     void testToAndFromByteArray();
     void testAggregationWithOneQuery();
     void testAggregationWithMultipleQueries();
-    void testAggregationThrowsRuntimeExceptionWhenSurveyIdDiffers();
+    void testAggregationReturnsFailureWhenSurveyIdDiffers();
 };
