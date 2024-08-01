@@ -283,10 +283,11 @@ SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(
     const QByteArray& data, const QString& surveyId,
     const QDateTime& createdAt) const
 {
-    QSharedPointer<SurveyResponse> response(
-        SurveyResponse::fromJsonByteArray(data));
+    auto responseResult = SurveyResponse::fromJsonByteArray(data);
+    qDebug() << responseResult.getErrorMessage();
+    Q_ASSERT(responseResult.isSuccess());
     const auto surveyRecord = findSurveyRecordById(surveyId);
-    return { .response = response,
+    return { .response = responseResult.getValue(),
         .surveyRecord = surveyRecord,
         .createdAt = createdAt };
 }

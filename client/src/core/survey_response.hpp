@@ -20,7 +20,7 @@ public:
 
 class SurveyResponse {
 public:
-    static QSharedPointer<SurveyResponse> fromJsonByteArray(
+    static Result<QSharedPointer<SurveyResponse>> fromJsonByteArray(
         const QByteArray& responseData);
 
     static Result<QSharedPointer<SurveyResponse>> aggregateSurveyResponses(

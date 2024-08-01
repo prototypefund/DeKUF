@@ -313,7 +313,11 @@ QList<QSharedPointer<SurveyResponse>> Daemon::parseResponseMessages(
             = encryption->decrypt(encryptedString, "");
         QByteArray jsonByteArray
             = QByteArray::fromBase64(decryptedResponseString.toLatin1());
-        responses.append(SurveyResponse::fromJsonByteArray(jsonByteArray));
+        auto parsingResult = SurveyResponse::fromJsonByteArray(jsonByteArray);
+        if (!parsingResult.isSuccess()) {
+            // TODO: Return failed
+        }
+        responses.append(parsingResult.getValue());
     }
     return responses;
 }

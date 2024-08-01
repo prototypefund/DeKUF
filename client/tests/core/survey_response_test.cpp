@@ -56,10 +56,11 @@ void SurveyResponseTest::testToAndFromByteArray()
     response.queryResponses.append(
         QSharedPointer<QueryResponse>::create("timestamp", cohortTestData));
     const auto json = response.toJsonByteArray();
-    const auto deserialized = SurveyResponse::fromJsonByteArray(json);
+    const auto deserializedResult = SurveyResponse::fromJsonByteArray(json);
+    Q_ASSERT(deserializedResult.isSuccess());
     QCOMPARE(response.queryResponses.count(), 1);
     QCOMPARE(*response.queryResponses.first(),
-        *deserialized->queryResponses.first());
+        *deserializedResult.getValue()->queryResponses.first());
 }
 
 void SurveyResponseTest::testAggregationWithOneQuery()

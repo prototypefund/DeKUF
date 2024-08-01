@@ -21,37 +21,37 @@ SurveyResponse::SurveyResponse(const QString& surveyId,
 {
 }
 
-QSharedPointer<SurveyResponse> SurveyResponse::fromJsonByteArray(
+Result<QSharedPointer<SurveyResponse>> SurveyResponse::fromJsonByteArray(
     const QByteArray& responseData)
 {
-    return fromJsonObject(QJsonDocument::fromJson(responseData).object());
-}
+    try {
+        auto responseJsonObj = QJsonDocument::fromJson(responseData).object();
+        const auto surveyId = responseJsonObj["survey_id"].toString();
+        auto response = QSharedPointer<SurveyResponse>::create(surveyId);
 
-QSharedPointer<SurveyResponse> SurveyResponse::fromJsonObject(
-    const QJsonObject& responseObject)
-{
-    const auto surveyId = responseObject["survey_id"].toString();
-    auto response = QSharedPointer<SurveyResponse>::create(surveyId);
+        const auto queryResponseArray
+            = responseJsonObj["query_responses"].toArray();
 
-    const auto queryResponseArray = responseObject["query_responses"].toArray();
+        for (const auto& queryResponseItem : queryResponseArray) {
+            const auto queryResponseObject = queryResponseItem.toObject();
+            const auto queryId = queryResponseObject["query_id"].toString();
 
-    for (const auto& queryResponseItem : queryResponseArray) {
-        const auto queryResponseObject = queryResponseItem.toObject();
-        const auto queryId = queryResponseObject["query_id"].toString();
+            const auto cohortJsonData = queryResponseObject["data"].toObject();
+            QMap<QString, int> cohortData;
 
-        const auto cohortJsonData = queryResponseObject["data"].toObject();
-        QMap<QString, int> cohortData;
+            for (auto it = cohortJsonData.constBegin();
+                 it != cohortJsonData.constEnd(); ++it) {
+                cohortData[it.key()] = it.value().toInt();
+            }
 
-        for (auto it = cohortJsonData.constBegin();
-             it != cohortJsonData.constEnd(); ++it) {
-            cohortData[it.key()] = it.value().toInt();
+            response->queryResponses.append(
+                QSharedPointer<QueryResponse>::create(queryId, cohortData));
         }
-
-        response->queryResponses.append(
-            QSharedPointer<QueryResponse>::create(queryId, cohortData));
+        return Result(response);
+    } catch (const QJsonParseError& error) {
+        return Result<QSharedPointer<SurveyResponse>>::Failure(
+            error.errorString());
     }
-
-    return response;
 }
 
 Result<QSharedPointer<SurveyResponse>> SurveyResponse::aggregateSurveyResponses(
