@@ -250,61 +250,58 @@ QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
     qDebug() << "ClientId:" << record.clientId;
     return network->getMessagesForDelegate(record.clientId)
         .then([&, record](QByteArray data) mutable {
-            try {
-                if (!record.groupSize.has_value()) {
-                    return;
-                }
-
-                qDebug() << "Data:" << data;
-
-                auto responses
-                    = parseResponseMessages(data, record.groupSize.value());
-
-                if (responses.count() < (record.groupSize.value() - 1)) {
-                    qDebug() << "Insufficient messages available";
-                    return;
-                }
-
-                qDebug() << "Response:" << responses.first()->toJsonByteArray();
-
-                auto personalResponse = createSurveyResponse(record.survey);
-                responses.append(personalResponse);
-
-                qDebug() << "Persional response:"
-                         << personalResponse->toJsonByteArray();
-                auto aggregationResult
-                    = SurveyResponse::aggregateSurveyResponses(responses);
-
-                if (!aggregationResult.success) {
-                    qDebug() << "Aggregation unsuccessful:"
-                             << aggregationResult.errorMessage;
-                }
-
-                auto aggregatedResponse = aggregationResult.getValue();
-
-                qDebug() << "Aggregated Response:"
-                         << aggregatedResponse->toJsonByteArray();
-                network
-                    ->postAggregationResult(
-                        record.clientId, aggregatedResponse->toJsonByteArray())
-                    .then([=](bool success) {
-                        if (!success)
-                            return;
-                        storage->addSurveyResponse(
-                            *personalResponse, *record.survey);
-                        storage->saveSurveyRecord(record);
-                    });
-                // TODO: Can we introduce some kind of return type those errors
-                // are annoying to deal with
-            } catch (QJsonParseError error) {
-                qDebug() << "we're in the error handling json";
-                qWarning() << "Invalid JSON: Messages could not be parsed";
+            if (!record.groupSize.has_value()) {
+                return;
             }
+
+            const auto responsesParsingResult
+                = parseResponseMessages(data, record.groupSize.value());
+
+            if (!responsesParsingResult.isSuccess()) {
+                qWarning() << "Error parsing other clients responses"
+                           << responsesParsingResult.getErrorMessage();
+                return;
+            }
+
+            auto responses = responsesParsingResult.getValue();
+
+            if (responses.count() < (record.groupSize.value() - 1)) {
+                qDebug() << "Insufficient messages available";
+                return;
+            }
+
+            auto personalResponse = createSurveyResponse(record.survey);
+            responses.append(personalResponse);
+
+            qDebug() << "Persional response:"
+                     << personalResponse->toJsonByteArray();
+            auto aggregationResult
+                = SurveyResponse::aggregateSurveyResponses(responses);
+
+            if (!aggregationResult.isSuccess()) {
+                qDebug() << "Aggregation unsuccessful:"
+                         << aggregationResult.errorMessage;
+            }
+
+            const auto& aggregatedResponse = aggregationResult.getValue();
+
+            qDebug() << "Aggregated Response:"
+                     << aggregatedResponse->toJsonByteArray();
+            network
+                ->postAggregationResult(
+                    record.clientId, aggregatedResponse->toJsonByteArray())
+                .then([=](bool success) {
+                    if (!success)
+                        return;
+                    storage->addSurveyResponse(
+                        *personalResponse, *record.survey);
+                    storage->saveSurveyRecord(record);
+                });
         });
 }
 
-QList<QSharedPointer<SurveyResponse>> Daemon::parseResponseMessages(
-    QByteArray& data, int groupSize)
+Result<QList<QSharedPointer<SurveyResponse>>> Daemon::parseResponseMessages(
+    const QByteArray& data, int groupSize) const
 {
     QList<QSharedPointer<SurveyResponse>> responses {};
     auto jsonDoc = QJsonDocument::fromJson(data);
@@ -323,11 +320,12 @@ QList<QSharedPointer<SurveyResponse>> Daemon::parseResponseMessages(
             = QByteArray::fromBase64(decryptedResponseString.toLatin1());
         auto parsingResult = SurveyResponse::fromJsonByteArray(jsonByteArray);
         if (!parsingResult.isSuccess()) {
-            // TODO: Return failed
+            return Result<QList<QSharedPointer<SurveyResponse>>>::Failure(
+                parsingResult.getErrorMessage());
         }
         responses.append(parsingResult.getValue());
     }
-    return responses;
+    return Result(responses);
 }
 
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(
