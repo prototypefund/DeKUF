@@ -1,5 +1,7 @@
 #include "survey_response.hpp"
 
+#include "result.hpp"
+
 QueryResponse::QueryResponse(
     const QString& queryId, const QMap<QString, int>& cohortData)
     : queryId(queryId)
@@ -52,17 +54,21 @@ QSharedPointer<SurveyResponse> SurveyResponse::fromJsonObject(
     return response;
 }
 
-QSharedPointer<SurveyResponse> SurveyResponse::aggregateSurveyResponses(
+Result<QSharedPointer<SurveyResponse>> SurveyResponse::aggregateSurveyResponses(
     const QList<QSharedPointer<SurveyResponse>> surveyResponses)
 {
-    Q_ASSERT(!surveyResponses.isEmpty());
+    if (surveyResponses.isEmpty())
+        return Result<QSharedPointer<SurveyResponse>>::Failure(
+            "SurveyResponses cannot be empty for aggregation");
+    qDebug() << "Aggregating started";
     auto surveyId = surveyResponses.first()->surveyId;
     QMap<QString, QMap<QString, int>> aggregatedResults;
 
     for (const auto& surveyResponse : surveyResponses) {
         if (surveyResponse->surveyId != surveyId)
-            throw std::runtime_error(
-                "SurveyResponses need to reference same survey by surveyId");
+            return Result<QSharedPointer<SurveyResponse>>::Failure(
+                "SurveyResponses need to reference same Survey");
+
         for (const auto& queryResponse : surveyResponse->queryResponses) {
             const auto& queryId = queryResponse->queryId;
             const auto& cohortData = queryResponse->cohortData;
@@ -83,7 +89,9 @@ QSharedPointer<SurveyResponse> SurveyResponse::aggregateSurveyResponses(
             QSharedPointer<QueryResponse>::create(it.key(), it.value()));
     }
 
-    return QSharedPointer<SurveyResponse>::create(surveyId, queryResponses);
+    qDebug() << "Aggregation successful";
+    return Result(
+        QSharedPointer<SurveyResponse>::create(surveyId, queryResponses));
 }
 
 QByteArray SurveyResponse::toJsonByteArray() const

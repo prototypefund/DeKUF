@@ -1,5 +1,3 @@
-#pragma once
-
 #include <QTest>
 
 #include <core/result.hpp>
@@ -59,8 +57,10 @@ void ResultTest::testQStringResultFailure()
 
 void ResultTest::testCustomTypeResultSuccess()
 {
-    struct CustomType { int value; };
-    CustomType ct{123};
+    struct CustomType {
+        int value;
+    };
+    CustomType ct { 123 };
     Result<CustomType> result(ct);
     QVERIFY(result.isSuccess());
     QVERIFY(result.getErrorMessage().isEmpty());
@@ -70,7 +70,9 @@ void ResultTest::testCustomTypeResultSuccess()
 
 void ResultTest::testCustomTypeResultFailure()
 {
-    struct CustomType { int value; };
+    struct CustomType {
+        int value;
+    };
     QString errorMsg = "An error occurred";
     Result<CustomType> result = Result<CustomType>::Failure(errorMsg);
     QVERIFY(!result.isSuccess());

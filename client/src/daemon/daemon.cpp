@@ -239,29 +239,43 @@ QFuture<void> Daemon::postMessageToDelegate(SurveyRecord& record) const
 
 QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
+    qDebug() << "ClientId:" << record.clientId;
     return network->getMessagesForDelegate(record.clientId)
         .then([&, record](QByteArray data) mutable {
             try {
                 if (!record.groupSize.has_value()) {
                     return;
                 }
-                auto responsesVariant
+
+                qDebug() << "Data:" << data;
+
+                auto responses
                     = parseResponseMessages(data, record.groupSize.value());
 
-                if (!responsesVariant
-                         .canConvert<QList<QSharedPointer<SurveyResponse>>>()) {
+                if (responses.count() < (record.groupSize.value() - 1)) {
                     qDebug() << "Insufficient messages available";
                     return;
                 }
 
-                auto responses
-                    = responsesVariant
-                          .value<QList<QSharedPointer<SurveyResponse>>>();
+                qDebug() << "Response:" << responses.first()->toJsonByteArray();
+
                 auto personalResponse = createSurveyResponse(record.survey);
                 responses.append(personalResponse);
-                qDebug() << responses.first()->toJsonByteArray();
-                auto aggregatedResponse
+
+                qDebug() << "Persional response:"
+                         << personalResponse->toJsonByteArray();
+                auto aggregationResult
                     = SurveyResponse::aggregateSurveyResponses(responses);
+
+                if (!aggregationResult.success) {
+                    qDebug() << "Aggregation unsuccessful:"
+                             << aggregationResult.errorMessage;
+                }
+
+                auto aggregatedResponse = aggregationResult.getValue();
+
+                qDebug() << "Aggregated Response:"
+                         << aggregatedResponse->toJsonByteArray();
                 network
                     ->postAggregationResult(
                         record.clientId, aggregatedResponse->toJsonByteArray())
@@ -281,7 +295,8 @@ QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
         });
 }
 
-QVariant Daemon::parseResponseMessages(QByteArray& data, int groupSize)
+QList<QSharedPointer<SurveyResponse>> Daemon::parseResponseMessages(
+    QByteArray& data, int groupSize)
 {
     QList<QSharedPointer<SurveyResponse>> responses {};
     auto jsonDoc = QJsonDocument::fromJson(data);
@@ -300,7 +315,7 @@ QVariant Daemon::parseResponseMessages(QByteArray& data, int groupSize)
             = QByteArray::fromBase64(decryptedResponseString.toLatin1());
         responses.append(SurveyResponse::fromJsonByteArray(jsonByteArray));
     }
-    return QVariant::fromValue(responses);
+    return responses;
 }
 
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(

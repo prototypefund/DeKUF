@@ -83,13 +83,14 @@ void SurveyResponseTest::testAggregationWithOneQuery()
     const QList<QSharedPointer<SurveyResponse>> responses { response,
         response2 };
 
-    auto aggregatedResponse
-        = SurveyResponse::aggregateSurveyResponses(responses);
+    auto aggregatedResult = SurveyResponse::aggregateSurveyResponses(responses);
 
     QMap<QString, int> aggregatedCohortData
         = { { "8", 1 }, { "16", 1 }, { "32", 0 } };
 
-    QCOMPARE(aggregatedResponse->queryResponses.first()->cohortData,
+    Q_ASSERT(aggregatedResult.isSuccess() && aggregatedResult.hasValue());
+
+    QCOMPARE(aggregatedResult.getValue()->queryResponses.first()->cohortData,
         aggregatedCohortData);
 }
 
@@ -120,21 +121,21 @@ void SurveyResponseTest::testAggregationWithMultipleQueries()
     const QList<QSharedPointer<SurveyResponse>> responses { response,
         response2 };
 
-    auto aggregatedResponse
-        = SurveyResponse::aggregateSurveyResponses(responses);
+    auto aggregatedResult = SurveyResponse::aggregateSurveyResponses(responses);
 
     QMap<QString, int> aggregatedCohortData
         = { { "8", 1 }, { "16", 2 }, { "32", 0 } };
 
-    QCOMPARE(aggregatedResponse->queryResponses.first()->cohortData,
+    Q_ASSERT(aggregatedResult.isSuccess() && aggregatedResult.hasValue());
+
+    QCOMPARE(aggregatedResult.getValue()->queryResponses.first()->cohortData,
         aggregatedCohortData);
 
-    QCOMPARE(aggregatedResponse->queryResponses.last()->cohortData,
+    QCOMPARE(aggregatedResult.getValue()->queryResponses.last()->cohortData,
         aggregatedCohortData);
 }
 
-void SurveyResponseTest::
-    testAggregationThrowsRuntimeExceptionWhenSurveyIdDiffers()
+void SurveyResponseTest::testAggregationReturnsFailureWhenSurveyIdDiffers()
 {
     auto response = QSharedPointer<SurveyResponse>::create("1");
 
@@ -155,8 +156,12 @@ void SurveyResponseTest::
     const QList<QSharedPointer<SurveyResponse>> responses { response,
         response2 };
 
-    QVERIFY_THROWS_EXCEPTION(std::runtime_error,
-        SurveyResponse::aggregateSurveyResponses(responses));
+    auto aggregationResult
+        = SurveyResponse::aggregateSurveyResponses(responses);
+
+    Q_ASSERT(!aggregationResult.success && !aggregationResult.hasValue());
+    Q_ASSERT(aggregationResult.errorMessage
+        == "SurveyResponses need to reference same Survey");
 }
 
 QTEST_MAIN(SurveyResponseTest)

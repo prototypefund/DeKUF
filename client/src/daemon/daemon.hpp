@@ -43,6 +43,7 @@ private:
         const QSharedPointer<Survey>&) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    QVariant parseResponseMessages(QByteArray& data, int groupSize);
+    QList<QSharedPointer<SurveyResponse>> parseResponseMessages(
+        QByteArray& data, int groupSize);
     QFuture<void> signUpForSurvey(const QSharedPointer<const Survey> survey);
 };

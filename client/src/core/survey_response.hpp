@@ -3,6 +3,7 @@
 #include <QtCore>
 
 #include "commissioner.hpp"
+#include "result.hpp"
 #include "survey_response.hpp"
 
 class QueryResponse {
@@ -22,7 +23,7 @@ public:
     static QSharedPointer<SurveyResponse> fromJsonByteArray(
         const QByteArray& responseData);
 
-    static QSharedPointer<SurveyResponse> aggregateSurveyResponses(
+    static Result<QSharedPointer<SurveyResponse>> aggregateSurveyResponses(
         QList<QSharedPointer<SurveyResponse>>);
 
     explicit SurveyResponse(const QString& surveyId);
