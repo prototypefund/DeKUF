@@ -60,7 +60,6 @@ Result<QSharedPointer<SurveyResponse>> SurveyResponse::aggregateSurveyResponses(
     if (surveyResponses.isEmpty())
         return Result<QSharedPointer<SurveyResponse>>::Failure(
             "SurveyResponses cannot be empty for aggregation");
-    qDebug() << "Aggregating started";
     auto surveyId = surveyResponses.first()->surveyId;
     QMap<QString, QMap<QString, int>> aggregatedResults;
 
@@ -89,7 +88,6 @@ Result<QSharedPointer<SurveyResponse>> SurveyResponse::aggregateSurveyResponses(
             QSharedPointer<QueryResponse>::create(it.key(), it.value()));
     }
 
-    qDebug() << "Aggregation successful";
     return Result(
         QSharedPointer<SurveyResponse>::create(surveyId, queryResponses));
 }
