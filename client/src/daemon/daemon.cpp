@@ -107,7 +107,15 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
     using Qt::endl;
 
     QTextStream cout(stdout);
-    const auto surveys = Survey::listFromByteArray(data);
+    const auto surveysParsingResult = Survey::listFromByteArray(data);
+
+    if (!surveysParsingResult.isSuccess()) {
+        qWarning() << "Error occured while parsing surveys:"
+                   << surveysParsingResult.getErrorMessage();
+        return {};
+    }
+
+    auto surveys = surveysParsingResult.getValue();
 
     qDebug() << "Fetched surveys:" << surveys.count();
 

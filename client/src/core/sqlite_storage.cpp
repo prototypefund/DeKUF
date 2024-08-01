@@ -188,14 +188,17 @@ QList<SurveyRecord> SqliteStorage::listSurveyRecords() const
         return survey_records;
 
     while (query.next()) {
-        const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
+        const auto surveyResult
+            = Survey::fromByteArray(query.value(0).toByteArray());
+        Q_ASSERT(surveyResult.isSuccess());
         const auto clientId = query.value(1).toString();
         const auto publicKey = query.value(2).toString();
         const auto delegatePublicKey = query.value(3).toString();
         const auto groupSize = query.value(4).toInt();
-        const auto hasResponse = findSurveyResponseFor(survey->id).has_value();
-        survey_records.push_back(SurveyRecord(survey, clientId, publicKey,
-            delegatePublicKey, groupSize, hasResponse));
+        const auto hasResponse
+            = findSurveyResponseFor(surveyResult.getValue()->id).has_value();
+        survey_records.push_back(SurveyRecord(surveyResult.getValue(), clientId,
+            publicKey, delegatePublicKey, groupSize, hasResponse));
     }
 
     return survey_records;
@@ -270,13 +273,15 @@ QSharedPointer<SurveyRecord> SqliteStorage::findSurveyRecordById(
     if (!query.next())
         return nullptr;
 
-    const auto survey = Survey::fromByteArray(query.value(0).toByteArray());
+    const auto surveyParsingResult
+        = Survey::fromByteArray(query.value(0).toByteArray());
+    Q_ASSERT(surveyParsingResult.isSuccess());
     const auto clientId = query.value(1).toString();
     const auto publicKey = query.value(2).toString();
     const auto delegatePublicKey = query.value(3).toString();
     const auto groupSize = query.value(4).toInt();
-    return QSharedPointer<SurveyRecord>::create(
-        survey, clientId, publicKey, delegatePublicKey, groupSize);
+    return QSharedPointer<SurveyRecord>::create(surveyParsingResult.getValue(),
+        clientId, publicKey, delegatePublicKey, groupSize);
 }
 
 SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(

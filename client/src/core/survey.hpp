@@ -26,10 +26,10 @@ public:
 
     Survey(const QString& id, const QString& name);
 
-    static QList<QSharedPointer<Survey>> listFromByteArray(
+    static Result<QList<QSharedPointer<Survey>>> listFromByteArray(
         const QByteArray& data);
 
-    static QSharedPointer<Survey> fromByteArray(const QByteArray& data);
+    static Result<QSharedPointer<Survey>> fromByteArray(const QByteArray& data);
 
     QByteArray toByteArray() const;
 };
