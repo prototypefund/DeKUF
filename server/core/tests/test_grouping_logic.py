@@ -83,3 +83,20 @@ class UngroupedSignupsGroupingTest(TestCase):
             )
             if aggregation_group.delegate:
                 self.assertIn(aggregation_group.delegate, signups_with_group)
+
+    def test_grouping_generates_paillier_keys(self):
+        for i in range(4):
+            SurveySignup.objects.create(survey=self.survey)
+
+        group_ungrouped_signups(list(SurveySignup.objects.all()), self.survey)
+
+        aggregation_group: Optional[AggregationGroup] = (
+            AggregationGroup.objects.first()
+        )
+
+        if not aggregation_group:
+            self.fail()
+
+        self.assertIsNotNone(aggregation_group.aggregation_public_key_n)
+        self.assertIsNotNone(aggregation_group.aggregation_private_key_q)
+        self.assertIsNotNone(aggregation_group.aggregation_private_key_p)

@@ -132,6 +132,8 @@ class MessagingToDelegateTest(TestCase):
         self.assertEqual(get_response.status_code, 200)
 
         response_content = get_response.content.decode("utf-8")
-        expected_response = '{"messages": ["secureencryptedmessagetrustme"'
-        ',"secureencryptedmessagetrustmeagain"]}'
+        expected_response = (
+            '{"messages": ["secureencryptedmessagetrustme"'
+            + ',"secureencryptedmessagetrustmeagain"]}'
+        )
         self.assertJSONEqual(response_content, expected_response)
