@@ -95,7 +95,7 @@ def get_signup_state(request, client_id):
             "delegate_public_key": str(delegate.public_key),
             "aggregation_started": True,
             "group_size": survey_signup.survey.group_size,
-            "data_public_key_n": str(
+            "aggregation_public_key_n": str(
                 aggregation_group.aggregation_public_key_n
             ),
         }

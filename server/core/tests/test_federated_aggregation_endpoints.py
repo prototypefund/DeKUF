@@ -94,7 +94,7 @@ class GetSignupStateTest(TestCase):
                 "delegate_public_key": str(self.signup.public_key),
                 "aggregation_started": True,
                 "group_size": 1,
-                "data_public_key_n": str(
+                "aggregation_public_key_n": str(
                     aggregation_group.aggregation_public_key_n
                 ),
             },
