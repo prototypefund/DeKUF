@@ -16,29 +16,26 @@ public:
         return dummyFuture(QByteArray());
     }
 
-    QFuture<QByteArray> getSignupState(const QString& clientId) const
+    QByteArray getSignupState(const QString& clientId) const
     {
-        return dummyFuture(getSignupStateResponse);
+        return getSignupStateResponse;
     }
 
-    QFuture<QByteArray> getMessagesForDelegate(
-        const QString& delegatePublicKey) const
+    QByteArray getMessagesForDelegate(const QString& delegatePublicKey) const
     {
-        return dummyFuture(QByteArray()).then([](QByteArray data) {
-            return data;
-        });
+        return {};
     }
 
-    QFuture<bool> postMessageToDelegate(
+    bool postMessageToDelegate(
         const QString& delegatePublicKey, const QString& message) const
     {
-        return dummyFuture(true);
+        return true;
     }
 
-    QFuture<bool> postAggregationResult(
+    bool postAggregationResult(
         const QString& delegatePublicKey, const QByteArray& data)
     {
-        return dummyFuture(true);
+        return true;
     }
 
 private:

@@ -50,7 +50,8 @@ public:
         const QString& surveyId) const
     {
         for (const auto& response : surveyResponses)
-            if (response.surveyRecord->survey->id == surveyId)
+            if (response.surveyRecord
+                && response.surveyRecord->survey->id == surveyId)
                 return response;
         return std::nullopt;
     }
