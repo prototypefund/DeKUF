@@ -85,10 +85,9 @@ void Daemon::run()
     qDebug() << "Processing surveys ...";
     processSurveys().then([&] {
         qDebug() << "Processing signups ...";
-        processSignups().then([&] {
-            qDebug() << "Processing finished.";
-            emit finished();
-        });
+        processSignups();
+        qDebug() << "Processing finished.";
+        emit finished();
     });
 }
 
@@ -159,58 +158,49 @@ QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
         });
 }
 
-QFuture<void> Daemon::processInitialSignup(SurveyRecord& record)
+void Daemon::processInitialSignup(SurveyRecord& record)
 {
-    return network->getSignupState(record.clientId)
-        .then([&, record](QByteArray data) mutable {
-            qDebug() << "we got here i can tell you";
-            const auto responseDocument = QJsonDocument::fromJson(data);
-            const auto responseObject = responseDocument.object();
-            if (!responseObject["aggregation_started"].toBool()) {
-                return;
+    auto data = network->getSignupState(record.clientId);
+    const auto responseDocument = QJsonDocument::fromJson(data);
+    const auto responseObject = responseDocument.object();
+    if (!responseObject["aggregation_started"].toBool()) {
+        return;
+    }
+
+    record.delegatePublicKey = responseObject["delegate_public_key"].toString();
+
+    if (record.publicKey == record.delegatePublicKey) {
+        record.groupSize = responseObject["group_size"].toInt();
+        qDebug() << "Client acts as delegate";
+
+        // test edge case
+        if (record.groupSize == 1) {
+            qDebug() << "Directly posting data to server as groupSize "
+                        "is 1";
+            auto surveyResponse = createSurveyResponse(record.survey);
+            auto success = network->postAggregationResult(
+                record.clientId, surveyResponse->toJsonByteArray());
+            if (success) {
+                storage->addSurveyResponse(*surveyResponse, *record.survey);
+                storage->saveSurveyRecord(record);
             }
+            return;
+        }
 
-            record.delegatePublicKey
-                = responseObject["delegate_public_key"].toString();
+        processMessagesForDelegate(record);
+    } else {
+        postMessageToDelegate(record);
+    }
 
-            if (record.publicKey == record.delegatePublicKey) {
-                record.groupSize = responseObject["group_size"].toInt();
-                qDebug() << "Client acts as delegate";
-
-                // test edge case
-                if (record.groupSize == 1) {
-                    qDebug() << "Directly posting data to server as groupSize "
-                                "is 1";
-                    auto surveyResponse = createSurveyResponse(record.survey);
-                    network
-                        ->postAggregationResult(
-                            record.clientId, surveyResponse->toJsonByteArray())
-                        .then([&, record, surveyResponse](bool success) {
-                            if (!success)
-                                return;
-                            storage->addSurveyResponse(
-                                *surveyResponse, *record.survey);
-                            storage->saveSurveyRecord(record);
-                        });
-                    return;
-                }
-
-                processMessagesForDelegate(record);
-            } else {
-                postMessageToDelegate(record);
-            }
-
-            storage->saveSurveyRecord(record);
-        });
+    storage->saveSurveyRecord(record);
 }
 
-QFuture<void> Daemon::processSignups()
+void Daemon::processSignups()
 {
     auto surveyRecords = storage->listSurveyRecords();
-    QList<QFuture<void>> futures;
     for (auto surveyRecord : surveyRecords) {
         if (surveyRecord.getState() == Initial) {
-            futures.append(processInitialSignup(surveyRecord));
+            processInitialSignup(surveyRecord);
             continue;
         }
         if (surveyRecord.getState() != Processing
@@ -218,12 +208,11 @@ QFuture<void> Daemon::processSignups()
             continue;
         qDebug() << surveyRecord.getState() << surveyRecord.clientId
                  << surveyRecord.delegatePublicKey;
-        futures.append(processMessagesForDelegate(surveyRecord));
+        processMessagesForDelegate(surveyRecord);
     }
-    return whenAll(futures);
 }
 
-QFuture<void> Daemon::postMessageToDelegate(SurveyRecord& record) const
+void Daemon::postMessageToDelegate(SurveyRecord& record) const
 {
     const auto response = createSurveyResponse(record.survey);
     // TODO: unnecessary back and forth conversion maybe just implement
@@ -232,72 +221,61 @@ QFuture<void> Daemon::postMessageToDelegate(SurveyRecord& record) const
         = QString::fromLatin1(response->toJsonByteArray().toBase64());
     auto encryptedResponseString
         = encryption->encrypt(responseString, record.delegatePublicKey);
-    return network
-        ->postMessageToDelegate(
-            record.delegatePublicKey, encryptedResponseString)
-        // TODO do we need to copy everything?
-        .then([=](bool success) {
-            if (!success)
-                return;
+    auto success = network->postMessageToDelegate(
+        record.delegatePublicKey, encryptedResponseString);
+    // TODO do we need to copy everything?
+    if (!success)
+        return;
 
-            // implicitely this will set the state to __Done__
-            storage->addSurveyResponse(*response, *record.survey);
-        });
+    // implicitely this will set the state to __Done__
+    storage->addSurveyResponse(*response, *record.survey);
 }
 
-QFuture<void> Daemon::processMessagesForDelegate(SurveyRecord& record)
+void Daemon::processMessagesForDelegate(SurveyRecord& record)
 {
     qDebug() << "ClientId:" << record.clientId;
-    return network->getMessagesForDelegate(record.clientId)
-        .then([&, record](QByteArray data) mutable {
-            if (!record.groupSize.has_value()) {
-                return;
-            }
+    auto data = network->getMessagesForDelegate(record.clientId);
+    if (!record.groupSize.has_value()) {
+        return;
+    }
 
-            const auto responsesParsingResult
-                = parseResponseMessages(data, record.groupSize.value());
+    const auto responsesParsingResult
+        = parseResponseMessages(data, record.groupSize.value());
 
-            if (!responsesParsingResult.isSuccess()) {
-                qWarning() << "Error parsing other clients responses"
-                           << responsesParsingResult.getErrorMessage();
-                return;
-            }
+    if (!responsesParsingResult.isSuccess()) {
+        qWarning() << "Error parsing other clients responses"
+                   << responsesParsingResult.getErrorMessage();
+        return;
+    }
 
-            auto responses = responsesParsingResult.getValue();
+    auto responses = responsesParsingResult.getValue();
 
-            if (responses.count() < (record.groupSize.value() - 1)) {
-                qDebug() << "Insufficient messages available";
-                return;
-            }
+    if (responses.count() < (record.groupSize.value() - 1)) {
+        qDebug() << "Insufficient messages available";
+        return;
+    }
 
-            auto personalResponse = createSurveyResponse(record.survey);
-            responses.append(personalResponse);
+    auto personalResponse = createSurveyResponse(record.survey);
+    responses.append(personalResponse);
 
-            qDebug() << "Persional response:"
-                     << personalResponse->toJsonByteArray();
-            auto aggregationResult
-                = SurveyResponse::aggregateSurveyResponses(responses);
+    qDebug() << "Persional response:" << personalResponse->toJsonByteArray();
+    auto aggregationResult
+        = SurveyResponse::aggregateSurveyResponses(responses);
 
-            if (!aggregationResult.isSuccess()) {
-                qDebug() << "Aggregation unsuccessful:"
-                         << aggregationResult.errorMessage;
-            }
+    if (!aggregationResult.isSuccess()) {
+        qDebug() << "Aggregation unsuccessful:"
+                 << aggregationResult.errorMessage;
+    }
 
-            const auto& aggregatedResponse = aggregationResult.getValue();
+    const auto& aggregatedResponse = aggregationResult.getValue();
 
-            qDebug() << "Aggregated Response:"
-                     << aggregatedResponse->toJsonByteArray();
-            network
-                ->postAggregationResult(
-                    record.clientId, aggregatedResponse->toJsonByteArray())
-                .then([=](bool success) {
-                    if (!success)
-                        return;
-                    storage->addSurveyResponse(
-                        *personalResponse, *record.survey);
-                    storage->saveSurveyRecord(record);
-                });
-        });
+    qDebug() << "Aggregated Response:" << aggregatedResponse->toJsonByteArray();
+    auto success = network->postAggregationResult(
+        record.clientId, aggregatedResponse->toJsonByteArray());
+    if (!success)
+        return;
+    storage->addSurveyResponse(*personalResponse, *record.survey);
+    storage->saveSurveyRecord(record);
 }
 
 Result<QList<QSharedPointer<SurveyResponse>>> Daemon::parseResponseMessages(

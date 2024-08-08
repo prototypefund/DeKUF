@@ -37,20 +37,19 @@ QFuture<QByteArray> ServerNetwork::surveySignup(
         });
 }
 
-QFuture<QByteArray> ServerNetwork::getSignupState(const QString& clientId) const
+QByteArray ServerNetwork::getSignupState(const QString& clientId) const
 {
     const auto url
         = QString("http://localhost:8000/api/signup-state/%1/").arg(clientId);
-    return getRequest(url).then([&](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return QByteArray();
-        }
-        return reply->readAll();
-    });
+    auto reply = getRequestSync(url);
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return {};
+    }
+    return reply->readAll();
 }
 
-QFuture<bool> ServerNetwork::postMessageToDelegate(
+bool ServerNetwork::postMessageToDelegate(
     const QString& delegatePublicKey, const QString& message) const
 {
     QJsonObject jsonObjData;
@@ -58,52 +57,47 @@ QFuture<bool> ServerNetwork::postMessageToDelegate(
     jsonObjData["public_key"] = delegatePublicKey;
     const QJsonDocument jsonDocData(jsonObjData);
     auto url = QString("http://localhost:8000/api/message-to-delegate/");
-    return postRequest(url, jsonDocData.toJson())
-        .then([](QNetworkReply* reply) {
-            if (reply->error() != QNetworkReply::NoError) {
-                qCritical() << "Error:" << reply->errorString();
-                return false;
-            }
-            return true;
-        });
+    auto reply = postRequestSync(url, jsonDocData.toJson());
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return false;
+    }
+    return true;
 }
 
-QFuture<QByteArray> ServerNetwork::getMessagesForDelegate(
+QByteArray ServerNetwork::getMessagesForDelegate(
     const QString& delegateId) const
 {
     const auto url
         = QString("http://localhost:8000/api/messages-for-delegate/%1/")
               .arg(delegateId);
-    return getRequest(url).then([&](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return QByteArray();
-        }
+    auto reply = getRequestSync(url);
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return {};
+    }
 
-        auto status
-            = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-        if (status != 200) {
-            return QByteArray();
-        }
+    auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    if (status != 200) {
+        return {};
+    }
 
-        return reply->readAll();
-    });
+    return reply->readAll();
 }
 
 // TODO: May be better to return a proper result type with success and result
 // instead of a bool
-QFuture<bool> ServerNetwork::postAggregationResult(
+bool ServerNetwork::postAggregationResult(
     const QString& delegateId, const QByteArray& data)
 {
     auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
                    .arg(delegateId);
-    return postRequest(url, data).then([](QNetworkReply* reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            qCritical() << "Error:" << reply->errorString();
-            return false;
-        }
-        return true;
-    });
+    auto reply = postRequestSync(url, data);
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return false;
+    }
+    return true;
 }
 
 QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
@@ -114,6 +108,17 @@ QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
     return future.then([reply] { return reply; });
 }
 
+QNetworkReply* ServerNetwork::getRequestSync(const QString& url) const
+{
+    QNetworkRequest request(url);
+    auto reply = manager->get(request);
+    QEventLoop eventLoop;
+    QObject::connect(
+        reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    eventLoop.exec();
+    return reply;
+}
+
 QFuture<QNetworkReply*> ServerNetwork::postRequest(
     const QString& url, const QByteArray& data) const
 {
@@ -122,4 +127,17 @@ QFuture<QNetworkReply*> ServerNetwork::postRequest(
     auto reply = manager->post(request, data);
     auto future = QtFuture::connect(reply, &QNetworkReply::finished);
     return future.then([reply] { return reply; });
+}
+
+QNetworkReply* ServerNetwork::postRequestSync(
+    const QString& url, const QByteArray& data) const
+{
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    auto reply = manager->post(request, data);
+    QEventLoop eventLoop;
+    QObject::connect(
+        reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    eventLoop.exec();
+    return reply;
 }

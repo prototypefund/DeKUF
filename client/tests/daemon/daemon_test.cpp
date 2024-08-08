@@ -95,7 +95,7 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
     Survey survey("testId", "testName");
     storage->addSurveyRecord(survey, "1337", "", "", std::nullopt);
 
-    await(daemon.processSignups());
+    daemon.processSignups();
     QCOMPARE(
         storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
@@ -116,14 +116,13 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
         "group_size": 1
     })");
 
-    await(daemon.processSignups());
+    daemon.processSignups();
     QCOMPARE(
         storage->listSurveyRecords().first().getState(), SurveyState::Initial);
 }
 
 void DaemonTest::testProcessSignupsHandlesDelegateCase()
 {
-    QSKIP("Async state makes this test not work");
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
     auto encryption = QSharedPointer<IdentityEncryption>::create();
@@ -138,7 +137,7 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
         "group_size": 1
     })");
 
-    await(daemon.processSignups());
+    daemon.processSignups();
     auto records = storage->listSurveyRecords();
     QCOMPARE(records.count(), 1);
     auto first = records.first();
@@ -163,7 +162,7 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
         "group_size": 1
     })");
 
-    await(daemon.processSignups());
+    daemon.processSignups();
     auto records = storage->listSurveyRecords();
     QCOMPARE(records.count(), 1);
     auto first = records.first();
@@ -183,7 +182,7 @@ void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
 
     Survey survey("testId", "testName");
     storage->addSurveyRecord(survey, "1337", "1337", "1337", std::nullopt);
-    await(daemon.processSignups());
+    daemon.processSignups();
 }
 
 // TODO: Instead of testing createSurveyResponse directly, it'd be better to
