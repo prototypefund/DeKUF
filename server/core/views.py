@@ -10,6 +10,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from phe import paillier
 from rest_framework.parsers import JSONParser
 
 
@@ -94,6 +95,9 @@ def get_signup_state(request, client_id):
             "delegate_public_key": str(delegate.public_key),
             "aggregation_started": True,
             "group_size": survey_signup.survey.group_size,
+            "aggregation_public_key_n": str(
+                aggregation_group.aggregation_public_key_n
+            ),
         }
 
         return JsonResponse(response_data, status=200)
@@ -156,7 +160,19 @@ def post_aggregation_result(request, delegate_id):
         if serializer.is_valid():
             survey_response = serializer.save()
             for query_response in survey_response.query_responses.all():
-                query_response.query.aggregate_query_response(query_response)
+                public_key = paillier.PaillierPublicKey(
+                    int(aggregation_group.aggregation_public_key_n)
+                )
+                private_key = paillier.PaillierPrivateKey(
+                    public_key,
+                    int(aggregation_group.aggregation_private_key_p),
+                    int(aggregation_group.aggregation_private_key_q),
+                )
+                query_response.query.aggregate_query_response(
+                    query_response,
+                    public_key=public_key,
+                    private_key=private_key,
+                )
 
             SurveySignup.objects.filter(group=aggregation_group).delete()
             aggregation_group.delete()

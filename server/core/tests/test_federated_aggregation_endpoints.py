@@ -7,6 +7,7 @@ from core.models.survey import Query, Survey
 from core.models.survey_signup import SurveySignup
 from django.test import TestCase
 from django.urls import reverse
+from phe import paillier
 
 
 class SurveySignupTest(TestCase):
@@ -93,6 +94,9 @@ class GetSignupStateTest(TestCase):
                 "delegate_public_key": str(self.signup.public_key),
                 "aggregation_started": True,
                 "group_size": 1,
+                "aggregation_public_key_n": str(
+                    aggregation_group.aggregation_public_key_n
+                ),
             },
         )
 
@@ -131,10 +135,20 @@ class ResultPostingTest(TestCase):
     def test_correctly_posted_aggregation_result_is_aggregated(self):
         url = reverse("post-aggregation-result", args=[self.signup.id])
 
+        public_key = paillier.PaillierPublicKey(
+            n=self.aggregation_group.aggregation_public_key_n
+        )
+
         result = {
             "survey_id": str(self.survey.id),
             "query_responses": [
-                {"query_id": str(self.query.id), "data": {"yes": 4, "no": 6}}
+                {
+                    "query_id": str(self.query.id),
+                    "data": {
+                        "yes": int(public_key.encrypt(4).ciphertext()),
+                        "no": int(public_key.encrypt(6).ciphertext()),
+                    },
+                }
             ],
         }
 
@@ -151,10 +165,20 @@ class ResultPostingTest(TestCase):
     def test_correctly_posted_aggregation_result_deletes_group_and_signup(self):
         url = reverse("post-aggregation-result", args=[self.signup.id])
 
+        public_key = paillier.PaillierPublicKey(
+            n=self.aggregation_group.aggregation_public_key_n
+        )
+
         result = {
             "survey_id": str(self.survey.id),
             "query_responses": [
-                {"query_id": str(self.query.id), "data": {"yes": 4, "no": 6}}
+                {
+                    "query_id": str(self.query.id),
+                    "data": {
+                        "yes": public_key.encrypt(4).ciphertext(),
+                        "no": public_key.encrypt(4).ciphertext(),
+                    },
+                }
             ],
         }
 

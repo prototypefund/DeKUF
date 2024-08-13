@@ -64,7 +64,8 @@ public:
         for (auto surveyRecord : surveyRecords) {
             records.append(SurveyRecord(surveyRecord.survey,
                 surveyRecord.clientId, surveyRecord.publicKey,
-                surveyRecord.delegatePublicKey, surveyRecord.groupSize,
+                surveyRecord.delegatePublicKey,
+                surveyRecord.aggregationPublicKey, surveyRecord.groupSize,
                 findSurveyResponseFor(surveyRecord.survey->id).has_value()));
         }
         return records;
@@ -72,11 +73,12 @@ public:
 
     void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<QString>& aggregationPublicKey,
         const std::optional<int>& groupSize)
     {
         surveyRecords.push_back(
             SurveyRecord(QSharedPointer<Survey>::create(survey), clientId,
-                publicKey, delegatePublicKey, groupSize));
+                publicKey, delegatePublicKey, aggregationPublicKey, groupSize));
     }
 
     void saveSurveyRecord(const SurveyRecord& record)

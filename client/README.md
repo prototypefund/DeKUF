@@ -28,6 +28,7 @@ For the moment, you'll need to manually install a few dependencies:
 6. [clang-format](https://clang.llvm.org/docs/ClangFormat.html) and
    [clang-tidy](https://clang.llvm.org/extra/clang-tidy/), version 14 (later
    versions format code differently, unfortunately)
+7. [botan](https://botan.randombit.net/)
 
 #### Debian/Ubuntu
 

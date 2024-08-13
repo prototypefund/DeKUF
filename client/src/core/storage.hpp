@@ -34,6 +34,7 @@ public:
     virtual QList<SurveyRecord> listSurveyRecords() const = 0;
     virtual void addSurveyRecord(const Survey& survey, const QString& clientId,
         const QString& publicKey, const QString& delegatePublicKey,
+        const std::optional<QString>& aggregationPublicKey,
         const std::optional<int>& groupSize)
         = 0;
     virtual void saveSurveyRecord(const SurveyRecord& record) = 0;

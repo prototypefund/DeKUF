@@ -81,7 +81,8 @@ void DaemonTest::testProcessSignupsIgnoresEmptySignupState()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", "", std::nullopt);
+    storage->addSurveyRecord(
+        survey, "1337", "", "", std::nullopt, std::nullopt);
 
     daemon.processSignups();
     QCOMPARE(
@@ -96,7 +97,8 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "", "", std::nullopt);
+    storage->addSurveyRecord(
+        survey, "1337", "", "", std::nullopt, std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
@@ -117,7 +119,8 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1", "1337", "", std::nullopt);
+    storage->addSurveyRecord(
+        survey, "1", "1337", "", std::nullopt, std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -142,7 +145,8 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1", "1337", "", std::nullopt);
+    storage->addSurveyRecord(
+        survey, "1", "1337", "", std::nullopt, std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
@@ -169,7 +173,8 @@ void DaemonTest::testProcessSignupsIgnoresEmptyMessagesForDelegate()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(survey, "1337", "1337", "1337", std::nullopt);
+    storage->addSurveyRecord(
+        survey, "1337", "1337", "1337", std::nullopt, std::nullopt);
     daemon.processSignups();
 }
 

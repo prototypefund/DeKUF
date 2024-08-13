@@ -4,6 +4,7 @@ from core.models.check_intervals import check_intervals
 from core.models.commissioner import Commissioner
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from phe import paillier
 
 
 class Survey(models.Model):
@@ -44,13 +45,22 @@ class Query(models.Model):
             }
         super().save(*args, **kwargs)
 
-    def aggregate_query_response(self, query_response):
-        if isinstance(query_response.data, dict):
-            for key, value in query_response.data.items():
-                if isinstance(value, str):
-                    raise ValueError("The value should not be a string")
-                self.aggregated_results[key] += value
-        else:
+    def aggregate_query_response(
+        self,
+        query_response,
+        public_key: paillier.PaillierPublicKey,
+        private_key: paillier.PaillierPrivateKey,
+    ):
+        if not isinstance(query_response.data, dict):
             raise ValueError("query_response.data must be a dictionary.")
+        for key, value in query_response.data.items():
+            encrypted_number = paillier.EncryptedNumber(public_key, value)
+            decrypted_number = private_key.decrypt(encrypted_number)
+            self.aggregated_results[key] += decrypted_number
+
+        # TODO: Check how we want to count participants
+        # We could multiply the value with the group_size, but then we
+        # would not consider drop-outs. If we take the values we would
+        # disable multi-count
         self.number_participants += 1
         self.save()

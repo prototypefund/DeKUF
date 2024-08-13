@@ -101,7 +101,8 @@ void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
     auto data = network->surveySignup(survey->id, publicKey);
     const auto responseObject = QJsonDocument::fromJson(data).object();
     const auto clientId = responseObject["client_id"].toString();
-    storage->addSurveyRecord(*survey, clientId, publicKey, "", std::nullopt);
+    storage->addSurveyRecord(
+        *survey, clientId, publicKey, "", std::nullopt, std::nullopt);
 }
 
 void Daemon::processInitialSignup(SurveyRecord& record)
@@ -114,6 +115,8 @@ void Daemon::processInitialSignup(SurveyRecord& record)
     }
 
     record.delegatePublicKey = responseObject["delegate_public_key"].toString();
+    record.aggregationPublicKey
+        = responseObject["aggregation_public_key_n"].toString();
 
     if (record.publicKey == record.delegatePublicKey) {
         record.groupSize = responseObject["group_size"].toInt();

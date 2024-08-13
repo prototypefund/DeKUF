@@ -15,13 +15,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Gui Widgets Test DBus)
 find_package(Gpgme REQUIRED)
+find_package(GMP REQUIRED)
 
 enable_testing(true)
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
-endif()
+endif ()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")

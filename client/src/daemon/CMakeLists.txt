@@ -3,11 +3,12 @@ list(FILTER DEKUF_CLIENT_DAEMON_LIB_SRC EXCLUDE REGEX "/main\\.cpp$")
 
 add_library(dekuf-client-daemon-lib ${DEKUF_CLIENT_DAEMON_LIB_SRC})
 target_link_libraries(dekuf-client-daemon-lib PUBLIC
-    Qt6::Core
-    Qt6::Network
-    Qt6::DBus
-    ${Gpgme_LIBRARY}
-    dekuf-client-core
+        Qt6::Core
+        Qt6::Network
+        Qt6::DBus
+        ${Gpgme_LIBRARY}
+        ${GMP_LIBRARIES}
+        dekuf-client-core
 )
 
 # Using .. to be able to include files like daemon/foo.cpp, but this also
