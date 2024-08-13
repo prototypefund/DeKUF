@@ -23,10 +23,7 @@ public:
 private:
     QNetworkAccessManager* manager;
 
-    QFuture<QNetworkReply*> getRequest(const QString& url) const;
-    QNetworkReply* getRequestSync(const QString& url) const;
-    QFuture<QNetworkReply*> postRequest(
-        const QString& url, const QByteArray& data) const;
-    QNetworkReply* postRequestSync(
+    QNetworkReply* getRequest(const QString& url) const;
+    QNetworkReply* postRequest(
         const QString& url, const QByteArray& data) const;
 };
