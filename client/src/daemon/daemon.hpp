@@ -33,8 +33,8 @@ private:
 
     bool checkIfAllDataKeysArePresent(
         const QSharedPointer<Survey>& survey) const;
-    QFuture<void> handleSurveysResponse(const QByteArray& data);
-    QFuture<void> processSurveys();
+    void handleSurveysResponse(const QByteArray& data);
+    void processSurveys();
     void processInitialSignup(SurveyRecord& record);
     void processSignups();
     void postMessageToDelegate(SurveyRecord& record) const;
@@ -45,5 +45,5 @@ private:
         const QSharedPointer<Query>& query) const;
     Result<QList<QSharedPointer<SurveyResponse>>> parseResponseMessages(
         const QByteArray& data, int groupSize) const;
-    QFuture<void> signUpForSurvey(const QSharedPointer<const Survey> survey);
+    void signUpForSurvey(const QSharedPointer<const Survey> survey);
 };
