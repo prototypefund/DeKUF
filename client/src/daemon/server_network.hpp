@@ -5,8 +5,6 @@
 class QNetworkAccessManager;
 class QNetworkReply;
 
-// TODO: Turn into an interface, move our server-specific implementation to a
-//       new class.
 class ServerNetwork : public QObject, public Network {
     Q_OBJECT
 
