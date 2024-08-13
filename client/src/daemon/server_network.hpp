@@ -10,7 +10,6 @@ class ServerNetwork : public QObject, public Network {
 
 public:
     ServerNetwork();
-    // virtual ~Network() = default;
 
     QFuture<QByteArray> listSurveys() const;
     QFuture<QByteArray> surveySignup(
