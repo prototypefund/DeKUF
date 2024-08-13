@@ -32,8 +32,8 @@ class Network {
 public:
     virtual ~Network() = default;
 
-    virtual QFuture<QByteArray> listSurveys() const = 0;
-    virtual QFuture<QByteArray> surveySignup(
+    virtual QByteArray listSurveys() const = 0;
+    virtual QByteArray surveySignup(
         const QString& surveyId, const QString& publicKey)
         = 0;
     virtual QByteArray getSignupState(const QString& clientId) const = 0;

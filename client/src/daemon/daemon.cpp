@@ -9,53 +9,6 @@
 
 #include "encryption.hpp"
 
-namespace {
-/**
- * Returns a future that resolves once all provided futures resolved.
- *
- * Replace with QtPromise::whenAll once we upgrade to Qt >= 6.3.
- */
-QFuture<void> whenAll(const QList<QFuture<void>>& futures)
-{
-    auto promise = QSharedPointer<QPromise<void>>::create();
-    auto pendingFutures = QSharedPointer<int>::create(0);
-    for (auto future : futures)
-        if (!future.isFinished())
-            *pendingFutures = *pendingFutures + 1;
-    if (*pendingFutures == 0) {
-        promise->finish();
-        return promise->future();
-    }
-
-    for (auto future : futures)
-        if (!future.isFinished()) {
-            future.then([=] {
-                *pendingFutures = *pendingFutures - 1;
-                if (*pendingFutures == 0)
-                    promise->finish();
-            });
-        }
-    return promise->future();
-}
-
-/**
- * Chains a callback that returns a subsequent future once the provided future
- * resolves, for consecutive execution.
- *
- * This is seemingly not the behaviour of QFuture::next() - though one might
- * argue it should be, or that there should be a more elegant way to do this
- * kind of thing.
- */
-template <typename T>
-QFuture<void> chain(QFuture<T> future, std::function<QFuture<void>(T)> next)
-{
-    auto promise = QSharedPointer<QPromise<void>>::create();
-    future.then(
-        [=](T value) { next(value).then([promise] { promise->finish(); }); });
-    return promise->future();
-}
-};
-
 Daemon::Daemon(QObject* parent, QSharedPointer<Storage> storage,
     QSharedPointer<Network> network, QSharedPointer<Encryption> encryption)
     : QObject(parent)
@@ -81,14 +34,12 @@ void Daemon::run()
         qDebug() << "-" << record.survey->id << "as" << record.clientId
                  << "state:" << record.getState();
 
-    // TODO: Consider rewriting this to use signals/slots.
     qDebug() << "Processing surveys ...";
-    processSurveys().then([&] {
-        qDebug() << "Processing signups ...";
-        processSignups();
-        qDebug() << "Processing finished.";
-        emit finished();
-    });
+    processSurveys();
+    qDebug() << "Processing signups ...";
+    processSignups();
+    qDebug() << "Processing finished.";
+    emit finished();
 }
 
 bool Daemon::checkIfAllDataKeysArePresent(
@@ -101,7 +52,7 @@ bool Daemon::checkIfAllDataKeysArePresent(
     return true;
 }
 
-QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
+void Daemon::handleSurveysResponse(const QByteArray& data)
 {
     using Qt::endl;
 
@@ -111,7 +62,7 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
     if (!surveysParsingResult.isSuccess()) {
         qWarning() << "Error occured while parsing surveys:"
                    << surveysParsingResult.getErrorMessage();
-        return {};
+        return;
     }
 
     auto surveys = surveysParsingResult.getValue();
@@ -122,7 +73,6 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
     for (const auto& record : storage->listSurveyRecords())
         signedUpSurveys.insert(record.survey->id);
 
-    QList<QFuture<void>> futures;
     for (const auto& survey : surveys) {
         if (signedUpSurveys.contains(survey->id))
             continue;
@@ -135,27 +85,24 @@ QFuture<void> Daemon::handleSurveysResponse(const QByteArray& data)
         if (!checkIfAllDataKeysArePresent(survey))
             continue;
 
-        futures.append(signUpForSurvey(survey));
+        signUpForSurvey(survey);
     }
-    return whenAll(futures);
 }
 
-QFuture<void> Daemon::processSurveys()
+void Daemon::processSurveys()
 {
-    return chain<QByteArray>(network->listSurveys(),
-        [this](QByteArray data) { return handleSurveysResponse(data); });
+    auto data = network->listSurveys();
+    handleSurveysResponse(data);
 }
 
-QFuture<void> Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
+void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
     auto publicKey = encryption->generateKeyPair();
-    return network->surveySignup(survey->id, publicKey)
-        .then([&, survey, publicKey](QByteArray data) {
-            const auto responseObject = QJsonDocument::fromJson(data).object();
-            const auto clientId = responseObject["client_id"].toString();
-            storage->addSurveyRecord(
-                *survey, clientId, publicKey, "", std::nullopt, std::nullopt);
-        });
+    auto data = network->surveySignup(survey->id, publicKey);
+    const auto responseObject = QJsonDocument::fromJson(data).object();
+    const auto clientId = responseObject["client_id"].toString();
+    storage->addSurveyRecord(
+        *survey, clientId, publicKey, "", std::nullopt, std::nullopt);
 }
 
 void Daemon::processInitialSignup(SurveyRecord& record)

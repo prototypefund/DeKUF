@@ -11,9 +11,8 @@ class ServerNetwork : public QObject, public Network {
 public:
     ServerNetwork();
 
-    QFuture<QByteArray> listSurveys() const;
-    QFuture<QByteArray> surveySignup(
-        const QString& surveyId, const QString& publicKey);
+    QByteArray listSurveys() const;
+    QByteArray surveySignup(const QString& surveyId, const QString& publicKey);
     QByteArray getSignupState(const QString& clientId) const;
     bool postMessageToDelegate(
         const QString& delegatePublicKey, const QString& message) const;

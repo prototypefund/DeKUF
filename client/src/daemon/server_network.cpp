@@ -7,19 +7,17 @@ ServerNetwork::ServerNetwork()
 {
 }
 
-QFuture<QByteArray> ServerNetwork::listSurveys() const
+QByteArray ServerNetwork::listSurveys() const
 {
-    return getRequest("http://localhost:8000/api/surveys/")
-        .then([&](QNetworkReply* reply) {
-            if (reply->error() != QNetworkReply::NoError) {
-                qCritical() << "Error:" << reply->errorString();
-                return QByteArray();
-            }
-            return reply->readAll();
-        });
+    auto reply = getRequestSync("http://localhost:8000/api/surveys/");
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return {};
+    }
+    return reply->readAll();
 }
 
-QFuture<QByteArray> ServerNetwork::surveySignup(
+QByteArray ServerNetwork::surveySignup(
     const QString& surveyId, const QString& publicKey)
 {
     auto url = QString("http://localhost:8000/api/survey-signup/");
@@ -27,14 +25,12 @@ QFuture<QByteArray> ServerNetwork::surveySignup(
     jsonObjData["survey_id"] = surveyId;
     jsonObjData["public_key"] = publicKey;
     const QJsonDocument jsonDocData(jsonObjData);
-    return postRequest(url, jsonDocData.toJson())
-        .then([](QNetworkReply* reply) {
-            if (reply->error() != QNetworkReply::NoError) {
-                qCritical() << "Error:" << reply->errorString();
-                return QByteArray();
-            }
-            return reply->readAll();
-        });
+    auto reply = postRequestSync(url, jsonDocData.toJson());
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << "Error:" << reply->errorString();
+        return {};
+    }
+    return reply->readAll();
 }
 
 QByteArray ServerNetwork::getSignupState(const QString& clientId) const
@@ -99,6 +95,10 @@ bool ServerNetwork::postAggregationResult(
     }
     return true;
 }
+
+// TODO: Remove the async versions.
+
+// TODO: Ensure the reply gets destroyed in the synchronous methods.
 
 QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
 {

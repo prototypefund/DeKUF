@@ -1,4 +1,3 @@
-#include <QSignalSpy>
 #include <QTest>
 
 #include <core/survey_response.hpp>
@@ -11,24 +10,13 @@
 
 #include "daemon/identity_encryption.hpp"
 
-namespace {
-template <typename T>
-void await(const QFuture<T>& future, const int timeout = 250)
-{
-    QFutureWatcher<T> watcher;
-    watcher.setFuture(future);
-    QSignalSpy spy(&watcher, &QFutureWatcher<void>::finished);
-    QVERIFY2(spy.wait(timeout), "Future never finished");
-}
-};
-
 void DaemonTest::testProcessSurveysIgnoresErrors()
 {
     auto storage = QSharedPointer<StorageStub>::create();
     auto network = QSharedPointer<NetworkStub>::create();
     auto encryption = QSharedPointer<IdentityEncryption>::create();
     Daemon daemon(nullptr, storage, network, encryption);
-    await(daemon.processSurveys());
+    daemon.processSurveys();
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
@@ -44,7 +32,7 @@ void DaemonTest::testProcessSurveysSignsUpForRightCommissioner()
     network->listSurveysResponse
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
-    await(daemon.processSurveys());
+    daemon.processSurveys();
     auto records = storage->listSurveyRecords();
     QCOMPARE(records.count(), 1);
     auto first = records.first();
@@ -63,7 +51,7 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWrongCommissioner()
     network->listSurveysResponse
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
-    await(daemon.processSurveys());
+    daemon.processSurveys();
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
@@ -81,7 +69,7 @@ void DaemonTest::testProcessSurveyDoesNotSignUpForWhenDataKeyNotPresent()
     network->listSurveysResponse
         = QByteArray("[\n" + survey.toByteArray() + "\n]");
 
-    await(daemon.processSurveys());
+    daemon.processSurveys();
     QCOMPARE(storage->listSurveyRecords().count(), 0);
 }
 
