@@ -63,7 +63,7 @@ void SqliteStorageTest::testAddAndListSurveyResponseWithSurvey()
         = QSharedPointer<Commissioner>::create("testCommissioner");
     Survey survey("1", "testName");
     survey.commissioner = commissioner;
-    storage->addSurveyRecord(survey, "", "", "", std::nullopt);
+    storage->addSurveyRecord(survey, "", "", "", std::nullopt, std::nullopt);
 
     SurveyResponse response("1");
     storage->addSurveyResponse(response, survey);
@@ -91,15 +91,16 @@ void SqliteStorageTest::testAddAndListSurveyRecords()
     QString clientId("bar");
     QString publicKey("");
     QString delegatePublicKey("");
-    storage->addSurveyRecord(
-        survey, clientId, publicKey, delegatePublicKey, std::nullopt);
+    storage->addSurveyRecord(survey, clientId, publicKey, delegatePublicKey,
+        std::nullopt, std::nullopt);
 
     QCOMPARE(storage->listSurveyRecords().count(), 1);
 }
 
 void SqliteStorageTest::testSaveSurveyRecord()
 {
-    storage->addSurveyRecord(Survey("1", "1"), "1", "", "", std::nullopt);
+    storage->addSurveyRecord(
+        Survey("1", "1"), "1", "", "", std::nullopt, std::nullopt);
     auto modifiedRecord = storage->listSurveyRecords().first();
     modifiedRecord.delegatePublicKey = "2";
     modifiedRecord.groupSize = 1337;
@@ -116,7 +117,8 @@ void SqliteStorageTest::testAddSurveyWorksWithValuesPresent()
     Survey testSurvey("123", "test");
     testSurvey.queries.append(QSharedPointer<Query>::create(
         "12345", "testDataKey", QList<QString> { "1", "2", "3" }, true));
-    storage->addSurveyRecord(testSurvey, "", "", "", std::nullopt);
+    storage->addSurveyRecord(
+        testSurvey, "", "", "", std::nullopt, std::nullopt);
 
     auto retrievedSurvey = storage->findSurveyRecordById(testSurvey.id);
     QVERIFY(!retrievedSurvey.isNull());
