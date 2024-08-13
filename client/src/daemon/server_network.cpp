@@ -9,7 +9,7 @@ ServerNetwork::ServerNetwork()
 
 QByteArray ServerNetwork::listSurveys() const
 {
-    auto reply = getRequestSync("http://localhost:8000/api/surveys/");
+    auto reply = getRequest("http://localhost:8000/api/surveys/");
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return {};
@@ -25,7 +25,7 @@ QByteArray ServerNetwork::surveySignup(
     jsonObjData["survey_id"] = surveyId;
     jsonObjData["public_key"] = publicKey;
     const QJsonDocument jsonDocData(jsonObjData);
-    auto reply = postRequestSync(url, jsonDocData.toJson());
+    auto reply = postRequest(url, jsonDocData.toJson());
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return {};
@@ -37,7 +37,7 @@ QByteArray ServerNetwork::getSignupState(const QString& clientId) const
 {
     const auto url
         = QString("http://localhost:8000/api/signup-state/%1/").arg(clientId);
-    auto reply = getRequestSync(url);
+    auto reply = getRequest(url);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return {};
@@ -53,7 +53,7 @@ bool ServerNetwork::postMessageToDelegate(
     jsonObjData["public_key"] = delegatePublicKey;
     const QJsonDocument jsonDocData(jsonObjData);
     auto url = QString("http://localhost:8000/api/message-to-delegate/");
-    auto reply = postRequestSync(url, jsonDocData.toJson());
+    auto reply = postRequest(url, jsonDocData.toJson());
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return false;
@@ -67,7 +67,7 @@ QByteArray ServerNetwork::getMessagesForDelegate(
     const auto url
         = QString("http://localhost:8000/api/messages-for-delegate/%1/")
               .arg(delegateId);
-    auto reply = getRequestSync(url);
+    auto reply = getRequest(url);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return {};
@@ -88,7 +88,7 @@ bool ServerNetwork::postAggregationResult(
 {
     auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
                    .arg(delegateId);
-    auto reply = postRequestSync(url, data);
+    auto reply = postRequest(url, data);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return false;
@@ -96,19 +96,7 @@ bool ServerNetwork::postAggregationResult(
     return true;
 }
 
-// TODO: Remove the async versions.
-
-// TODO: Ensure the reply gets destroyed in the synchronous methods.
-
-QFuture<QNetworkReply*> ServerNetwork::getRequest(const QString& url) const
-{
-    QNetworkRequest request(url);
-    auto reply = manager->get(request);
-    auto future = QtFuture::connect(reply, &QNetworkReply::finished);
-    return future.then([reply] { return reply; });
-}
-
-QNetworkReply* ServerNetwork::getRequestSync(const QString& url) const
+QNetworkReply* ServerNetwork::getRequest(const QString& url) const
 {
     QNetworkRequest request(url);
     auto reply = manager->get(request);
@@ -116,20 +104,11 @@ QNetworkReply* ServerNetwork::getRequestSync(const QString& url) const
     QObject::connect(
         reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     eventLoop.exec();
+    // TODO: Ensure the reply gets destroyed.
     return reply;
 }
 
-QFuture<QNetworkReply*> ServerNetwork::postRequest(
-    const QString& url, const QByteArray& data) const
-{
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    auto reply = manager->post(request, data);
-    auto future = QtFuture::connect(reply, &QNetworkReply::finished);
-    return future.then([reply] { return reply; });
-}
-
-QNetworkReply* ServerNetwork::postRequestSync(
+QNetworkReply* ServerNetwork::postRequest(
     const QString& url, const QByteArray& data) const
 {
     QNetworkRequest request(url);
@@ -139,5 +118,6 @@ QNetworkReply* ServerNetwork::postRequestSync(
     QObject::connect(
         reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
     eventLoop.exec();
+    // TODO: Ensure the reply gets destroyed.
     return reply;
 }
