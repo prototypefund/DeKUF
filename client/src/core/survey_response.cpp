@@ -9,6 +9,17 @@ QueryResponse::QueryResponse(
 {
 }
 
+QSharedPointer<EncryptedQueryResponse> QueryResponse::encrypt(
+    const QSharedPointer<HomomorphicEncryptor>& encryptor) const
+{
+    const QMap<QString, mpz_class> encryptedCohortData;
+    for (auto it = cohortData.constBegin(); it != cohortData.constEnd(); ++it) {
+        encryptedCohortData[it.key()] += encryptor->encrypt(it.value());
+    }
+    return QSharedPointer<EncryptedQueryResponse>::create(
+        queryId, encryptedCohortData);
+}
+
 SurveyResponse::SurveyResponse(const QString& surveyId)
     : surveyId(surveyId)
 {
@@ -54,6 +65,8 @@ Result<QSharedPointer<SurveyResponse>> SurveyResponse::fromJsonByteArray(
     }
 }
 
+// TODO: We just use this for testing, join it with the encrypted versions
+// aggregate method
 Result<QSharedPointer<SurveyResponse>> SurveyResponse::aggregateSurveyResponses(
     const QList<QSharedPointer<SurveyResponse>> surveyResponses)
 {
@@ -118,4 +131,15 @@ QByteArray SurveyResponse::toJsonByteArray() const
     QJsonDocument root;
     root.setObject(surveyJsonResponse);
     return root.toJson();
+}
+
+QSharedPointer<EncryptedSurveyResponse> SurveyResponse::encrypt(
+    const QSharedPointer<HomomorphicEncryptor>& encryptor) const
+{
+    QList<QSharedPointer<EncryptedQueryResponse>> encryptedQueryResponses;
+    for (auto const& queryResponse : queryResponses) {
+        encryptedQueryResponses.push_back(queryResponse->encrypt(encryptor));
+    }
+    return QSharedPointer<EncryptedSurveyResponse>::create(
+        surveyId, encryptedQueryResponses);
 }

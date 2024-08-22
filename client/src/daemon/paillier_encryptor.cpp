@@ -18,6 +18,18 @@ PaillierEncryptor::PaillierEncryptor(const QString& n_str)
     gmp_randseed_ui(rng.data(), seed);
 }
 
+Result<QSharedPointer<PaillierEncryptor>>
+PaillierEncryptor::createPaillierEncryptor(const QString& n_str)
+{
+    try {
+        auto encryptor = QSharedPointer<PaillierEncryptor>::create(n_str);
+        return Result(encryptor);
+    } catch (const std::invalid_argument& error) {
+        return Result<QSharedPointer<PaillierEncryptor>>::Failure(
+            "Data public key encryption string not valid:" + n_str);
+    }
+}
+
 mpz_class PaillierEncryptor::encrypt(const mpz_class& m)
 {
     mpz_class r;
@@ -25,7 +37,7 @@ mpz_class PaillierEncryptor::encrypt(const mpz_class& m)
     return (powm(g, m, n_squared) * powm(r, n, n_squared)) % n_squared;
 }
 
-mpz_class PaillierEncryptor::add_encrypted(
+mpz_class PaillierEncryptor::addEncrypted(
     const mpz_class& a, const mpz_class& b) const
 {
     return (a * b) % n_squared;

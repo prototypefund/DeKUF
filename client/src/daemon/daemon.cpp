@@ -163,11 +163,27 @@ void Daemon::processSignups()
 
 void Daemon::postMessageToDelegate(SurveyRecord& record) const
 {
+    if (!record.aggregationPublicKey.has_value()) {
+        qWarning() << "AggregationKey is null, posting message failed.";
+        return;
+    }
+    const auto encryptorResult = PaillierEncryptor::createPaillierEncryptor(
+        record.aggregationPublicKey.value());
+    qDebug() << record.aggregationPublicKey.value();
+    if (!encryptorResult.isSuccess()) {
+        qWarning() << "Posting message failed:"
+                   << encryptorResult.getErrorMessage();
+        return;
+    }
     const auto response = createSurveyResponse(record.survey);
+    // TODO: Improve naming of dual encryption
+    const auto dataEncryptedResponse
+        = response->encrypt(encryptorResult.getValue());
+
     // TODO: unnecessary back and forth conversion maybe just implement
     // toJsonString method
-    auto responseString
-        = QString::fromLatin1(response->toJsonByteArray().toBase64());
+    auto responseString = QString::fromLatin1(
+        dataEncryptedResponse->toJsonByteArray().toBase64());
     auto encryptedResponseString
         = encryption->encrypt(responseString, record.delegatePublicKey);
     auto success = network->postMessageToDelegate(
@@ -204,12 +220,27 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
         return;
     }
 
+    if (!record.aggregationPublicKey.has_value()) {
+        qWarning() << "AggregationKey is null, processing messages failed.";
+        return;
+    }
+    const auto encryptorResult = PaillierEncryptor::createPaillierEncryptor(
+        record.aggregationPublicKey.value());
+    if (!encryptorResult.isSuccess()) {
+        qWarning() << "Posting message failed:"
+                   << encryptorResult.getErrorMessage();
+        return;
+    }
+
     auto personalResponse = createSurveyResponse(record.survey);
-    responses.append(personalResponse);
+    auto encryptedPersonalResponse
+        = personalResponse->encrypt(encryptorResult.getValue());
+    responses.append(encryptedPersonalResponse);
 
     qDebug() << "Persional response:" << personalResponse->toJsonByteArray();
     auto aggregationResult
-        = SurveyResponse::aggregateSurveyResponses(responses);
+        = EncryptedSurveyResponse::aggregateEncryptedSurveyResponses(
+            responses, encryptorResult.getValue());
 
     if (!aggregationResult.isSuccess()) {
         qDebug() << "Aggregation unsuccessful:"
@@ -227,10 +258,10 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
     storage->saveSurveyRecord(record);
 }
 
-Result<QList<QSharedPointer<SurveyResponse>>> Daemon::parseResponseMessages(
-    const QByteArray& data, int groupSize) const
+Result<QList<QSharedPointer<EncryptedSurveyResponse>>>
+Daemon::parseResponseMessages(const QByteArray& data, int groupSize) const
 {
-    QList<QSharedPointer<SurveyResponse>> responses {};
+    QList<QSharedPointer<EncryptedSurveyResponse>> responses {};
     auto jsonDoc = QJsonDocument::fromJson(data);
 
     auto jsonObj = jsonDoc.object();
@@ -245,10 +276,11 @@ Result<QList<QSharedPointer<SurveyResponse>>> Daemon::parseResponseMessages(
             = encryption->decrypt(encryptedString, "");
         QByteArray jsonByteArray
             = QByteArray::fromBase64(decryptedResponseString.toLatin1());
-        auto parsingResult = SurveyResponse::fromJsonByteArray(jsonByteArray);
+        auto parsingResult
+            = EncryptedSurveyResponse::fromJsonByteArray(jsonByteArray);
         if (!parsingResult.isSuccess()) {
-            return Result<QList<QSharedPointer<SurveyResponse>>>::Failure(
-                parsingResult.getErrorMessage());
+            return Result<QList<QSharedPointer<EncryptedSurveyResponse>>>::
+                Failure(parsingResult.getErrorMessage());
         }
         responses.append(parsingResult.getValue());
     }

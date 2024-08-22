@@ -43,7 +43,7 @@ private:
         const QSharedPointer<Survey>&) const;
     QSharedPointer<QueryResponse> createQueryResponse(
         const QSharedPointer<Query>& query) const;
-    Result<QList<QSharedPointer<SurveyResponse>>> parseResponseMessages(
-        const QByteArray& data, int groupSize) const;
+    Result<QList<QSharedPointer<EncryptedSurveyResponse>>>
+    parseResponseMessages(const QByteArray& data, int groupSize) const;
     void signUpForSurvey(const QSharedPointer<const Survey> survey);
 };
