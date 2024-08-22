@@ -28,7 +28,7 @@ void PaillierEncryptorTest::testHomomorphicAddition()
     mpz_class cipher_a = encryptor.encrypt(a);
     mpz_class cipher_b = encryptor.encrypt(b);
 
-    mpz_class sum_cipher = encryptor.add_encrypted(cipher_a, cipher_b);
+    mpz_class sum_cipher = encryptor.addEncrypted(cipher_a, cipher_b);
     mpz_class sum_plain = a + b;
 
     QVERIFY(sum_cipher != cipher_a);

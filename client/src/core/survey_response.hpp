@@ -2,7 +2,7 @@
 
 #include <QtCore>
 
-#include "commissioner.hpp"
+#include "encrypted_survey_response.hpp"
 #include "result.hpp"
 #include "survey_response.hpp"
 
@@ -16,6 +16,9 @@ public:
         return queryId == other.queryId;
     }
     QueryResponse(const QString& queryId, const QMap<QString, int>& cohortData);
+
+    QSharedPointer<EncryptedQueryResponse> encrypt(
+        const QSharedPointer<HomomorphicEncryptor>& encryptor) const;
 };
 
 class SurveyResponse {
@@ -35,6 +38,9 @@ public:
     QList<QSharedPointer<QueryResponse>> queryResponses;
 
     QByteArray toJsonByteArray() const;
+
+    QSharedPointer<EncryptedSurveyResponse> encrypt(
+        const QSharedPointer<HomomorphicEncryptor>& encryptor) const;
 
 private:
     static QSharedPointer<SurveyResponse> fromJsonObject(

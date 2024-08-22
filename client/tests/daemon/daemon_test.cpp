@@ -103,7 +103,8 @@ void DaemonTest::testProcessSignupsIgnoresNonStartedAggregations()
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": false,
         "delegate_public_key": "1337",
-        "group_size": 1
+        "group_size": 1,
+        "aggregation_public_key_n": "123"
     })");
 
     daemon.processSignups();
@@ -125,7 +126,8 @@ void DaemonTest::testProcessSignupsHandlesDelegateCase()
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
         "delegate_public_key": "1337",
-        "group_size": 1
+        "group_size": 1,
+        "aggregation_public_key_n": "123"
     })");
 
     daemon.processSignups();
@@ -145,13 +147,13 @@ void DaemonTest::testProcessSignupsHandlesNonDelegateCase()
     Daemon daemon(nullptr, storage, network, encryption);
 
     Survey survey("testId", "testName");
-    storage->addSurveyRecord(
-        survey, "1", "1337", "", std::nullopt, std::nullopt);
+    storage->addSurveyRecord(survey, "1", "1337", "", "123", std::nullopt);
 
     network->getSignupStateResponse = QByteArray(R"({
         "aggregation_started": true,
         "delegate_public_key": "2448",
-        "group_size": 1
+        "group_size": 1,
+        "aggregation_public_key_n": "123"
     })");
 
     daemon.processSignups();
