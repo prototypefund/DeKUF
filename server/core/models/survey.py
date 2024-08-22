@@ -2,6 +2,7 @@ import uuid
 
 from core.models.check_intervals import check_intervals
 from core.models.commissioner import Commissioner
+from core.models.data_point import DataPoint
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from phe import paillier
@@ -26,14 +27,16 @@ class Query(models.Model):
     survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="queries"
     )
-    data_key = models.CharField(max_length=100)
+    data_point = models.ForeignKey(
+        DataPoint, on_delete=models.deletion.DO_NOTHING
+    )
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
     number_participants = models.IntegerField(default=0, editable=False)
     aggregated_results = models.JSONField(default=dict, editable=False)
 
     def __str__(self):
-        return f"Query on {self.data_key}"
+        return f"Query on {self.data_point.name}"
 
     def save(self, *args, **kwargs):
         if not self.discrete:

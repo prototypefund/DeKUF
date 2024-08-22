@@ -3,6 +3,7 @@ import uuid
 
 from core.models.aggregation_group import AggregationGroup
 from core.models.commissioner import Commissioner
+from core.models.data_point import DataPoint, Types
 from core.models.survey import Query, Survey
 from core.models.survey_signup import SurveySignup
 from django.test import TestCase
@@ -118,8 +119,14 @@ class ResultPostingTest(TestCase):
         self.survey = Survey.objects.create(
             name="TestSurvey", commissioner=commissioner
         )
+        self.data_point = DataPoint.objects.create(
+            name="test", key="test", type=Types.INTEGER.value
+        )
+
         self.query = Query.objects.create(
-            survey=self.survey, data_key="testKey", cohorts=["yes", "no"]
+            survey=self.survey,
+            data_point=self.data_point,
+            cohorts=["yes", "no"],
         )
         self.survey.queries.add(self.query)
         self.signup = SurveySignup.objects.create(survey=self.survey)

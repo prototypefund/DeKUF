@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models.aggregation_group import AggregationGroup
 from .models.client_to_delegate_message import ClientToDelegateMessage
 from .models.commissioner import Commissioner
+from .models.data_point import DataPoint, Types
 from .models.response import QueryResponse, SurveyResponse
 from .models.survey import Query, Survey
 from .models.survey_signup import SurveySignup
@@ -61,3 +62,32 @@ class ClientToDelegateMessageAdmin(admin.ModelAdmin):
     list_display_links = ["id"]
     list_filter = ("group", "content")
     search_fields = ("id", "delegate_id", "group", "content")
+
+
+@admin.register(DataPoint)
+class DataPointAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "key",
+        "type_display",
+        "min_value",
+        "max_value",
+        "precision",
+    )
+    list_filter = ("type",)
+    search_fields = ("name",)
+    ordering = ("name",)
+
+    fieldsets = (
+        (None, {"fields": ("name", "key", "type")}),
+        ("Value Range", {"fields": ("min_value", "max_value")}),
+        ("Precision", {"fields": ("precision",)}),
+    )
+
+    def type_display(self, obj):
+        return obj.get_type_display()
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == "type":
+            kwargs["choices"] = [(t.value, t.name) for t in Types]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)

@@ -3,6 +3,7 @@ from core.json_serializers import (
     SurveyResponseSerializer,
 )
 from core.models.commissioner import Commissioner
+from core.models.data_point import DataPoint, Types
 from core.models.survey import Query, Survey
 from django.test import TestCase
 
@@ -27,8 +28,13 @@ class SurveyResponseSerializerTestCase(TestCase):
         self.survey = Survey.objects.create(
             name="Customer Feedback", commissioner=self.commissioner
         )
+        self.data_point = DataPoint.objects.create(
+            name="test", key="key", type=Types.INTEGER.value
+        )
         self.query = Query.objects.create(
-            survey=self.survey, data_key="test", cohorts=["Yes", "No"]
+            survey=self.survey,
+            data_point=self.data_point,
+            cohorts=["Yes", "No"],
         )
 
     def test_survey_response_serializer(self):

@@ -1,0 +1,26 @@
+[
+    {
+        "model": "core.datapoint",
+        "pk": 1,
+        "fields": {
+            "name": "CPU RAM (GB)",
+            "key": "CPU_RAM_GB",
+            "type": 1,
+            "min_value": 0,
+            "max_value": 512,
+            "precision": null
+        }
+    },
+    {
+        "model": "core.datapoint",
+        "pk": 2,
+        "fields": {
+            "name": "Average CPU Temperature",
+            "key": "CPU_Avg_Temperature_Celsius",
+            "type": 2,
+            "min_value": 0,
+            "max_value": 200,
+            "precision": 1
+        }
+    }
+]

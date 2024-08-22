@@ -1,4 +1,5 @@
 from core.models.commissioner import Commissioner
+from core.models.data_point import DataPoint, Types
 from core.models.response import QueryResponse, SurveyResponse
 from core.models.survey import Query, Survey
 from django.test import TestCase
@@ -11,11 +12,16 @@ class QueryResponseAggregationTestCase(TestCase):
         self.survey = Survey.objects.create(
             name="Customer Feedback", commissioner=self.commissioner
         )
+        self.data_point = DataPoint.objects.create(
+            name="test", key="test", type=Types.INTEGER.value
+        )
         self.public_key, self.private_key = paillier.generate_paillier_keypair()
 
     def test_correct_aggregation_with_one_query_response(self):
         query = Query.objects.create(
-            survey=self.survey, data_key="test", cohorts=["Yes", "No"]
+            survey=self.survey,
+            data_point=self.data_point,
+            cohorts=["Yes", "No"],
         )
         response_data = {
             "Yes": self.public_key.encrypt(1).ciphertext(),
@@ -35,7 +41,9 @@ class QueryResponseAggregationTestCase(TestCase):
 
     def test_correct_aggregation_with_multiple_query_responses(self):
         query = Query.objects.create(
-            survey=self.survey, data_key="test", cohorts=["Yes", "No"]
+            survey=self.survey,
+            data_point=self.data_point,
+            cohorts=["Yes", "No"],
         )
         response_data_1 = {
             "Yes": int(self.public_key.encrypt(1).ciphertext()),
@@ -68,7 +76,9 @@ class QueryResponseAggregationTestCase(TestCase):
 
     def test_wrong_response_leads_to_value_or_key_error(self):
         query = Query.objects.create(
-            survey=self.survey, data_key="test", cohorts=["Yes", "No"]
+            survey=self.survey,
+            data_point=self.data_point,
+            cohorts=["Yes", "No"],
         )
         response_data_wrong_cohort_name = {"Yesaaa": 1, "No": 0}
         response_data_no_number = {"Yes": "a", "No": 0}
