@@ -3,8 +3,8 @@
         "model": "core.datapoint",
         "pk": 1,
         "fields": {
-            "name": "CPU RAM (GB)",
-            "key": "CPU_RAM_GB",
+            "name": "RAM (GB)",
+            "key": "RAM_GB",
             "type": 1,
             "min_value": 0,
             "max_value": 512,
