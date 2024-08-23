@@ -40,7 +40,11 @@ class Query(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.discrete:
-            check_intervals(self.cohorts)
+            check_intervals(
+                self.cohorts,
+                self.data_point.min_value,
+                self.data_point.max_value,
+            )
         # TODO: Improve comparison
         if not set(self.aggregated_results.keys()) == set(self.cohorts):
             self.aggregated_results = {
