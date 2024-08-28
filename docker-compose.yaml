@@ -1,10 +1,10 @@
 services:
-  web:
+  server-web:
     environment:
       - "DATABASE_URL=postgresql://dekufserver:dekufserver@db/dekufserver"
     build: server
     depends_on:
-      db:
+      server-db:
         condition: service_healthy
     command: >
       sh -c "poetry run ./manage.py migrate &&
@@ -12,10 +12,10 @@ services:
     ports:
       - "8080:8000"
 
-  db:
+  server-db:
     image: postgres:15
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - server_postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=dekufserver
       - POSTGRES_PASSWORD=dekufserver
@@ -30,4 +30,4 @@ services:
       start_period: 80s
 
 volumes:
-    postgres_data:
+    server_postgres_data:
