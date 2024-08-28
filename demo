@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+def server_exec(cmd):
+    os.system("docker compose exec server-web " + cmd)
+
+def server_django_shell_exec(code):
+    server_exec("poetry run ./manage.py shell -c '" + code + "'")
+
+def server_init():
+    server_django_shell_exec("""
+from django.contrib.auth.models import User
+User.objects.create_superuser("admin", "", "dekuf")
+""")
+
+commands = {
+    "server-init": server_init
+}
+
+def show_usage():
+    print(f"Usage: {sys.argv[0]} {'|'.join(commands.keys())}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        show_usage()
+        sys.exit(1)
+    command = sys.argv[1]
+    if command not in commands:
+        show_usage()
+        sys.exit(2)
+
+    commands[command]()
