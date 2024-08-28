@@ -9,14 +9,21 @@ def server_exec(cmd):
 def server_django_shell_exec(code):
     server_exec("poetry run ./manage.py shell -c '" + code + "'")
 
+def client_init():
+    # TODO: Initialise/reset the clients' data (via D-Bus).
+    print("Not implemented")
+
 def server_init():
+    # TODO: Reset a previously initialised server first.
+    # TODO: Also create the survey/queries.
     server_django_shell_exec("""
 from django.contrib.auth.models import User
 User.objects.create_superuser("admin", "", "dekuf")
 """)
 
 commands = {
-    "server-init": server_init
+    "server-init": server_init,
+    "client-init": client_init
 }
 
 def show_usage():
