@@ -29,13 +29,14 @@ services:
             retries: 5
             start_period: 80s
 
-    # TODO: Client can't connect to D-Bus.
     # TODO: Ensure client can connect to the server.
     # TODO: Spawn multiple clients.
     client:
         build: client
         command: >
-            sh -c "/etc/init.d/dbus start; sleep 1; make run-daemon"
+            sh -c 'echo "export $(dbus-launch)" > dbus-env.sh
+                   . ./dbus-env.sh
+                   make run-daemon'
 
 volumes:
     server_postgres_data:
