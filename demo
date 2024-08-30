@@ -4,8 +4,8 @@ import os
 import sys
 
 
-def docker_exec(service, cmd):
-    os.system(f"docker compose exec {service} bash -c '{cmd}'")
+def docker_exec(service, index, cmd):
+    os.system(f"docker compose exec --index {index} {service} bash -c '{cmd}'")
 
 
 def server_init():
@@ -14,19 +14,25 @@ def server_init():
     pass
 
 
-def client_exec(cmd):
-    docker_exec("client", cmd)
+def client_exec(index, cmd):
+    docker_exec("client", index, cmd)
 
 
 def client_init():
     # TODO: Consider removing any existing data points first, perhaps removing
     #       the database file while the daemon is running would work.
-    # TODO: Once we have multiple clients, send a different value for each
-    #       client.
-    client_exec(". ./dbus-env.sh && dbus-send --type=method_call "
-                "--dest=org.privact.client / "
-                "org.privact.client.Data.submit_data_point "
-                "string:test string:1")
+    values = {
+        "1": "1",
+        "2": "2",
+        "3": "2",
+        "4": "3"
+    }
+    for index, value in values.items():
+        client_exec(index,
+                    ". ./dbus-env.sh && dbus-send --type=method_call "
+                    "--dest=org.privact.client / "
+                    "org.privact.client.Data.submit_data_point "
+                    f"string:test string:{value}")
 
 
 commands = {

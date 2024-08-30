@@ -13,12 +13,12 @@ services:
             sh -c "poetry run ./manage.py migrate &&
                    poetry run ./manage.py runserver 0.0.0.0:8000"
 
-    # TODO: Spawn multiple clients.
     client:
         build: client
         depends_on:
             server:
                 condition: service_healthy
+        scale: 4
         environment:
             DEKUF_CLIENT_SERVER_URL: "http://server:8000"
         command: >
