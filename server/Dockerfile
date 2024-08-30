@@ -6,3 +6,9 @@ RUN pip install poetry
 WORKDIR /usr/src/app
 COPY . .
 RUN poetry install
+RUN <<EOF
+poetry run ./manage.py shell -c '
+from django.contrib.auth.models import User
+User.objects.create_superuser("admin", "", "dekuf")
+'
+EOF

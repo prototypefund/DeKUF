@@ -3,17 +3,20 @@
 import os
 import sys
 
+
 def docker_exec(service, cmd):
     os.system(f"docker compose exec {service} bash -c '{cmd}'")
+
+
+def server_init():
+    # TODO: Actually set up the survey and queries here, removing them if they
+    #       already exist.
+    pass
+
 
 def client_exec(cmd):
     docker_exec("client", cmd)
 
-def server_exec(cmd):
-    docker_exec("server-web", cmd)
-
-def server_django_shell_exec(code):
-    server_exec("poetry run ./manage.py shell -c '" + code + "'")
 
 def client_init():
     # TODO: Send more reasonable data - different for each client.
@@ -23,19 +26,12 @@ def client_init():
                 "string:foo string:bar")
 
 
-def server_init():
-    # TODO: Reset a previously initialised server first.
-    # TODO: Also create the survey/queries.
-    # TODO: Move admin user creation to the Dockerfile.
-    server_django_shell_exec("""
-from django.contrib.auth.models import User
-User.objects.create_superuser("admin", "", "dekuf")
-""")
 
 commands = {
     "server-init": server_init,
     "client-init": client_init
 }
+
 
 def show_usage():
     print(f"Usage: {sys.argv[0]} {'|'.join(commands.keys())}")
