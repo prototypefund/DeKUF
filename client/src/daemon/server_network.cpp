@@ -2,14 +2,28 @@
 
 #include "server_network.hpp"
 
+namespace {
+const QString defaultBaseUrl = "http://localhost:8000";
+
+QString getBaseUrl()
+{
+    auto userBaseUrl = qgetenv("DEKUF_CLIENT_SERVER_URL");
+    if (userBaseUrl.isEmpty())
+        return defaultBaseUrl;
+    return userBaseUrl;
+}
+}
+
 ServerNetwork::ServerNetwork()
     : manager(new QNetworkAccessManager(this))
+    , baseUrl(getBaseUrl())
 {
+    qDebug() << "Working with server" << baseUrl;
 }
 
 QByteArray ServerNetwork::listSurveys() const
 {
-    auto reply = getRequest("http://localhost:8000/api/surveys/");
+    auto reply = getRequest(baseUrl + "/api/surveys/");
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
         return {};
@@ -20,7 +34,7 @@ QByteArray ServerNetwork::listSurveys() const
 QByteArray ServerNetwork::surveySignup(
     const QString& surveyId, const QString& publicKey)
 {
-    auto url = QString("http://localhost:8000/api/survey-signup/");
+    auto url = QString(baseUrl + "/api/survey-signup/");
     QJsonObject jsonObjData;
     jsonObjData["survey_id"] = surveyId;
     jsonObjData["public_key"] = publicKey;
@@ -35,8 +49,7 @@ QByteArray ServerNetwork::surveySignup(
 
 QByteArray ServerNetwork::getSignupState(const QString& clientId) const
 {
-    const auto url
-        = QString("http://localhost:8000/api/signup-state/%1/").arg(clientId);
+    const auto url = QString(baseUrl + "/api/signup-state/%1/").arg(clientId);
     auto reply = getRequest(url);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
@@ -52,7 +65,7 @@ bool ServerNetwork::postMessageToDelegate(
     jsonObjData["message"] = message;
     jsonObjData["public_key"] = delegatePublicKey;
     const QJsonDocument jsonDocData(jsonObjData);
-    auto url = QString("http://localhost:8000/api/message-to-delegate/");
+    auto url = QString(baseUrl + "/api/message-to-delegate/");
     auto reply = postRequest(url, jsonDocData.toJson());
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
@@ -65,8 +78,7 @@ QByteArray ServerNetwork::getMessagesForDelegate(
     const QString& delegateId) const
 {
     const auto url
-        = QString("http://localhost:8000/api/messages-for-delegate/%1/")
-              .arg(delegateId);
+        = QString(baseUrl + "/api/messages-for-delegate/%1/").arg(delegateId);
     auto reply = getRequest(url);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();
@@ -86,8 +98,8 @@ QByteArray ServerNetwork::getMessagesForDelegate(
 bool ServerNetwork::postAggregationResult(
     const QString& delegateId, const QByteArray& data)
 {
-    auto url = QString("http://localhost:8000/api/post-aggregation-result/%1/")
-                   .arg(delegateId);
+    auto url
+        = QString(baseUrl + "/api/post-aggregation-result/%1/").arg(delegateId);
     auto reply = postRequest(url, data);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << "Error:" << reply->errorString();

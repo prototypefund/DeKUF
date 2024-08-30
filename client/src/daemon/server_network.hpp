@@ -22,6 +22,7 @@ public:
 
 private:
     QNetworkAccessManager* manager;
+    QString baseUrl;
 
     QNetworkReply* getRequest(const QString& url) const;
     QNetworkReply* postRequest(
