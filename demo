@@ -19,12 +19,14 @@ def client_exec(cmd):
 
 
 def client_init():
-    # TODO: Send more reasonable data - different for each client.
+    # TODO: Consider removing any existing data points first, perhaps removing
+    #       the database file while the daemon is running would work.
+    # TODO: Once we have multiple clients, send a different value for each
+    #       client.
     client_exec(". ./dbus-env.sh && dbus-send --type=method_call "
                 "--dest=org.privact.client / "
                 "org.privact.client.Data.submit_data_point "
-                "string:foo string:bar")
-
+                "string:test string:1")
 
 
 commands = {

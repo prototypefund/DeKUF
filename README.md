@@ -14,44 +14,56 @@ the same repository, this one.
 
 ## Testing
 
-Running an integration test is currently a fairly manual process which we will
-automate over time. These are the steps you'll need to follow.
+Testing the whole system is currently only semi automated, but we plan to add
+fully automated integration tests over time. For now, you'll need to follow
+these steps:
 
-### 1. Set up the server
+### 1. Launch the services
 
-1. Launch the [server](server)
-2. Go to [http://localhost:8000/admin/](http://localhost:8000/admin/)
-3. Add a new _Survey_
-    1. Set _Name_ to _Test_
-    2. Add a new _Commissioner_ called _KDE_
-    3. Set both _Group size_ and _Group count_ to `2`
-    4. Add a _Query_ with _Data key_ _test_ and _Cohorts_ `["1", "2", "3"]`.
-       Leave _Discrete_ checked
+The easiest way to do that is via [Docker
+Compose](https://docs.docker.com/compose/):
 
-### 2. Launch the clients
+    docker compose up
 
-You will need to spawn `Group size * Group count` clients, so in our case,
-**4**.
+This will build and spawn the server, and a sufficient amount of clients.
 
-**Please note:** Currently, this is a manual process, and spawning multiple
-clients on the same machine isn't even possible. Yet, the clients need to be on
-the same machine as the server, since they hard code the server URL as
-_localhost_. Consequently, this is not currently something you _can_ do, but a
-note of what you _should_ do. To push a _data point_ into a client, you can use
-the `submit_data_point.py` script.
+**Note:** The amount of clients needs to be at least `Group size * Group count`,
+at the time of writing that's **4**. If the number is now higher, you might need
+to adjust it in [docker-compose.yaml](docker-compose.yaml).
 
-1. Spawn the first client, and push the data point `test` with value `1`
-2. Spawn the second client, and push the data point `test` with value `2`
-3. Spawn the third client, and push the data point `test` with value `2`
-4. Spawn the fourth client, and push the data point `test` with value `3`
+### 2. Set up the server
+
+1. Go to [http://localhost:8080/admin/](http://localhost:8080/admin/).
+2. Log in as _admin_ with password _dekuf_ - at least these are the credentials
+   set at the time of writing.
+3. Add a new _Survey_.
+    1. Set _Name_ to _Test_.
+    2. Add a new _Commissioner_ called _KDE_.
+    3. Set both _Group size_ and _Group count_ to `2`.
+    4. Add a new _Data point_ called _Test_ with _Key_ _test_ and _Type_
+       _Integer_.
+    5. Set the query's _Cohorts_ to `["1", "2", "3"]`. Leave _Discrete_ checked.
+    6. Save it.
+
+This part is relatively easy to automate and we will probably add it to the
+[demo](demo) script.
+
+### 3. Initialise the clients with data
+
+This part is already automated:
+
+    ./demo client-init
+
+It should set the datapoint _test_ for each client, with values `1`, `2`, `2`
+and `3` respectively, at least at the time of writing.
+
+### 4. Verify the results on the server
 
 Wait a few minutes for the clients to subscribe to the survey, finish and submit
 the aggregation.
 
-### 3. Verify the results on the server
-
-In the admin interface, check _Survey responses_ and verify that one has been
-created. The value should be: `{"1": 1, "2": 2, "3": 1}`.
+Then, in the admin interface, check _Survey responses_ and verify that one has
+been created. The value should be: `{"1": 1, "2": 2, "3": 1}`.
 
 ### Debugging
 
