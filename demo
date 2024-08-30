@@ -8,9 +8,28 @@ def docker_exec(service, index, cmd):
     os.system(f"docker compose exec --index {index} {service} bash -c '{cmd}'")
 
 
+def server_exec(cmd):
+    docker_exec("server", 1, cmd)
+
+
+def server_django_exec(code):
+    server_exec(f"poetry run ./manage.py shell -c '\\''{code}'\\''")
+
+
 def server_init():
-    # TODO: Actually set up the survey and queries here, removing them if they
-    #       already exist.
+    # TODO: Consider removing existing data first.
+    server_django_exec("""
+from core.models.commissioner import Commissioner
+from core.models.data_point import DataPoint
+from core.models.survey import Query, Survey
+
+c = Commissioner.objects.create(name="KDE")
+s = Survey.objects.create(name="Test", commissioner=c, group_size=2,
+                          group_count=2)
+
+dp = DataPoint.objects.create(name="Test", key="test", type=1)
+Query.objects.create(survey=s, data_point=dp, cohorts=["1", "2", "3"])
+""")
     pass
 
 
@@ -35,9 +54,15 @@ def client_init():
                     f"string:test string:{value}")
 
 
+def init_all():
+    server_init()
+    client_init()
+
+
 commands = {
     "server-init": server_init,
-    "client-init": client_init
+    "client-init": client_init,
+    "init-all": init_all
 }
 
 

@@ -33,6 +33,12 @@ to adjust it in [docker-compose.yaml](docker-compose.yaml).
 
 ### 2. Set up the server
 
+This part is already automated:
+
+    ./demo server-init
+
+But in case you want to do it manually:
+
 1. Go to [http://localhost:8080/admin/](http://localhost:8080/admin/).
 2. Log in as _admin_ with password _dekuf_ - at least these are the credentials
    set at the time of writing.
@@ -44,9 +50,6 @@ to adjust it in [docker-compose.yaml](docker-compose.yaml).
        _Integer_.
     5. Set the query's _Cohorts_ to `["1", "2", "3"]`. Leave _Discrete_ checked.
     6. Save it.
-
-This part is relatively easy to automate and we will probably add it to the
-[demo](demo) script.
 
 ### 3. Initialise the clients with data
 
