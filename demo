@@ -16,10 +16,10 @@ def server_django_shell_exec(code):
     server_exec("poetry run ./manage.py shell -c '" + code + "'")
 
 def client_init():
-    # TODO: The dbus-send command doesn't work yet.
     # TODO: Send more reasonable data - different for each client.
-    client_exec(". ./dbus-env.sh && dbus-send --print-reply "
-                "--dest=org.privact.data / org.privact.data.submit_data_point "
+    client_exec(". ./dbus-env.sh && dbus-send --type=method_call "
+                "--dest=org.privact.client / "
+                "org.privact.client.Data.submit_data_point "
                 "string:foo string:bar")
 
 

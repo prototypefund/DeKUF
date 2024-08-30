@@ -25,9 +25,10 @@ DBusService::DBusService(QSharedPointer<Storage> storage)
         qDebug() << "DBusService: Failed to connect to D-Bus session bus";
         return;
     }
-    if (!connection.registerService("org.privact.data"))
+    if (!connection.registerService("org.privact.client"))
         throw QString("DBusService: ")
             + qPrintable(connection.lastError().message());
 
-    connection.registerObject("/", &data, QDBusConnection::ExportAllSlots);
+    connection.registerObject(
+        "/", "org.privact.client.Data", &data, QDBusConnection::ExportAllSlots);
 }

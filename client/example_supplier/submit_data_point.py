@@ -20,7 +20,9 @@ if __name__ == "__main__":
         print("Failed to connect to D-Bus session bus")
         sys.exit(2)
 
-    iface = QDBusInterface("org.privact.data", "/", "", session_bus)
+    iface = QDBusInterface(
+        "org.privact.client", "/", "org.privact.client.Data", session_bus
+    )
     if not iface.isValid():
         print(session_bus.lastError().message())
         sys.exit(3)
