@@ -27,7 +27,9 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
+# TODO: Find a way to add "server" (for the Docker Compose demo setup) to
+#       ALLOWED_HOSTS without hard coding it here.
+ALLOWED_HOSTS: list[str] = ["localhost", "server"]
 
 
 # Application definition
