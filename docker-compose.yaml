@@ -9,9 +9,7 @@ services:
             interval: 60s
             timeout: 10s
             retries: 5
-        command: >
-            sh -c "poetry run ./manage.py migrate &&
-                   poetry run ./manage.py runserver 0.0.0.0:8000"
+        command: "poetry run ./manage.py runserver 0.0.0.0:8000"
 
     client:
         build: client
