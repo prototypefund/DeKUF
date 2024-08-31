@@ -237,7 +237,7 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
         = personalResponse->encrypt(encryptorResult.getValue());
     responses.append(encryptedPersonalResponse);
 
-    qDebug() << "Persional response:" << personalResponse->toJsonByteArray();
+    qDebug() << "Personal response:" << personalResponse->toJsonByteArray();
     auto aggregationResult
         = EncryptedSurveyResponse::aggregateEncryptedSurveyResponses(
             responses, encryptorResult.getValue());
