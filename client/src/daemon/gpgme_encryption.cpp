@@ -163,7 +163,9 @@ QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
         throw std::runtime_error(message.toStdString());
     }
 
-    gpgme_op_delete(context, importedKey, 0);
+    error = gpgme_op_delete_ext(
+        context, importedKey, GPGME_DELETE_ALLOW_SECRET | GPGME_DELETE_FORCE);
+    CHECK_GPGME_ERROR(error, "Error deleting key");
 
     size_t length = 0;
     auto buffer = gpgme_data_release_and_get_mem(outputData, &length);
