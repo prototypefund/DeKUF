@@ -4,6 +4,9 @@
 
 #include "gpgme_encryption_test.hpp"
 
+// TODO: Key pair generation can take a while, so these tests take ridiculously
+// long compared to all the others. We should figure out how to speed that up.
+
 void GpgmeEncryptionTest::testGenerateKeyPair()
 {
     GpgmeEncryption encryption;
