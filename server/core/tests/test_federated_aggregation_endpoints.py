@@ -6,6 +6,7 @@ from core.models.commissioner import Commissioner
 from core.models.data_point import DataPoint, Types
 from core.models.survey import Query, Survey
 from core.models.survey_signup import SurveySignup
+from core.views import initiate_grouping
 from django.test import TestCase
 from django.urls import reverse
 from phe import paillier
@@ -46,6 +47,44 @@ class SurveySignupTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_multiple_signups_and_grouping(self):
+        url = reverse("survey-signup")
+        num_signups = 10
+
+        for i in range(num_signups):
+            data = {"survey_id": str(self.survey.id), "public_key": f"key_{i}"}
+            response = self.client.post(
+                url, content_type="application/json", data=json.dumps(data)
+            )
+            self.assertEqual(response.status_code, 201)
+            initiate_grouping(self.survey)
+
+        self.assertEqual(SurveySignup.objects.count(), num_signups)
+
+        expected_full_groups = num_signups // (
+            self.survey.group_size * self.survey.group_count
+        )
+        self.assertEqual(AggregationGroup.objects.count(), expected_full_groups)
+
+        grouped_signups = SurveySignup.objects.filter(
+            group__isnull=False
+        ).count()
+        self.assertEqual(
+            grouped_signups, expected_full_groups * self.survey.group_size
+        )
+
+        ungrouped_signups = SurveySignup.objects.filter(
+            group__isnull=True
+        ).count()
+        self.assertEqual(
+            ungrouped_signups, num_signups % self.survey.group_size
+        )
+
+        for group in AggregationGroup.objects.all():
+            self.assertEqual(
+                group.surveysignup_set.count(), self.survey.group_size
+            )
 
 
 class GetSignupStateTest(TestCase):

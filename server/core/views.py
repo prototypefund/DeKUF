@@ -1,4 +1,7 @@
 import json
+from collections import defaultdict
+from threading import Lock
+from typing import Any
 
 from core.json_serializers import SurveyResponseSerializer, SurveySerializer
 from core.models.aggregation_group import AggregationGroup
@@ -6,12 +9,38 @@ from core.models.client_to_delegate_message import ClientToDelegateMessage
 from core.models.grouping_logic import group_ungrouped_signups
 from core.models.survey import Survey
 from core.models.survey_signup import SurveySignup
+from django.core.cache import cache
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from phe import paillier
 from rest_framework.parsers import JSONParser
+
+survey_locks: defaultdict[Any, Lock] = defaultdict(Lock)
+
+
+def initiate_grouping(survey):
+    survey_lock = survey_locks[survey.id]
+    grouping_lock_key = f"grouping_lock_{survey.id}"
+
+    with survey_lock:
+        if not cache.get(grouping_lock_key):
+            cache.set(grouping_lock_key, True, timeout=20)
+            perform_grouping(survey, grouping_lock_key)
+
+
+def perform_grouping(survey, lock_key):
+    try:
+        ungrouped_signups = list(
+            SurveySignup.objects.filter(survey=survey, group__isnull=True)
+        )
+        group_ungrouped_signups(
+            ungrouped_signups=ungrouped_signups, survey=survey
+        )
+    finally:
+        cache.delete(lock_key)
 
 
 @csrf_exempt
@@ -50,22 +79,19 @@ def signup_to_survey(request):
 
         # TODO: Do we need to check whether it's a correct public key?
         public_key = data["public_key"]
-        survey_signup = SurveySignup.objects.create(
-            survey=survey, public_key=public_key
-        )
 
-        response_data = {
-            "client_id": str(survey_signup.id),
-            "survey_id": str(survey.id),
-            "time": survey_signup.time.isoformat(),
-        }
+        with transaction.atomic():
+            survey_signup = SurveySignup.objects.create(
+                survey=survey, public_key=public_key
+            )
 
-        group_ungrouped_signups(
-            ungrouped_signups=list(
-                SurveySignup.objects.filter(group__isnull=True)
-            ),
-            survey=survey,
-        )
+            response_data = {
+                "client_id": str(survey_signup.id),
+                "survey_id": str(survey.id),
+                "time": survey_signup.time.isoformat(),
+            }
+
+            transaction.on_commit(lambda: initiate_grouping(survey))
 
         return JsonResponse(response_data, status=201)
     # TODO: Improve error description
