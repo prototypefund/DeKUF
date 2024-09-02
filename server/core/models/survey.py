@@ -61,7 +61,7 @@ class Query(models.Model):
         if not isinstance(query_response.data, dict):
             raise ValueError("query_response.data must be a dictionary.")
         for key, value in query_response.data.items():
-            encrypted_number = paillier.EncryptedNumber(public_key, value)
+            encrypted_number = paillier.EncryptedNumber(public_key, int(value))
             decrypted_number = private_key.decrypt(encrypted_number)
             self.aggregated_results[key] += decrypted_number
 

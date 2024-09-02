@@ -88,8 +88,18 @@ EncryptedSurveyResponse::aggregateEncryptedSurveyResponses(
             auto& queryResult = aggregatedResults[queryId];
             for (auto it = cohortData.constBegin(); it != cohortData.constEnd();
                  ++it) {
-                queryResult[it.key()] = encryptor->addEncrypted(
-                    it.value(), queryResult.value(it.key()));
+                const auto& key = it.key();
+                const auto& newValue = it.value();
+
+                if (!queryResult.contains(key)) {
+                    queryResult[key] = newValue;
+                    continue;
+                }
+                const auto& existingValue = queryResult[key];
+                auto addedValue
+                    = encryptor->addEncrypted(newValue, existingValue);
+
+                queryResult[key] = addedValue;
             }
         }
     }
@@ -98,8 +108,9 @@ EncryptedSurveyResponse::aggregateEncryptedSurveyResponses(
 
     for (auto it = aggregatedResults.constBegin();
          it != aggregatedResults.constEnd(); ++it) {
-        queryResponses.append(QSharedPointer<EncryptedQueryResponse>::create(
-            it.key(), it.value()));
+        auto response = QSharedPointer<EncryptedQueryResponse>::create(
+            it.key(), it.value());
+        queryResponses.append(response);
     }
 
     return Result(QSharedPointer<EncryptedSurveyResponse>::create(
@@ -122,7 +133,6 @@ QByteArray EncryptedSurveyResponse::toJsonByteArray() const
             cohortJsonResponse.insert(it.key(),
                 QJsonValue(QString::fromStdString(it.value().get_str())));
         }
-
         queryJsonResponse["data"] = cohortJsonResponse;
         queryJsonResponses.push_back(queryJsonResponse);
     }
