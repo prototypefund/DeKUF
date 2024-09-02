@@ -25,7 +25,8 @@ Compose](https://docs.docker.com/compose/):
 
     docker compose up
 
-This will build and spawn the server, and a sufficient amount of clients.
+This will build and spawn the server, and a sufficient amount of clients. If you
+want to launch a fresh demo, add the `--force-recreate` option.
 
 **Note:** The amount of clients needs to be at least `Group size * Group count`,
 at the time of writing that's **4**. If the number is now higher, you might need
