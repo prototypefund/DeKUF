@@ -25,7 +25,7 @@ gpgme_ctx_t initGpgme()
     gpgme_check_version(nullptr);
     gpgme_set_locale(nullptr, LC_CTYPE, setlocale(LC_CTYPE, nullptr));
 
-    gpgme_ctx_t context;
+    gpgme_ctx_t context = nullptr;
     gpgme_error_t error = gpgme_new(&context);
     CHECK_GPGME_ERROR(error, "Error initializing GPGME");
 
@@ -70,6 +70,40 @@ std::string exportKey(
     delete buffer;
     return key;
 }
+
+gpgme_key_t importAndLoadKey(gpgme_ctx_t context, const QString& key)
+{
+    auto keyBytes = key.toUtf8();
+    gpgme_data_t keyData = nullptr;
+    auto error = gpgme_data_new_from_mem(
+        &keyData, keyBytes.data(), keyBytes.length(), 0);
+    CHECK_GPGME_ERROR(error, "Error converting key string to data");
+
+    error = gpgme_op_import(context, keyData);
+    CHECK_GPGME_ERROR(error, "Error importing key");
+    auto importResult = gpgme_op_import_result(context);
+    if (importResult->not_imported)
+        throw std::runtime_error("Key wasn't imported");
+
+    gpgme_op_keylist_start(context, "", 0);
+    QList<gpgme_key_t> allKeys;
+    while (true) {
+        gpgme_key_t currentKey = nullptr;
+        error = gpgme_op_keylist_next(context, &currentKey);
+        if (gpg_err_code(error) == GPG_ERR_EOF)
+            break;
+        CHECK_GPGME_ERROR(error, "Error loading next key");
+        allKeys.append(currentKey);
+    }
+
+    for (auto currentKey : allKeys) {
+        auto exported = exportKey(context, currentKey->fpr, 0);
+        if (QString::fromStdString(exported) == key)
+            return currentKey;
+    }
+
+    throw std::runtime_error("Failed to import key");
+}
 }
 // NOLINTEND
 
@@ -101,8 +135,37 @@ QString GpgmeEncryption::generateKeyPair()
 
 QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
 {
-    // TODO: Actually implement this.
-    throw std::runtime_error("Not implemented");
+    auto context = initGpgme();
+
+    auto inputBytes = text.toUtf8();
+    gpgme_data_t inputData = nullptr;
+    auto error = gpgme_data_new_from_mem(
+        &inputData, inputBytes.data(), inputBytes.length(), 0);
+    CHECK_GPGME_ERROR(error, "Error converting input string to data");
+
+    gpgme_data_t outputData = nullptr;
+    error = gpgme_data_new(&outputData);
+    CHECK_GPGME_ERROR(error, "Error creating output data buffer");
+
+    auto importedKey = importAndLoadKey(context, key);
+    gpgme_key_t recipientKeys[] = { importedKey, nullptr }; // NOLINT
+    error = gpgme_op_encrypt(context, recipientKeys, // NOLINT
+        GPGME_ENCRYPT_ALWAYS_TRUST, inputData, outputData);
+    CHECK_GPGME_ERROR(error, "Encryption failed");
+    auto encryptResult = gpgme_op_encrypt_result(context);
+    if (encryptResult->invalid_recipients) {
+        QString message = "Invalid recipient encountered "
+            + QString::fromLatin1(encryptResult->invalid_recipients->fpr);
+        throw std::runtime_error(message.toStdString());
+    }
+
+    gpgme_op_delete(context, importedKey, 0);
+
+    size_t length = 0;
+    auto buffer = gpgme_data_release_and_get_mem(outputData, &length);
+    std::string output(buffer, length);
+    delete buffer; // NOLINT
+    return QString::fromStdString(output);
 }
 
 QString GpgmeEncryption::decrypt(const QString& text, const QString& key) const

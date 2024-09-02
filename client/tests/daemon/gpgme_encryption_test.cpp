@@ -11,4 +11,13 @@ void GpgmeEncryptionTest::testGenerateKeyPair()
     QVERIFY(!publicKey.isEmpty());
 }
 
+void GpgmeEncryptionTest::testEncrypt()
+{
+    GpgmeEncryption encryption;
+    auto publicKey = encryption.generateKeyPair();
+    auto raw = "1337";
+    auto encrypted = encryption.encrypt(raw, publicKey);
+    QVERIFY(encrypted != raw);
+}
+
 QTEST_MAIN(GpgmeEncryptionTest)
