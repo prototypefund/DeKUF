@@ -213,6 +213,15 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
         return;
     }
 
+    // TODO: The empty response returned in responsesParsingResult for a
+    // mismatch between group size and the amount of messages leads to a
+    // successful result without value. We should probably handle that
+    // differently, but this at least prevents a crash.
+    if (!responsesParsingResult.hasValue()) {
+        qWarning() << "Incorrect amount of messages received";
+        return;
+    }
+
     auto responses = responsesParsingResult.getValue();
 
     if (responses.count() < (record.groupSize.value() - 1)) {
