@@ -8,4 +8,5 @@ class GpgmeEncryptionTest : public QObject {
 private slots:
     void testGenerateKeyPair();
     void testEncrypt();
+    void testDecrypt();
 };

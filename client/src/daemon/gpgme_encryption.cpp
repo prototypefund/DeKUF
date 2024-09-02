@@ -2,6 +2,7 @@
 #include <QString>
 #include <gpgme.h>
 #include <stdexcept>
+#include <unistd.h>
 
 #include "gpgme_encryption.hpp"
 
@@ -22,6 +23,21 @@
     }
 
 namespace {
+gpgme_error_t passphraseCallback(void* opaque, const char* uid_hint,
+    const char* passphrase_info, int last_was_bad, int fd)
+{
+    auto passphrase = "...\n";
+    auto length = strlen(passphrase);
+    auto offset = 0;
+    int result = 0;
+    do {
+        result = write(fd, &passphrase[offset], length - offset); // NOLINT
+        if (result > 0)
+            offset += result;
+    } while (result > 0 && offset != length);
+    return offset == length ? 0 : gpgme_error_from_errno(errno);
+}
+
 gpgme_ctx_t initGpgme()
 {
     // TODO: Figure out if setting the locale is actually necessary.
@@ -46,11 +62,7 @@ gpgme_ctx_t initGpgme()
 
     gpgme_set_armor(context, 1);
 
-    // Keep the system's GPG agent from printing the user for a password.  It
-    // seems like this won't do the trick for exporting private keys. For the
-    // moment, we don't necessarily need to, but it's a foot gun.
-    error = gpgme_set_pinentry_mode(context, GPGME_PINENTRY_MODE_CANCEL);
-    CHECK_GPGME_ERROR(error, "Failed to set pinentry mode");
+    gpgme_set_passphrase_cb(context, passphraseCallback, nullptr);
 
     return context;
 }
@@ -124,7 +136,7 @@ QString GpgmeEncryption::generateKeyPair()
                 Subkey-Length: 2048
                 Name-Comment: TODO
                 Expire-Date: 0
-                Passphrase: ""
+                Passphrase: ...
             </GnupgKeyParms>
         )";
     auto error = gpgme_op_genkey(context, params, nullptr, nullptr);
@@ -132,6 +144,8 @@ QString GpgmeEncryption::generateKeyPair()
 
     auto result = gpgme_op_genkey_result(context);
 
+    // TODO: Now that we've figured out the passphrase stuff, it should be
+    // possible to export the private key as well, could be cleaner.
     std::string fingerprint(result->fpr);
     auto publicKey = exportKey(context, fingerprint, 0);
     return QString::fromStdString(publicKey);
@@ -163,9 +177,12 @@ QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
         throw std::runtime_error(message.toStdString());
     }
 
-    error = gpgme_op_delete_ext(
-        context, importedKey, GPGME_DELETE_ALLOW_SECRET | GPGME_DELETE_FORCE);
-    CHECK_GPGME_ERROR(error, "Error deleting key");
+    // TODO: The imported key never gets deleted, which is not great, but also
+    // not a huge issue for a prototype. The problem with deleting it is, that
+    // the way the tests currently work, that'd delete the secret key later
+    // needed for decryption. If we change the tests to actually test
+    // encryption/decryption between two separate instances, it should work
+    // fine.
 
     size_t length = 0;
     auto buffer = gpgme_data_release_and_get_mem(outputData, &length);
@@ -176,6 +193,27 @@ QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
 
 QString GpgmeEncryption::decrypt(const QString& text, const QString& key) const
 {
-    // TODO: Actually implement this.
-    throw std::runtime_error("Not implemented");
+    // TODO: The key is just being ignored entirely, since GPG automatically
+    // finds a suitable key - if it has one.
+
+    auto context = initGpgme();
+
+    auto inputBytes = text.toLatin1();
+    gpgme_data_t inputData = nullptr;
+    auto error = gpgme_data_new_from_mem(
+        &inputData, inputBytes.data(), inputBytes.length(), 1);
+    CHECK_GPGME_ERROR(error, "Error converting input string to data");
+
+    gpgme_data_t outputData = nullptr;
+    error = gpgme_data_new(&outputData);
+    CHECK_GPGME_ERROR(error, "Error creating output data buffer");
+
+    error = gpgme_op_decrypt(context, inputData, outputData);
+    CHECK_GPGME_ERROR(error, "Failed to decrypt data");
+
+    size_t length = 0;
+    auto buffer = gpgme_data_release_and_get_mem(outputData, &length);
+    std::string output(buffer, length);
+    delete buffer; // NOLINT
+    return QString::fromStdString(output);
 }
