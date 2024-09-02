@@ -175,7 +175,9 @@ def post_aggregation_result(request, delegate_id):
                 )
 
             SurveySignup.objects.filter(group=aggregation_group).delete()
-            ClientToDelegateMessage.objects.filter(group=aggregation_group).delete()
+            ClientToDelegateMessage.objects.filter(
+                group=aggregation_group
+            ).delete()
             aggregation_group.delete()
             return JsonResponse(serializer.data, status=201)
         else:
