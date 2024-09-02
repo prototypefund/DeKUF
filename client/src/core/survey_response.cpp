@@ -12,8 +12,10 @@ QueryResponse::QueryResponse(
 QSharedPointer<EncryptedQueryResponse> QueryResponse::encrypt(
     const QSharedPointer<HomomorphicEncryptor>& encryptor) const
 {
-    const QMap<QString, mpz_class> encryptedCohortData;
+    QMap<QString, mpz_class> encryptedCohortData;
     for (auto it = cohortData.constBegin(); it != cohortData.constEnd(); ++it) {
+        if (!encryptedCohortData.contains(it.key()))
+            encryptedCohortData.insert(it.key(), {});
         encryptedCohortData[it.key()] += encryptor->encrypt(it.value());
     }
     return QSharedPointer<EncryptedQueryResponse>::create(
