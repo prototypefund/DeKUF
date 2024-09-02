@@ -24,8 +24,8 @@ from core.models.data_point import DataPoint
 from core.models.survey import Query, Survey
 
 c = Commissioner.objects.create(name="KDE")
-s = Survey.objects.create(name="Test", commissioner=c, group_size=2,
-                          group_count=2)
+s = Survey.objects.create(name="Test", commissioner=c, group_size=4,
+                          group_count=1)
 
 dp = DataPoint.objects.create(name="Test", key="test", type=1)
 Query.objects.create(survey=s, data_point=dp, cohorts=["1", "2", "3"])
