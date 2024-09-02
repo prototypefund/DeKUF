@@ -5,9 +5,13 @@
 
 #include "gpgme_encryption.hpp"
 
-// TODO: Get rid of all these memory leaks.
+// TODO: This is not just rushed, prototypical code, this is a an absolute
+// _nightmare_. Probably two memory leaks for each line of code, that's not
+// gonna go well in the long run. As if that wasn't enough, it's also absolute
+// repetitive spaghetti that shows utter ignorance of how libgpgme actually
+// works. Oh, and linting is also disabled for most of this code, too. Needs
+// some major profiling and refactoring. Or an exorcist.
 
-// TODO: Actually fix the linter issues.
 // NOLINTBEGIN
 
 #define CHECK_GPGME_ERROR(error, message)                                      \
