@@ -56,7 +56,7 @@ std::string exportKey(
 {
     gpgme_data_t data;
     auto error = gpgme_data_new(&data);
-    CHECK_GPGME_ERROR(error, "Error creationg key data");
+    CHECK_GPGME_ERROR(error, "Error creating key data");
 
     error = gpgme_data_set_encoding(data, GPGME_DATA_ENCODING_ARMOR);
     CHECK_GPGME_ERROR(error, "Failed to set key encoding");
