@@ -97,6 +97,7 @@ void Daemon::processSurveys()
 
 void Daemon::signUpForSurvey(const QSharedPointer<const Survey> survey)
 {
+    qDebug() << "Signing up for survey" << survey->id;
     auto publicKey = encryption->generateKeyPair();
     auto data = network->surveySignup(survey->id, publicKey);
     const auto responseObject = QJsonDocument::fromJson(data).object();
@@ -138,6 +139,7 @@ void Daemon::processInitialSignup(SurveyRecord& record)
 
         processMessagesForDelegate(record);
     } else {
+        qDebug() << "Sending data to delegate";
         postMessageToDelegate(record);
     }
 
@@ -155,8 +157,6 @@ void Daemon::processSignups()
         if (surveyRecord.getState() != Processing
             || surveyRecord.publicKey != surveyRecord.delegatePublicKey)
             continue;
-        qDebug() << surveyRecord.getState() << surveyRecord.clientId
-                 << surveyRecord.delegatePublicKey;
         processMessagesForDelegate(surveyRecord);
     }
 }

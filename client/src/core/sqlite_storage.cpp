@@ -310,7 +310,6 @@ SurveyResponseRecord SqliteStorage::createSurveyResponseRecord(
     const QDateTime& createdAt) const
 {
     auto responseResult = SurveyResponse::fromJsonByteArray(data);
-    qDebug() << responseResult.getErrorMessage();
     Q_ASSERT(responseResult.isSuccess());
     const auto surveyRecord = findSurveyRecordById(surveyId);
     return { .response = responseResult.getValue(),
