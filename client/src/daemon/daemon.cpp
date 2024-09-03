@@ -217,7 +217,7 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
     // successful result without value. We should probably handle that
     // differently, but this at least prevents a crash.
     if (!responsesParsingResult.hasValue()) {
-        qWarning() << "Incorrect amount of messages received";
+        qWarning() << "Waiting for remaining messages...";
         return;
     }
 
