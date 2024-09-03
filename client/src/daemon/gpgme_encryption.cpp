@@ -69,8 +69,16 @@ gpgme_ctx_t initGpgme()
     return context;
 }
 
-std::string exportKey(
-    gpgme_ctx_t context, const std::string& fingerprint, int mode)
+QString releaseData(gpgme_data_t data)
+{
+    size_t length = 0;
+    auto buffer = gpgme_data_release_and_get_mem(data, &length); // NOLINT
+    std::string s(buffer, length);
+    delete buffer; // NOLINT
+    return QString::fromStdString(s);
+}
+
+QString exportKey(gpgme_ctx_t context, const QString& fingerprint, int mode)
 {
     gpgme_data_t data;
     auto error = gpgme_data_new(&data);
@@ -79,14 +87,10 @@ std::string exportKey(
     error = gpgme_data_set_encoding(data, GPGME_DATA_ENCODING_ARMOR);
     CHECK_GPGME_ERROR(error, "Failed to set key encoding");
 
-    error = gpgme_op_export(context, fingerprint.c_str(), mode, data);
+    error = gpgme_op_export(context, fingerprint.toLatin1(), mode, data);
     CHECK_GPGME_ERROR(error, "Error exporting key");
 
-    size_t length;
-    auto buffer = gpgme_data_release_and_get_mem(data, &length);
-    std::string key(buffer, length);
-    delete buffer;
-    return key;
+    return releaseData(data);
 }
 
 gpgme_key_t importAndLoadKey(gpgme_ctx_t context, const QString& key)
@@ -116,7 +120,7 @@ gpgme_key_t importAndLoadKey(gpgme_ctx_t context, const QString& key)
 
     for (auto currentKey : allKeys) {
         auto exported = exportKey(context, currentKey->fpr, 0);
-        if (QString::fromStdString(exported) == key)
+        if (exported == key)
             return currentKey;
     }
 
@@ -148,9 +152,8 @@ QString GpgmeEncryption::generateKeyPair()
 
     // TODO: Now that we've figured out the passphrase stuff, it should be
     // possible to export the private key as well, could be cleaner.
-    std::string fingerprint(result->fpr);
-    auto publicKey = exportKey(context, fingerprint, 0);
-    return QString::fromStdString(publicKey);
+    QString fingerprint(result->fpr);
+    return exportKey(context, fingerprint, 0);
 }
 
 QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
@@ -186,11 +189,7 @@ QString GpgmeEncryption::encrypt(const QString& text, const QString& key) const
     // encryption/decryption between two separate instances, it should work
     // fine.
 
-    size_t length = 0;
-    auto buffer = gpgme_data_release_and_get_mem(outputData, &length);
-    std::string output(buffer, length);
-    delete buffer; // NOLINT
-    return QString::fromStdString(output);
+    return releaseData(outputData);
 }
 
 QString GpgmeEncryption::decrypt(const QString& text, const QString& key) const
