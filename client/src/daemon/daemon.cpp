@@ -224,7 +224,7 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
     auto responses = responsesParsingResult.getValue();
 
     if (responses.count() < (record.groupSize.value() - 1)) {
-        qDebug() << "Insufficient messages available";
+        qDebug() << "Waiting for remaining messages...";
         return;
     }
 
