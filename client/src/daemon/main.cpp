@@ -12,8 +12,10 @@ const int interval = 60000;
 QSharedPointer<Encryption> createEncryption()
 {
     // End to end encryption is pretty experimental, and disabled by default.
-    if (qgetenv("DEKUF_CLIENT_ENABLE_E2E") == "1")
+    if (qgetenv("DEKUF_CLIENT_ENABLE_E2E") == "1") {
+        qDebug() << "GPG end to end encryption active";
         return QSharedPointer<GpgmeEncryption>::create();
+    }
     return QSharedPointer<IdentityEncryption>::create();
 }
 
