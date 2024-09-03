@@ -62,6 +62,8 @@ gpgme_ctx_t initGpgme()
 
     gpgme_set_armor(context, 1);
 
+    error = gpgme_set_pinentry_mode(context, GPGME_PINENTRY_MODE_LOOPBACK);
+    CHECK_GPGME_ERROR(error, "Failed to set pinentry mode");
     gpgme_set_passphrase_cb(context, passphraseCallback, nullptr);
 
     return context;
