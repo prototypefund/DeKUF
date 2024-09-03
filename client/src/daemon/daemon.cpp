@@ -169,7 +169,6 @@ void Daemon::postMessageToDelegate(SurveyRecord& record) const
     }
     const auto encryptorResult = PaillierEncryptor::createPaillierEncryptor(
         record.aggregationPublicKey.value());
-    qDebug() << record.aggregationPublicKey.value();
     if (!encryptorResult.isSuccess()) {
         qWarning() << "Posting message failed:"
                    << encryptorResult.getErrorMessage();
