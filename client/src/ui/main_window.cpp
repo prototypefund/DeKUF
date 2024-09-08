@@ -5,7 +5,35 @@
 #include <core/survey_response.hpp>
 
 namespace {
-void setupTableWidget(QTableWidget& tableWidget)
+void setupDataPointsTableWidget(QTableWidget& tableWidget)
+{
+    tableWidget.horizontalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
+    tableWidget.verticalHeader()->setSectionResizeMode(
+        QHeaderView::ResizeToContents);
+
+    SqliteStorage storage;
+    int row = 0;
+    for (const auto& dataPoint : storage.listDataPoints()) {
+        tableWidget.insertRow(row);
+
+        auto keyItem = new QTableWidgetItem; // NOLINT
+        keyItem->setText(dataPoint.key);
+        tableWidget.setItem(row, 0, keyItem);
+
+        auto valueItem = new QTableWidgetItem; // NOLINT
+        valueItem->setText(dataPoint.value);
+        tableWidget.setItem(row, 1, valueItem);
+
+        auto createdAtItem = new QTableWidgetItem; // NOLINT
+        createdAtItem->setText(dataPoint.createdAt.toString());
+        tableWidget.setItem(row, 2, createdAtItem);
+
+        row++;
+    }
+}
+
+void setupResponsesTableWidget(QTableWidget& tableWidget)
 {
     tableWidget.horizontalHeader()->setSectionResizeMode(
         QHeaderView::ResizeToContents);
@@ -84,7 +112,8 @@ MainWindow::MainWindow(QWidget* parent)
     : ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setupTableWidget(*ui->tableWidget);
+    setupDataPointsTableWidget(*ui->dataPointsTableWidget);
+    setupResponsesTableWidget(*ui->responsesTableWidget);
 }
 
 MainWindow::~MainWindow() { delete ui; }

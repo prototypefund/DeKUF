@@ -9,7 +9,7 @@ public:
     explicit SqliteStorage(const QString& databasePath);
     SqliteStorage();
 
-    QList<DataPoint> listDataPoints(const QString& key) const;
+    QList<DataPoint> listDataPoints(const QString& key = "") const;
     void addDataPoint(const QString& key, const QString& value);
     bool checkIfDataPointPresent(const QString& key) const;
     QList<SurveyResponseRecord> listSurveyResponses() const;
