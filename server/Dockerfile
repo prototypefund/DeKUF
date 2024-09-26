@@ -11,6 +11,6 @@ RUN poetry run ./manage.py migrate
 RUN <<EOF
 poetry run ./manage.py shell -c '
 from django.contrib.auth.models import User
-User.objects.create_superuser("admin", "", "dekuf")
+User.objects.create_superuser("admin", "", "admin")
 '
 EOF

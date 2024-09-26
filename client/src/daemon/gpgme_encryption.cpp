@@ -51,8 +51,8 @@ gpgme_ctx_t initGpgme()
 
     // TODO: For the purpose of the tests, this needs to be in another location
     // and get removed after each test.
-    // TODO: Don't hard code .dekuf here, also used in SqliteStorage.
-    auto gpgPath = QDir::homePath() + QDir::separator() + ".dekuf"
+    // TODO: Don't hard code .privact here, also used in SqliteStorage.
+    auto gpgPath = QDir::homePath() + QDir::separator() + ".privact"
         + QDir::separator() + "gpg";
     QDir(gpgPath).mkpath(".");
 

@@ -28,11 +28,11 @@ format:
 
 .PHONY: run-daemon
 run-daemon:
-	build/dekuf-client
+	build/privact-client
 
 .PHONY: run-ui
 run-ui:
-	build/dekuf-client-ui
+	build/privact-client-ui
 
 .PHONY: clean
 clean:

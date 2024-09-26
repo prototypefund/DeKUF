@@ -18,8 +18,8 @@ services:
                 condition: service_healthy
         scale: 4
         environment:
-            DEKUF_CLIENT_SERVER_URL: "http://server:8000"
-            DEKUF_CLIENT_ENABLE_E2E: "1"
+            PRIVACT_CLIENT_SERVER_URL: "http://server:8000"
+            PRIVACT_CLIENT_ENABLE_E2E: "1"
         command: >
             sh -c 'echo "export $(dbus-launch)" > dbus-env.sh
                    . ./dbus-env.sh

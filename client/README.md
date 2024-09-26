@@ -1,6 +1,6 @@
-# DeKUF - Client
+# Privact - Client
 
-The client-side daemon for DeKUF.
+The client-side daemon for Privact.
 
 It has two functionalities:
 
@@ -61,9 +61,9 @@ To comply with the formatting rules, run:
 
 There are a few environment variables you can set to configure the daemon:
 
-- `DEKUF_CLIENT_SERVER_URL` - point to the base URL of the server, without
+- `PRIVACT_CLIENT_SERVER_URL` - point to the base URL of the server, without
   trailing slash, e.g. `http://localhost:8000`.
-- `DEKUF_CLIENT_ENABLE_E2E` - set to `1` to enable experimental end to end
+- `PRIVACT_CLIENT_ENABLE_E2E` - set to `1` to enable experimental end to end
   encryption.
 
 ### Running the UI

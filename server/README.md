@@ -1,6 +1,6 @@
-# DeKUF - Server
+# Privact - Server
 
-The backend for DeKUF.
+The backend for Privact.
 
 It mainly presents surveys and accepts responses from [../client](../client).
 

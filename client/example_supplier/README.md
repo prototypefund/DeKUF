@@ -1,4 +1,4 @@
-# Example supplier for the DeKUF client
+# Example supplier for the Privact client
 
 ## Requirements
 

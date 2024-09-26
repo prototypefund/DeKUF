@@ -7,7 +7,7 @@
 #include "sqlite_storage.hpp"
 
 namespace {
-const QString userDir = ".dekuf";
+const QString userDir = ".privact";
 const QString dbFileName = "db.sqlite3";
 
 QSqlDatabase createDb(const QString& path)

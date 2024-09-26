@@ -7,7 +7,7 @@ const QString defaultBaseUrl = "http://localhost:8000";
 
 QString getBaseUrl()
 {
-    auto userBaseUrl = qgetenv("DEKUF_CLIENT_SERVER_URL");
+    auto userBaseUrl = qgetenv("PRIVACT_CLIENT_SERVER_URL");
     if (userBaseUrl.isEmpty())
         return defaultBaseUrl;
     return userBaseUrl;

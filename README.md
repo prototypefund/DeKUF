@@ -1,6 +1,6 @@
-# DeKUF - Decentralizing KUserFeedback
+# Privact
 
-A system for gathering more meaningful data in a more privacy-friendly way.
+A system for gathering meaningful insights in a privacy-friendly way.
 
 For more background, see [the wiki][1].
 
@@ -11,7 +11,7 @@ version 3, see [COPYING](COPYING).
 
 ## Components
 
-DeKUF consists of two separate components, which are - for the time being - in
+Privact consists of two separate components, which are - for the time being - in
 the same repository, this one.
 
 1. [client](client)
@@ -46,7 +46,7 @@ This part is already automated:
 But in case you want to do it manually:
 
 1. Go to [http://localhost:8080/admin/](http://localhost:8080/admin/).
-2. Log in as _admin_ with password _dekuf_ - at least these are the credentials
+2. Log in as _admin_ with password _admin_ - at least these are the credentials
    set at the time of writing.
 3. Add a new _Survey_.
     1. Set _Name_ to _Test_.
@@ -99,4 +99,4 @@ have changed since this was written.
 In addition to _discrete_ queries, we can also do continuous queries, using
 interval notation. A test case for this is not documented yet.
 
-[1]: https://gitlab.com/privact/dekuf/-/wikis/home
+[1]: https://gitlab.com/privact/privact/-/wikis/home
