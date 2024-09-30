@@ -65,7 +65,13 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ["id", "name", "commissioner", "queries"]
+        fields = [
+            "id",
+            "name",
+            "commissioner",
+            "queries",
+            "number_participants",
+        ]
 
 
 class QueryResponseSerializer(serializers.ModelSerializer):
@@ -86,7 +92,7 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurveyResponse
-        fields = ("survey_id", "query_responses")
+        fields = ("survey_id", "query_responses", "number_participants")
 
     def create(self, validated_data):
         query_responses_data = validated_data.pop("query_responses")

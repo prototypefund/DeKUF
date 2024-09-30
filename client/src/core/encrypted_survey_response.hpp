@@ -21,6 +21,7 @@ public:
 
 class EncryptedSurveyResponse {
 public:
+    const int number_participants;
     static Result<QSharedPointer<EncryptedSurveyResponse>> fromJsonByteArray(
         const QByteArray& responseData);
 
@@ -29,10 +30,12 @@ public:
         QList<QSharedPointer<EncryptedSurveyResponse>>,
         const QSharedPointer<HomomorphicEncryptor> encryptor);
 
-    explicit EncryptedSurveyResponse(const QString& surveyId);
+    explicit EncryptedSurveyResponse(
+        const QString& surveyId, int number_participants = 1);
 
     EncryptedSurveyResponse(const QString& surveyId,
-        QList<QSharedPointer<EncryptedQueryResponse>> encryptedQueryResponses);
+        QList<QSharedPointer<EncryptedQueryResponse>> encryptedQueryResponses,
+        int number_participants = 1);
 
     const QString surveyId;
     QList<QSharedPointer<EncryptedQueryResponse>> encryptedQueryResponses;

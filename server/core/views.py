@@ -159,6 +159,10 @@ def post_aggregation_result(request, delegate_id):
 
         if serializer.is_valid():
             survey_response = serializer.save()
+            survey_response.survey.number_participants += (
+                survey_response.number_participants
+            )
+            survey_response.survey.save()
             for query_response in survey_response.query_responses.all():
                 public_key = paillier.PaillierPublicKey(
                     int(aggregation_group.aggregation_public_key_n)

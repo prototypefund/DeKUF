@@ -23,16 +23,19 @@ public:
 
 class SurveyResponse {
 public:
+    int number_participants;
     static Result<QSharedPointer<SurveyResponse>> fromJsonByteArray(
         const QByteArray& responseData);
 
     static Result<QSharedPointer<SurveyResponse>> aggregateSurveyResponses(
         QList<QSharedPointer<SurveyResponse>>);
 
-    explicit SurveyResponse(const QString& surveyId);
+    explicit SurveyResponse(
+        const QString& surveyId, int number_participants = 1);
 
     SurveyResponse(const QString& surveyId,
-        QList<QSharedPointer<QueryResponse>> queryResponses);
+        QList<QSharedPointer<QueryResponse>> queryResponses,
+        int number_participants = 1);
 
     const QString surveyId;
     QList<QSharedPointer<QueryResponse>> queryResponses;

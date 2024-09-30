@@ -40,6 +40,7 @@ class SurveyResponseSerializerTestCase(TestCase):
     def test_survey_response_serializer(self):
         survey_response_data = {
             "survey_id": self.survey.id,
+            "number_participants": 1,
             "query_responses": [
                 {
                     "query_id": self.query.id,
@@ -55,6 +56,7 @@ class SurveyResponseSerializerTestCase(TestCase):
 
         survey_response = serializer.save()
         self.assertIsNotNone(survey_response.id)
+        self.assertEqual(survey_response.number_participants, 1)
 
         query_response = survey_response.query_responses.first()
         self.assertIsNotNone(query_response)

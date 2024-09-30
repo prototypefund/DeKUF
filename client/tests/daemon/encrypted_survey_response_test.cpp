@@ -108,6 +108,8 @@ void EncryptedSurveyResponseTest::testAggregationWithOneQuery()
                  ->encryptedQueryResponses.first()
                  ->cohortData,
         aggregatedCohortData);
+
+    QCOMPARE(aggregatedResult.getValue()->number_participants, 2);
 }
 
 void EncryptedSurveyResponseTest::testAggregationWithMultipleQueries()
@@ -158,6 +160,8 @@ void EncryptedSurveyResponseTest::testAggregationWithMultipleQueries()
     QCOMPARE(
         aggregatedResult.getValue()->encryptedQueryResponses.last()->cohortData,
         aggregatedCohortData);
+
+    QCOMPARE(aggregatedResult.getValue()->number_participants, 2);
 }
 
 void EncryptedSurveyResponseTest::
