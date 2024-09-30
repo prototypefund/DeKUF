@@ -40,8 +40,8 @@ EncryptedSurveyResponse::fromJsonByteArray(const QByteArray& responseData)
         const auto surveyId = responseJsonObj["survey_id"].toString();
         const auto number_participants
             = responseJsonObj["number_participants"].toInt();
-        auto response
-            = QSharedPointer<EncryptedSurveyResponse>::create(surveyId);
+        auto response = QSharedPointer<EncryptedSurveyResponse>::create(
+            surveyId, number_participants);
 
         const auto queryResponseArray
             = responseJsonObj["query_responses"].toArray();
