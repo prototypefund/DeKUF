@@ -14,6 +14,7 @@ class Survey(models.Model):
     commissioner = models.ForeignKey(Commissioner, on_delete=models.CASCADE)
     group_size = models.IntegerField(default=2)
     group_count = models.IntegerField(default=2)
+    number_participants = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
@@ -32,7 +33,6 @@ class Query(models.Model):
     )
     cohorts = models.JSONField(encoder=DjangoJSONEncoder, default=list)
     discrete = models.BooleanField(default=True)
-    number_participants = models.IntegerField(default=0, editable=False)
     aggregated_results = models.JSONField(default=dict, editable=False)
 
     def __str__(self):
@@ -65,9 +65,4 @@ class Query(models.Model):
             decrypted_number = private_key.decrypt(encrypted_number)
             self.aggregated_results[key] += decrypted_number
 
-        # TODO: Check how we want to count participants
-        # We could multiply the value with the group_size, but then we
-        # would not consider drop-outs. If we take the values we would
-        # disable multi-count
-        self.number_participants += 1
         self.save()

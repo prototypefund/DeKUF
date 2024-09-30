@@ -295,6 +295,7 @@ Daemon::parseResponseMessages(const QByteArray& data, int groupSize) const
     return Result(responses);
 }
 
+// TODO: don't return empty response -> return Result type
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(
     const QSharedPointer<Survey>& survey) const
 {

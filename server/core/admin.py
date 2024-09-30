@@ -18,8 +18,6 @@ class CommissionerAdmin(admin.ModelAdmin):
 class QueryInline(admin.TabularInline):
     model = Query
     extra = 1
-    # Activate number participants after fixing the issue #54
-    # readonly_fields = ("aggregated_results", "number_participants")
     readonly_fields = ["aggregated_results"]
 
 
@@ -27,7 +25,7 @@ class QueryInline(admin.TabularInline):
 class SurveyAdmin(admin.ModelAdmin):
     list_display = ("name", "commissioner")
     inlines = [QueryInline]
-    readonly_fields = ["id"]
+    readonly_fields = ["id", "number_participants"]
 
 
 class QueryResponseInline(admin.TabularInline):

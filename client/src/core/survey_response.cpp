@@ -22,15 +22,18 @@ QSharedPointer<EncryptedQueryResponse> QueryResponse::encrypt(
         queryId, encryptedCohortData);
 }
 
-SurveyResponse::SurveyResponse(const QString& surveyId)
+SurveyResponse::SurveyResponse(const QString& surveyId, int number_participants)
     : surveyId(surveyId)
+    , number_participants(number_participants)
 {
 }
 
 SurveyResponse::SurveyResponse(const QString& surveyId,
-    QList<QSharedPointer<QueryResponse>> queryResponses)
+    QList<QSharedPointer<QueryResponse>> queryResponses,
+    int number_participants)
     : surveyId(surveyId)
     , queryResponses(queryResponses)
+    , number_participants(number_participants)
 {
 }
 
@@ -40,7 +43,10 @@ Result<QSharedPointer<SurveyResponse>> SurveyResponse::fromJsonByteArray(
     try {
         auto responseJsonObj = QJsonDocument::fromJson(responseData).object();
         const auto surveyId = responseJsonObj["survey_id"].toString();
-        auto response = QSharedPointer<SurveyResponse>::create(surveyId);
+        const auto number_participants
+            = responseJsonObj["number_participants"].toInt();
+        auto response = QSharedPointer<SurveyResponse>::create(
+            surveyId, number_participants);
 
         const auto queryResponseArray
             = responseJsonObj["query_responses"].toArray();
@@ -129,6 +135,7 @@ QByteArray SurveyResponse::toJsonByteArray() const
 
     surveyJsonResponse["query_responses"] = queryJsonResponses;
     surveyJsonResponse["survey_id"] = surveyId;
+    surveyJsonResponse["number_participants"] = number_participants;
 
     QJsonDocument root;
     root.setObject(surveyJsonResponse);

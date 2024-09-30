@@ -7,6 +7,7 @@ from django.db import models
 class SurveyResponse(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE)
+    number_participants = models.IntegerField(default=0)
 
 
 class QueryResponse(models.Model):
