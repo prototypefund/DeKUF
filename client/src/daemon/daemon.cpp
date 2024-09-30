@@ -232,7 +232,6 @@ void Daemon::processMessagesForDelegate(SurveyRecord& record)
         qWarning() << "AggregationKey is null, processing messages failed.";
         return;
     }
-
     const auto encryptorResult = PaillierEncryptor::createPaillierEncryptor(
         record.aggregationPublicKey.value());
     if (!encryptorResult.isSuccess()) {
@@ -296,7 +295,7 @@ Daemon::parseResponseMessages(const QByteArray& data, int groupSize) const
     return Result(responses);
 }
 
-// TODO: return Result
+// TODO: don't return empty response -> return Result type
 QSharedPointer<SurveyResponse> Daemon::createSurveyResponse(
     const QSharedPointer<Survey>& survey) const
 {
